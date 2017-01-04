@@ -75,6 +75,7 @@ private:
 			void				_RefreshPackageList(bool force);
 
 			void				_StartRefreshWorker(bool force = false);
+			void				_OpenRepositoriesPreflet();
 	static	status_t			_RefreshModelThreadWorker(void* arg);
 	static	status_t			_PackageActionWorker(void* arg);
 	static	status_t			_PopulatePackageWorker(void* arg);
