@@ -14,9 +14,6 @@
 
 #include "constants.h"
 
-#undef B_TRANSLATION_CONTEXT
-#define B_TRANSLATION_CONTEXT "RepositoriesSettings"
-
 const char* settingsFilename = "Repositories_settings";
 
 

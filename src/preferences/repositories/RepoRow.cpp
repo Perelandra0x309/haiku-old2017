@@ -14,10 +14,6 @@
 #include "constants.h"
 
 
-#undef B_TRANSLATION_CONTEXT
-#define B_TRANSLATION_CONTEXT "RepoRow"
-
-
 RepoRow::RepoRow(const char* repo_name, const char* repo_url, bool enabled)
 	:
 	BRow(),

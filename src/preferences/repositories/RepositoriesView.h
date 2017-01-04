@@ -44,7 +44,7 @@ private:
 	TaskLooper				*fTaskLooper;
 	bool					fShowCompletedStatus;
 	int						fRunningTaskCount, fLastCompletedTimerId;
-	BButton					*fAboutButton, *fAddButton, *fRemoveButton,
+	BButton					*fAddButton, *fRemoveButton,
 							*fEnableButton, *fDisableButton;
 
 	// Message helpers

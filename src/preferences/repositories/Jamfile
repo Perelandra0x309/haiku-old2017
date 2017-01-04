@@ -12,7 +12,7 @@ Preference Repositories :
 	RepositoriesSettings.cpp
 	TaskLooper.cpp
 	TaskTimer.cpp
-	: be translation package libcolumnlistview.a [ TargetLibstdc++ ] localestub
+	: be package libcolumnlistview.a [ TargetLibstdc++ ] localestub
 	: Repositories.rdef
 ;
 

@@ -153,10 +153,6 @@ RepositoriesWindow::MessageReceived(BMessage* message)
 			fView->MessageReceived(message);
 			break;
 		}
-		case SHOW_ABOUT: {
-			be_app->AboutRequested();
-			break;
-		}
 		// captures pkgman changes while the Repositories application is running
 		case B_NODE_MONITOR: {
 			// This preflet is making the changes, so ignore this message

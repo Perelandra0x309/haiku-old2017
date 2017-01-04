@@ -143,22 +143,16 @@ RepositoriesView::RepositoriesView()
 	fAddButton->SetExplicitSize(btnSize);
 	fRemoveButton = new BButton("minus", "-", new BMessage(REMOVE_REPOS));
 	fRemoveButton->SetExplicitSize(btnSize);
-	fAboutButton = new BButton("about", "?", new BMessage(SHOW_ABOUT));
-	fAboutButton->SetExplicitSize(btnSize);
 
 	// Layout
 	int16 buttonSpacing = 1;
 	BLayoutBuilder::Group<>(this, B_VERTICAL, 0)
 		.SetInsets(B_USE_WINDOW_SPACING, B_USE_WINDOW_SPACING,
 			B_USE_WINDOW_SPACING, B_USE_WINDOW_SPACING)
-		.AddGroup(B_HORIZONTAL, 0, 0.0)
-			.Add(new BStringView("instruction",
-				B_TRANSLATE_COMMENT("Select repositories to use with Haiku package "\
-					"management:", "Label text")), 0.0)
-			.AddGlue()
-			.Add(fAboutButton, 0.0)
-		.End()
-		.AddStrut(3)
+		.Add(new BStringView("instruction", B_TRANSLATE_COMMENT("Select"
+				" repositories to use with Haiku package management:",
+				"Label text")), 0.0)
+		.AddStrut(B_USE_DEFAULT_SPACING)
 		.Add(fListView, 1)
 		.AddGroup(B_HORIZONTAL, 0, 0.0)
 			// Add and Remove buttons
