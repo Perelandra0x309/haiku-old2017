@@ -17,7 +17,8 @@
 
 class AddRepoWindow : public BWindow {
 public:
-							AddRepoWindow(BRect size, BMessenger* messenger);
+							AddRepoWindow(BRect size,
+								const BMessenger& messenger);
 	virtual void			MessageReceived(BMessage*);
 	virtual void			Quit();
 	virtual void			FrameResized(float newWidth, float newHeight);
@@ -26,7 +27,7 @@ private:
 	BTextControl*			fText;
 	BButton*				fAddButton;
 	BButton*				fCancelButton;
-	BMessenger*				fReplyMessenger;
+	BMessenger				fReplyMessenger;
 	status_t				_GetClipboardData();
 };
 

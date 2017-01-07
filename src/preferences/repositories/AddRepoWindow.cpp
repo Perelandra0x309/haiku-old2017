@@ -23,7 +23,7 @@
 static float sAddWindowWidth = 500.0;
 
 
-AddRepoWindow::AddRepoWindow(BRect size, BMessenger* messenger)
+AddRepoWindow::AddRepoWindow(BRect size, const BMessenger& messenger)
 	:
 	BWindow(BRect(0, 0, sAddWindowWidth, 10), "AddWindow", B_MODAL_WINDOW,
 		B_ASYNCHRONOUS_CONTROLS	| B_AUTO_UPDATE_SIZE_LIMITS | B_CLOSE_ON_ESCAPE),
@@ -61,7 +61,7 @@ AddRepoWindow::AddRepoWindow(BRect size, BMessenger* messenger)
 void
 AddRepoWindow::Quit()
 {
-	fReplyMessenger->SendMessage(ADD_WINDOW_CLOSED);
+	fReplyMessenger.SendMessage(ADD_WINDOW_CLOSED);
 	BWindow::Quit();
 }
 
@@ -94,7 +94,7 @@ AddRepoWindow::MessageReceived(BMessage* message)
 				} else {
 					BMessage* addMessage = new BMessage(ADD_REPO_URL);
 					addMessage->AddString(key_url, url);
-					fReplyMessenger->SendMessage(addMessage);
+					fReplyMessenger.SendMessage(addMessage);
 					Quit();
 				}
 			}

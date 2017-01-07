@@ -128,7 +128,7 @@ RepositoriesWindow::MessageReceived(BMessage* message)
 	{
 		case ADD_REPO_WINDOW: {
 			BRect frame = Frame();
-			fAddWindow = new AddRepoWindow(frame, &fMessenger);
+			fAddWindow = new AddRepoWindow(frame, fMessenger);
 			break;
 		}
 		case ADD_REPO_URL: {

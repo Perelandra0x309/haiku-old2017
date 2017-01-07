@@ -43,7 +43,6 @@ private:
 	BView*					fStatusContainerView;
 	BStringView*			fListStatusView;
 	TaskLooper*				fTaskLooper;
-	BMessenger				fMessenger;
 	bool					fShowCompletedStatus;
 	int						fRunningTaskCount, fLastCompletedTimerId;
 	BButton*				fAddButton;

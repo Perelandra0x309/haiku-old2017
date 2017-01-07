@@ -36,7 +36,7 @@ typedef struct {
 
 class TaskTimer : public BLooper {
 public:
-							TaskTimer(BMessenger* target, Task* owner);
+							TaskTimer(const BMessenger& target, Task* owner);
 							~TaskTimer();
 	virtual bool			QuitRequested();
 	virtual void			MessageReceived(BMessage*);
@@ -47,7 +47,7 @@ private:
 	int32					fTimeoutMicroSeconds;
 	bool					fTimerIsRunning;
 	BString					fRepositoryName;
-	BMessenger*				fReplyTarget;
+	BMessenger				fReplyTarget;
 	BMessenger				fMessenger;
 	BMessageRunner*			fMessageRunner;
 	BMessage				fTimeoutMessage;

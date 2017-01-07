@@ -49,7 +49,7 @@ private:
 
 class TaskLooper : public BLooper {
 public:
-							TaskLooper(BMessenger* target);
+							TaskLooper(const BMessenger& target);
 	virtual	bool			QuitRequested();
 	virtual void			MessageReceived(BMessage*);
 
@@ -59,7 +59,7 @@ private:
 	static status_t			_DoTask(void* data);
 	static void				_AppendErrorDetails(BString& details,
 								JobStateListener* listener);
-	BMessenger*				fReplyTarget;
+	BMessenger				fReplyTarget;
 	BMessenger				fMessenger;
 };
 

@@ -150,8 +150,8 @@ RepositoriesView::RepositoriesView()
 		.SetInsets(B_USE_WINDOW_SPACING)
 		.AddGroup(B_HORIZONTAL, 0, 0.0)
 			.Add(new BStringView("instruction", B_TRANSLATE_COMMENT("Select"
-					" repositories to use with Haiku package management:",
-					"Label text")), 0.0)
+				" repositories to use with Haiku package management:",
+				"Label text")), 0.0)
 			.AddGlue()
 		.End()
 		.AddStrut(B_USE_DEFAULT_SPACING)
@@ -215,8 +215,7 @@ RepositoriesView::AllAttached()
 void
 RepositoriesView::AttachedToWindow()
 {
-	fMessenger.SetTo(this);
-	fTaskLooper = new TaskLooper(&fMessenger);
+	fTaskLooper = new TaskLooper(BMessenger(this));
 }
 
 
