@@ -10,6 +10,7 @@
 
 
 #include <ColumnListView.h>
+#include <GroupView.h>
 #include <String.h>
 #include <StringView.h>
 #include <View.h>
@@ -26,7 +27,7 @@ public:
 };
 
 
-class RepositoriesView : public BView {
+class RepositoriesView : public BGroupView {
 public:
 							RepositoriesView();
 							~RepositoriesView();
@@ -38,14 +39,17 @@ public:
 
 private:
 	RepositoriesSettings	fSettings;
-	RepositoriesListView	*fListView;
-	BView					*fStatusContainerView;
-	BStringView				*fListStatusView;
-	TaskLooper				*fTaskLooper;
+	RepositoriesListView*	fListView;
+	BView*					fStatusContainerView;
+	BStringView*			fListStatusView;
+	TaskLooper*				fTaskLooper;
+	BMessenger				fMessenger;
 	bool					fShowCompletedStatus;
 	int						fRunningTaskCount, fLastCompletedTimerId;
-	BButton					*fAddButton, *fRemoveButton,
-							*fEnableButton, *fDisableButton;
+	BButton*				fAddButton;
+	BButton*				fRemoveButton;
+	BButton*				fEnableButton;
+	BButton*				fDisableButton;
 
 	// Message helpers
 	void					_AddSelectedRowsToQueue();

@@ -38,12 +38,8 @@ typedef struct {
 static const Repository kDefaultRepos[] = {
 	{ "Haiku", "http://packages.haiku-os.org/haiku/master/"B_HAIKU_ABI_NAME
 		"/current"},
-	{ "Haikuports", "http://packages.haiku-os.org/haikuports/master/repo/"
-		B_HAIKU_ABI_NAME"/current" },
-	{ "BeSly Software Solutions", "http://software.besly.de/repo"},
-	{ "clasqm's repo", "http://clasquin-johnson.co.za/michel/repo"},
-	{ "clasqm's x86_64 repo", "http://clasquin-johnson.co.za/michel/repo_64"},
-	{ "FatElk", "http://coquillemartialarts.com/fatelk/repo"}
+	{ "HaikuPorts", "http://packages.haiku-os.org/haikuports/master/repo/"
+		B_HAIKU_ABI_NAME"/current" }
 };
 
 
@@ -61,7 +57,7 @@ static const Repository kDefaultRepos[] = {
 
 // Messages
 enum {
-	ADD_REPO_WINDOW = 'BHDa',
+	ADD_REPO_WINDOW = 'BHRa',
 	ADD_BUTTON_PRESSED,
 	CANCEL_BUTTON_PRESSED,
 	ADD_REPO_URL,

@@ -17,16 +17,16 @@
 
 class AddRepoWindow : public BWindow {
 public:
-							AddRepoWindow(BRect size, BLooper* looper);
+							AddRepoWindow(BRect size, BMessenger* messenger);
 	virtual void			MessageReceived(BMessage*);
 	virtual void			Quit();
 	virtual void			FrameResized(float newWidth, float newHeight);
 
 private:
-	BView					*fView;
-	BTextControl			*fText;
-	BButton					*fAddButton, *fCancelButton;
-	BLooper					*fReplyLooper;
+	BTextControl*			fText;
+	BButton*				fAddButton;
+	BButton*				fCancelButton;
+	BMessenger*				fReplyMessenger;
 	status_t				_GetClipboardData();
 };
 

@@ -93,11 +93,13 @@ JobStateListener::GetJobLog()
 }
 
 
-TaskLooper::TaskLooper(BLooper* target)
-	:BLooper("TaskLooper"),
+TaskLooper::TaskLooper(BMessenger* target)
+	:
+	BLooper("TaskLooper"),
 	fReplyTarget(target)
 {
 	Run();
+	fMessenger.SetTo(this);
 }
 
 
@@ -152,13 +154,13 @@ TaskLooper::MessageReceived(BMessage* message)
 				else {
 					threadResult = resume_thread(newTask->threadId);
 					if (threadResult == B_OK) {
-						newTask->fTimer = new TaskTimer(this, newTask);
+						newTask->fTimer = new TaskTimer(&fMessenger, newTask);
 						newTask->fTimer->Start(newTask->name);
 						// Reply to view
 						BMessage reply(*message);
 						reply.what = TASK_STARTED;
 						reply.AddInt16(key_count, fTaskQueue.CountItems());
-						fReplyTarget->PostMessage(&reply);
+						fReplyTarget->SendMessage(&reply);
 					} else
 						kill_thread(newTask->threadId);
 				}
@@ -183,7 +185,7 @@ TaskLooper::MessageReceived(BMessage* message)
 				if (task->taskType == ENABLE_REPO
 					&& task->name.Compare(task->resultName) != 0)
 					reply.AddString(key_name, task->resultName);
-				fReplyTarget->PostMessage(&reply);
+				fReplyTarget->SendMessage(&reply);
 				_RemoveAndDelete(task);
 			}
 			break;
@@ -196,7 +198,7 @@ TaskLooper::MessageReceived(BMessage* message)
 				BMessage reply(TASK_CANCELED);
 				reply.AddInt16(key_count, fTaskQueue.CountItems()-1);
 				reply.AddPointer(key_rowptr, task->rowItem);
-				fReplyTarget->PostMessage(&reply);
+				fReplyTarget->SendMessage(&reply);
 				_RemoveAndDelete(task);
 			}
 			break;
@@ -209,8 +211,7 @@ void
 TaskLooper::_RemoveAndDelete(Task* task)
 {
 	fTaskQueue.RemoveItem(task);
-	if (task->fTimer)
-	{
+	if (task->fTimer) {
 		task->fTimer->Lock();
 		task->fTimer->Quit();
 		task->fTimer = NULL;

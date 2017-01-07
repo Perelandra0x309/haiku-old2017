@@ -24,19 +24,19 @@ class TaskLooper;
 
 
 typedef struct {
-		RepoRow* rowItem;
-		int32 taskType;
-		BString name, taskParam;
-		thread_id threadId;
-		TaskLooper* owner;
-		BString resultName, resultErrorDetails;
-		TaskTimer* fTimer;
+		RepoRow*		rowItem;
+		int32			taskType;
+		BString			name, taskParam;
+		thread_id		threadId;
+		TaskLooper*		owner;
+		BString			resultName, resultErrorDetails;
+		TaskTimer*		fTimer;
 } Task;
 
 
 class TaskTimer : public BLooper {
 public:
-							TaskTimer(BLooper* target, Task* owner);
+							TaskTimer(BMessenger* target, Task* owner);
 							~TaskTimer();
 	virtual bool			QuitRequested();
 	virtual void			MessageReceived(BMessage*);
@@ -47,13 +47,13 @@ private:
 	int32					fTimeoutMicroSeconds;
 	bool					fTimerIsRunning;
 	BString					fRepositoryName;
-	BLooper					*fReplyTarget;
+	BMessenger*				fReplyTarget;
 	BMessenger				fMessenger;
-	BMessageRunner			*fMessageRunner;
+	BMessageRunner*			fMessageRunner;
 	BMessage				fTimeoutMessage;
-	BAlert					*fTimeoutAlert;
+	BAlert*					fTimeoutAlert;
 	BInvoker				fTimeoutAlertInvoker;
-	Task					*fOwner;
+	Task*					fOwner;
 	int32					_NextAlertStackCount();
 };
 

@@ -20,7 +20,7 @@
 static int32 sAlertStackCount = 0;
 
 
-TaskTimer::TaskTimer(BLooper* target, Task* owner)
+TaskTimer::TaskTimer(BMessenger* target, Task* owner)
 	:
 	BLooper(),
 	fTimeoutMicroSeconds(kTimerTimeoutSeconds * 1000000),
@@ -105,7 +105,7 @@ TaskTimer::MessageReceived(BMessage* message)
 				if (selection == 1) {
 					BMessage reply(TASK_KILL_REQUEST);
 					reply.AddPointer(key_taskptr, fOwner);
-					fReplyTarget->PostMessage(&reply);
+					fReplyTarget->SendMessage(&reply);
 				} else if (selection == 0) {
 					// Create new timer
 					fMessageRunner = new BMessageRunner(fMessenger,

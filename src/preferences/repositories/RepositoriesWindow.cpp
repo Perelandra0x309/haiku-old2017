@@ -29,16 +29,15 @@
 RepositoriesWindow::RepositoriesWindow()
 	:
 	BWindow(BRect(50, 50, 500, 400), B_TRANSLATE_SYSTEM_NAME("Repositories"),
-		B_TITLED_WINDOW, B_NOT_ZOOMABLE | B_ASYNCHRONOUS_CONTROLS),
+		B_TITLED_WINDOW, B_NOT_ZOOMABLE | B_ASYNCHRONOUS_CONTROLS
+			| B_AUTO_UPDATE_SIZE_LIMITS),
 	fAddWindow(NULL),
 	fPackageNodeStatus(B_ERROR)
 {
 	fView = new RepositoriesView();
-	BLayoutBuilder::Group<>(this, B_VERTICAL).Add(fView);
+	BLayoutBuilder::Group<>(this, B_VERTICAL).Add(fView).End();
 
 	// Size and location on screen
-	BSize viewSize(fView->MinSize());
-	SetSizeLimits(viewSize.Width(), 9999, viewSize.Height(), 9999);
 	BRect frame = fSettings.GetFrame();
 	ResizeTo(frame.Width(), frame.Height());
 	BScreen screen;
@@ -49,6 +48,8 @@ RepositoriesWindow::RepositoriesWindow()
 	else
 		MoveTo(frame.left, frame.top);
 	Show();
+	
+	fMessenger.SetTo(this);
 
 	// Find the pkgman settings or cache directory
 	BPath packagePath;
@@ -127,7 +128,7 @@ RepositoriesWindow::MessageReceived(BMessage* message)
 	{
 		case ADD_REPO_WINDOW: {
 			BRect frame = Frame();
-			fAddWindow = new AddRepoWindow(frame, this);
+			fAddWindow = new AddRepoWindow(frame, &fMessenger);
 			break;
 		}
 		case ADD_REPO_URL: {
@@ -144,13 +145,6 @@ RepositoriesWindow::MessageReceived(BMessage* message)
 		case DELETE_KEY_PRESSED: {
 			BMessage message(REMOVE_REPOS);
 			fView->MessageReceived(&message);
-			break;
-		}
-		case TASK_STARTED:
-		case TASK_COMPLETED_WITH_ERRORS:
-		case TASK_COMPLETED:
-		case TASK_CANCELED: {
-			fView->MessageReceived(message);
 			break;
 		}
 		// captures pkgman changes while the Repositories application is running

@@ -17,10 +17,9 @@
 class RepositoriesApplication : public BApplication {
 public:
 							RepositoriesApplication();
-	virtual void			AboutRequested();
 
 private:
-	RepositoriesWindow		*fWindow;
+	RepositoriesWindow*		fWindow;
 };
 
 

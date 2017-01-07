@@ -57,14 +57,13 @@ RepositoriesListView::RepositoriesListView(const char* name)
 
 
 void
-RepositoriesListView::KeyDown (const char* bytes, int32 numBytes)
+RepositoriesListView::KeyDown(const char* bytes, int32 numBytes)
 {
 	switch (bytes[0]) {
 		case B_DELETE:
-		{
 			Window()->PostMessage(DELETE_KEY_PRESSED);
 			break;
-		}
+		
 		default:
 			BColumnListView::KeyDown(bytes, numBytes);
 	}
@@ -73,7 +72,7 @@ RepositoriesListView::KeyDown (const char* bytes, int32 numBytes)
 
 RepositoriesView::RepositoriesView()
 	:
-	BView("RepositoriesView", B_SUPPORTS_LAYOUT),
+	BGroupView("RepositoriesView"),
 	fTaskLooper(NULL),
 	fShowCompletedStatus(false),
 	fRunningTaskCount(0),
@@ -107,7 +106,7 @@ RepositoriesView::RepositoriesView()
 	fListStatusView->SetHighUIColor(fListStatusView->HighUIColor(), .9f);
 
 	// Set appropriate explicit view sizes
-	float viewWidth = max_c(fListStatusView->StringWidth(templateText),
+	float viewWidth = max(fListStatusView->StringWidth(templateText),
 		fListStatusView->StringWidth(kStatusCompletedText));
 	BSize statusViewSize(viewWidth + 3, B_H_SCROLL_BAR_HEIGHT - 2);
 	fListStatusView->SetExplicitSize(statusViewSize);
@@ -123,7 +122,8 @@ RepositoriesView::RepositoriesView()
 				.AddGlue()
 			.End()
 			.Add(new BSeparatorView(B_HORIZONTAL))
-		.End();
+		.End()
+	.End();
 	fListView->AddStatusView(fStatusContainerView);
 
 	// Standard buttons
@@ -147,11 +147,13 @@ RepositoriesView::RepositoriesView()
 	// Layout
 	int16 buttonSpacing = 1;
 	BLayoutBuilder::Group<>(this, B_VERTICAL, 0)
-		.SetInsets(B_USE_WINDOW_SPACING, B_USE_WINDOW_SPACING,
-			B_USE_WINDOW_SPACING, B_USE_WINDOW_SPACING)
-		.Add(new BStringView("instruction", B_TRANSLATE_COMMENT("Select"
-				" repositories to use with Haiku package management:",
-				"Label text")), 0.0)
+		.SetInsets(B_USE_WINDOW_SPACING)
+		.AddGroup(B_HORIZONTAL, 0, 0.0)
+			.Add(new BStringView("instruction", B_TRANSLATE_COMMENT("Select"
+					" repositories to use with Haiku package management:",
+					"Label text")), 0.0)
+			.AddGlue()
+		.End()
 		.AddStrut(B_USE_DEFAULT_SPACING)
 		.Add(fListView, 1)
 		.AddGroup(B_HORIZONTAL, 0, 0.0)
@@ -179,7 +181,8 @@ RepositoriesView::RepositoriesView()
 				.Add(fEnableButton)
 				.Add(fDisableButton)
 			.End()
-		.End();
+		.End()
+	.End();
 }
 
 
@@ -212,7 +215,8 @@ RepositoriesView::AllAttached()
 void
 RepositoriesView::AttachedToWindow()
 {
-	fTaskLooper = new TaskLooper(Window());
+	fMessenger.SetTo(this);
+	fTaskLooper = new TaskLooper(&fMessenger);
 }
 
 
@@ -221,7 +225,7 @@ RepositoriesView::MessageReceived(BMessage* message)
 {
 	switch (message->what)
 	{
-		case REMOVE_REPOS :{
+		case REMOVE_REPOS: {
 			RepoRow* rowItem = dynamic_cast<RepoRow*>(fListView->CurrentSelection());
 			if (!rowItem || !fRemoveButton->IsEnabled())
 				break;
@@ -244,11 +248,11 @@ RepositoriesView::MessageReceived(BMessage* message)
 				BString repoText;
 				repoText.Append("\n").Append(rowItem->Name())
 					.Append(" (").Append(rowItem->Url()).Append(")");
-				minWidth = max_c(minWidth, StringWidth(repoText.String()));
+				minWidth = max(minWidth, StringWidth(repoText.String()));
 				text.Append(repoText);
 				rowItem = dynamic_cast<RepoRow*>(fListView->CurrentSelection(rowItem));
 			}
-			minWidth = min_c(minWidth, Frame().Width());
+			minWidth = min(minWidth, Frame().Width());
 				// Ensure alert window isn't much larger than the main window
 			BAlert* alert = new BAlert("confirm", text, kRemoveLabel,
 				kCancelLabel, NULL, B_WIDTH_AS_USUAL, B_WARNING_ALERT);
@@ -269,10 +273,10 @@ RepositoriesView::MessageReceived(BMessage* message)
 			_SaveList();
 			break;
 		}
-		case LIST_SELECTION_CHANGED: {
+		case LIST_SELECTION_CHANGED:
 			_UpdateButtons();
 			break;
-		}
+		
 		case ITEM_INVOKED: {
 			// Simulates pressing whichever is the enabled button
 			if (fEnableButton->IsEnabled()) {
@@ -290,8 +294,7 @@ RepositoriesView::MessageReceived(BMessage* message)
 			// Check if there are multiple selections of the same repository,
 			// pkgman won't like that
 			RepoRow* rowItem = dynamic_cast<RepoRow*>(fListView->CurrentSelection());
-			while (rowItem)
-			{
+			while (rowItem) {
 				if (names.HasString(rowItem->Name())
 					&& kNewRepoDefaultName.Compare(rowItem->Name()) != 0) {
 					(new BAlert("duplicate",
@@ -312,11 +315,11 @@ RepositoriesView::MessageReceived(BMessage* message)
 			}
 			break;
 		}
-		case DISABLE_BUTTON_PRESSED: {
+		case DISABLE_BUTTON_PRESSED:
 			_AddSelectedRowsToQueue();
 			_UpdateButtons();
 			break;
-		}
+		
 		case TASK_STARTED: {
 			int16 count;
 			status_t result1 = message->FindInt16(key_count, &count);
@@ -378,11 +381,11 @@ RepositoriesView::MessageReceived(BMessage* message)
 			_UpdateButtons();
 			break;
 		}
-		case UPDATE_LIST: {
+		case UPDATE_LIST:
 			_RefreshList();
 			_UpdateButtons();
 			break;
-		}
+		
 		case STATUS_VIEW_COMPLETED_TIMEOUT: {
 			int32 timerID;
 			status_t result = message->FindInt32(key_ID, &timerID);
@@ -474,7 +477,7 @@ RepositoriesView::_UpdateFromRepoConfig(RepoRow* rowItem)
 	BString repoName(rowItem->Name());
 	status_t result = pRoster.GetRepositoryConfig(repoName, &repoConfig);
 	// Repo name was found and the URL matches
-	if (result == B_OK && repoConfig.BaseURL().Compare(rowItem->Url())==0)
+	if (result == B_OK && repoConfig.BaseURL() == rowItem->Url())
 		rowItem->SetEnabled(true);
 	else
 		rowItem->SetEnabled(false);
@@ -489,9 +492,8 @@ RepositoriesView::AddManualRepository(BString url)
 	bool foundRoot = false;
 	int32 index;
 	int32 listCount = fListView->CountRows();
-	for (index = 0; index < listCount; index++)
-	{
-		RepoRow* repoItem = dynamic_cast<RepoRow*>((fListView->RowAt(index)));
+	for (index = 0; index < listCount; index++) {
+		RepoRow* repoItem = dynamic_cast<RepoRow*>(fListView->RowAt(index));
 		const char* urlPtr = repoItem->Url();
 		// Find an already existing URL
 		if (url.ICompare(urlPtr) == 0) {
@@ -503,7 +505,7 @@ RepositoriesView::AddManualRepository(BString url)
 		}
 		// Use the same name from another repo with the same root url
 		if (foundRoot == false && rootUrl.ICompare(urlPtr,
-			rootUrl.Length()) == 0) {
+				rootUrl.Length()) == 0) {
 			foundRoot = true;
 			name = repoItem->Name();
 		}
@@ -559,8 +561,7 @@ RepositoriesView::_InitList()
 	status_t result = fSettings.GetRepositories(repoCount, nameList, urlList);
 	if (result == B_OK) {
 		BString name, url;
-		for (index = 0; index < repoCount; index++)
-		{
+		for (index = 0; index < repoCount; index++) {
 			name = nameList.StringAt(index);
 			url = urlList.StringAt(index);
 			_AddRepo(name, url, false);
@@ -577,9 +578,8 @@ RepositoriesView::_RefreshList()
 {
 	// Clear enabled status on all rows
 	int32 index, listCount = fListView->CountRows();
-	for (index = 0; index < listCount; index++)
-	{
-		RepoRow* repoItem = dynamic_cast<RepoRow*>((fListView->RowAt(index)));
+	for (index = 0; index < listCount; index++) {
+		RepoRow* repoItem = dynamic_cast<RepoRow*>(fListView->RowAt(index));
 		if (repoItem->TaskState() == STATE_NOT_IN_QUEUE)
 			repoItem->SetEnabled(false);
 	}
@@ -597,9 +597,9 @@ RepositoriesView::_UpdateListFromRoster()
 	status_t result = pRoster.GetRepositoryNames(repositoryNames);
 	if (result != B_OK) {
 		(new BAlert("error",
-			B_TRANSLATE_COMMENT("Repositories could not retrieve the names of the "
-				"currently enabled repositories.", "Alert error message"),
-			"OK", NULL, NULL, B_WIDTH_AS_USUAL, B_WARNING_ALERT))->Go(NULL);
+			B_TRANSLATE_COMMENT("Repositories could not retrieve the names of "
+				"the currently enabled repositories.", "Alert error message"),
+			kOKLabel, NULL, NULL, B_WIDTH_AS_USUAL, B_WARNING_ALERT))->Go(NULL);
 		return;
 	}
 	BPackageKit::BRepositoryConfig repoConfig;
@@ -609,8 +609,13 @@ RepositoriesView::_UpdateListFromRoster()
 		result = pRoster.GetRepositoryConfig(repoName, &repoConfig);
 		if (result == B_OK)
 			_AddRepo(repoName, repoConfig.BaseURL(), true);
-//		else
-//			(new BAlert("error", "Error getting repo config", "OK"))->Go(NULL);
+		else {
+			BString text(B_TRANSLATE_COMMENT("Error getting repository"
+				" configuration for %name%.", "Alert error message, "
+				"do not translate %name%"));
+			text.ReplaceFirst("%name%", repoName);
+			(new BAlert("error", text, kOKLabel))->Go(NULL);
+		}
 	}
 	_FindSiblings();
 	_SaveList();
@@ -624,7 +629,7 @@ RepositoriesView::_SaveList()
 	int32 index;
 	int32 listCount = fListView->CountRows();
 	for (index = 0; index < listCount; index++) {
-		RepoRow* repoItem = dynamic_cast<RepoRow*>((fListView->RowAt(index)));
+		RepoRow* repoItem = dynamic_cast<RepoRow*>(fListView->RowAt(index));
 		nameList.Add(repoItem->Name());
 		urlList.Add(repoItem->Url());
 	}
@@ -643,7 +648,7 @@ RepositoriesView::_AddRepo(BString name, BString url, bool enabled)
 	int32 listCount = fListView->CountRows();
 	// Find if the repo already exists in list
 	for (index = 0; index < listCount; index++) {
-		RepoRow* repoItem = dynamic_cast<RepoRow*>((fListView->RowAt(index)));
+		RepoRow* repoItem = dynamic_cast<RepoRow*>(fListView->RowAt(index));
 		if (url.ICompare(repoItem->Url()) == 0) {
 			// update name and enabled values
 			if (name.Compare(repoItem->Name()) != 0)
@@ -667,7 +672,7 @@ RepositoriesView::_FindSiblings()
 	int32 index, listCount = fListView->CountRows();
 	// Find repository names that are duplicated
 	for (index = 0; index < listCount; index++) {
-		RepoRow* repoItem = dynamic_cast<RepoRow*>((fListView->RowAt(index)));
+		RepoRow* repoItem = dynamic_cast<RepoRow*>(fListView->RowAt(index));
 		BString name = repoItem->Name();
 		// Ignore newly added repos since we don't know the real name yet
 		if (name.Compare(kNewRepoDefaultName)==0)
@@ -681,7 +686,7 @@ RepositoriesView::_FindSiblings()
 	}
 	// Set sibling values for each row
 	for (index = 0; index < listCount; index++) {
-		RepoRow* repoItem = dynamic_cast<RepoRow*>((fListView->RowAt(index)));
+		RepoRow* repoItem = dynamic_cast<RepoRow*>(fListView->RowAt(index));
 		BString name = repoItem->Name();
 		repoItem->SetHasSiblings(namesWithSiblings.HasString(name));
 	}
@@ -701,14 +706,10 @@ RepositoriesView::_UpdateButtons()
 		RepoRow* rowItem = dynamic_cast<RepoRow*>(fListView->CurrentSelection());
 		while (rowItem) {
 			selectedCount++;
-			switch (rowItem->TaskState())
-			{
-				case STATE_IN_QUEUE_WAITING:
-				case STATE_IN_QUEUE_RUNNING: {
-					someAreInQueue = true;
-					break;
-				}
-			}
+			uint32 taskState = rowItem->TaskState();
+			if ( taskState == STATE_IN_QUEUE_WAITING
+				|| taskState == STATE_IN_QUEUE_RUNNING)
+				someAreInQueue = true;
 			if (rowItem->IsEnabled())
 				someAreEnabled = true;
 			else
@@ -734,7 +735,8 @@ RepositoriesView::_UpdateButtons()
 			fDisableButton->SetEnabled(someAreEnabled);
 		}
 
-	} else {// No selected rows
+	} else {
+		// No selected rows
 		fEnableButton->SetLabel(kLabelEnable);
 		fDisableButton->SetLabel(kLabelDisable);
 		fEnableButton->SetEnabled(false);
@@ -750,7 +752,7 @@ RepositoriesView::_UpdateStatusView()
 	if (fRunningTaskCount) {
 		BString text(kStatusViewText);
 		text.Append(" ");
-		text<<fRunningTaskCount;
+		text << fRunningTaskCount;
 		fListStatusView->SetText(text);
 	} else
 		fListStatusView->SetText("");

@@ -26,8 +26,9 @@ public:
 
 private:
 	RepositoriesSettings	fSettings;
-	RepositoriesView		*fView;
-	AddRepoWindow			*fAddWindow;
+	RepositoriesView*		fView;
+	AddRepoWindow*			fAddWindow;
+	BMessenger				fMessenger;
 	node_ref				fPackageNodeRef;
 		// node_ref to watch for changes to package-repositories directory
 	status_t				fPackageNodeStatus;

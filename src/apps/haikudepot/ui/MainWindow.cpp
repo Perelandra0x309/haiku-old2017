@@ -323,7 +323,7 @@ MainWindow::MessageReceived(BMessage* message)
 			break;
 
 		case MSG_MANAGE_REPOS:
-			_OpenRepositoriesPreflet();
+			be_roster->Launch("application/x-vnd.Haiku-Repositories");
 			break;
 
 		case MSG_LOG_IN:
@@ -1105,14 +1105,6 @@ MainWindow::_StartRefreshWorker(bool force)
 		deleter.Detach();
 		resume_thread(fModelWorker);
 	}
-}
-
-
-void
-MainWindow::_OpenRepositoriesPreflet()
-{
-	BRoster roster;
-	roster.Launch("application/x-vnd.Haiku-Repositories");
 }
 
 

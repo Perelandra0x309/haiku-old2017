@@ -23,13 +23,12 @@
 static float sAddWindowWidth = 500.0;
 
 
-AddRepoWindow::AddRepoWindow(BRect size, BLooper* looper)
+AddRepoWindow::AddRepoWindow(BRect size, BMessenger* messenger)
 	:
 	BWindow(BRect(0, 0, sAddWindowWidth, 10), "AddWindow", B_MODAL_WINDOW,
 		B_ASYNCHRONOUS_CONTROLS	| B_AUTO_UPDATE_SIZE_LIMITS | B_CLOSE_ON_ESCAPE),
-	fReplyLooper(looper)
+	fReplyMessenger(messenger)
 {
-	fView = new BView("view", B_SUPPORTS_LAYOUT);
 	fText = new BTextControl("text", B_TRANSLATE_COMMENT("Repository URL:",
 		"Text box label"), "", new BMessage(ADD_BUTTON_PRESSED));
 	fAddButton = new BButton(B_TRANSLATE_COMMENT("Add", "Button label"),
@@ -38,16 +37,15 @@ AddRepoWindow::AddRepoWindow(BRect size, BLooper* looper)
 	fCancelButton = new BButton(kCancelLabel,
 		new BMessage(CANCEL_BUTTON_PRESSED));
 
-	BLayoutBuilder::Group<>(fView, B_VERTICAL)
-		.SetInsets(B_USE_WINDOW_SPACING, B_USE_WINDOW_SPACING,
-			B_USE_WINDOW_SPACING, B_USE_WINDOW_SPACING)
+	BLayoutBuilder::Group<>(this, B_VERTICAL)
+		.SetInsets(B_USE_WINDOW_SPACING)
 		.Add(fText)
 		.AddGroup(B_HORIZONTAL, B_USE_DEFAULT_SPACING)
 			.AddGlue()
 			.Add(fCancelButton)
-			.Add(fAddButton);
-	BLayoutBuilder::Group<>(this, B_VERTICAL)
-		.Add(fView);
+			.Add(fAddButton)
+		.End()
+	.End();
 	_GetClipboardData();
 	fText->MakeFocus();
 
@@ -63,7 +61,7 @@ AddRepoWindow::AddRepoWindow(BRect size, BLooper* looper)
 void
 AddRepoWindow::Quit()
 {
-	fReplyLooper->PostMessage(ADD_WINDOW_CLOSED);
+	fReplyMessenger->SendMessage(ADD_WINDOW_CLOSED);
 	BWindow::Quit();
 }
 
@@ -73,11 +71,11 @@ AddRepoWindow::MessageReceived(BMessage* message)
 {
 	switch (message->what)
 	{
-		case CANCEL_BUTTON_PRESSED: {
+		case CANCEL_BUTTON_PRESSED:
 			if (QuitRequested())
 				Quit();
 			break;
-		}
+		
 		case ADD_BUTTON_PRESSED: {
 			BString url(fText->Text());
 			if (url != "") {
@@ -96,7 +94,7 @@ AddRepoWindow::MessageReceived(BMessage* message)
 				} else {
 					BMessage* addMessage = new BMessage(ADD_REPO_URL);
 					addMessage->AddString(key_url, url);
-					fReplyLooper->PostMessage(addMessage);
+					fReplyMessenger->SendMessage(addMessage);
 					Quit();
 				}
 			}
