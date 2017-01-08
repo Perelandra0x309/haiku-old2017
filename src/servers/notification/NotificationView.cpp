@@ -54,13 +54,14 @@ property_info message_prop_list[] = {
 };
 
 
-NotificationView::NotificationView(NotificationWindow* win,
-	BNotification* notification, bigtime_t timeout)
+NotificationView::NotificationView(BNotification* notification, bigtime_t timeout,
+	float iconSize)
 	:
 	BView("NotificationView", B_WILL_DRAW),
-	fParent(win),
+//	fParent(win),
 	fNotification(notification),
 	fTimeout(timeout),
+	fIconSize(iconSize),
 	fRunner(NULL),
 	fBitmap(NULL),
 	fCloseClicked(false)
@@ -68,8 +69,8 @@ NotificationView::NotificationView(NotificationWindow* win,
 	if (fNotification->Icon() != NULL)
 		fBitmap = new BBitmap(fNotification->Icon());
 
-	if (fTimeout <= 0)
-		fTimeout = fParent->Timeout() * 1000000;
+//	if (fTimeout <= 0)
+//		fTimeout = fParent->Timeout() * 1000000;
 
 	BGroupLayout* layout = new BGroupLayout(B_VERTICAL);
 	SetLayout(layout);
@@ -238,9 +239,6 @@ NotificationView::Draw(BRect updateRect)
 	SetDrawingMode(B_OP_ALPHA);
 	SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_OVERLAY);
 
-	// Icon size
-	float iconSize = (float)fParent->IconSize();
-
 	BRect stripeRect = Bounds();
 	stripeRect.right = kIconStripeWidth;
 	SetHighColor(tint_color(ui_color(B_PANEL_BACKGROUND_COLOR),
@@ -258,7 +256,7 @@ NotificationView::Draw(BRect updateRect)
 	// Draw icon
 	if (fBitmap) {
 		float ix = 18;
-		float iy = (Bounds().Height() - iconSize) / 4.0;
+		float iy = (Bounds().Height() - fIconSize) / 4.0;
 			// Icon is vertically centered in view
 
 		if (fNotification->Type() == B_PROGRESS_NOTIFICATION)
@@ -267,7 +265,7 @@ NotificationView::Draw(BRect updateRect)
 			iy -= (progRect.Height() + kEdgePadding);
 		}
 
-		iconRect.Set(ix, iy, ix + iconSize - 1.0, iy + iconSize - 1.0);
+		iconRect.Set(ix, iy, ix + fIconSize - 1.0, iy + fIconSize - 1.0);
 		DrawBitmapAsync(fBitmap, fBitmap->Bounds(), iconRect);
 	}
 
@@ -447,7 +445,7 @@ NotificationView::SetText(float newMaxWidth)
 
 	float iconRight = kIconStripeWidth;
 	if (fBitmap != NULL)
-		iconRight += fParent->IconSize();
+		iconRight += fIconSize;
 	else
 		iconRight += 32;
 

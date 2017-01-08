@@ -167,7 +167,7 @@ NotificationWindow::MessageReceived(BMessage* message)
 			if (notification->InitCheck() == B_OK) {
 				bigtime_t timeout;
 				if (message->FindInt64("timeout", &timeout) != B_OK)
-					timeout = -1;
+					timeout = fTimeout;
 				BMessenger messenger = message->ReturnAddress();
 				app_info info;
 
@@ -205,8 +205,8 @@ NotificationWindow::MessageReceived(BMessage* message)
 					} else
 						group = aIt->second;
 
-					NotificationView* view = new NotificationView(this,
-						notification, timeout);
+					NotificationView* view = new NotificationView(notification,
+						timeout, fIconSize);
 
 					group->AddInfo(view);
 

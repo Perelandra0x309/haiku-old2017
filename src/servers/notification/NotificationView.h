@@ -25,9 +25,8 @@ const uint32 kRemoveView = 'ReVi';
 
 class NotificationView : public BView {
 public:
-								NotificationView(NotificationWindow* win,
-									BNotification* notification,
-									bigtime_t timeout = -1);
+								NotificationView(BNotification* notification,
+									bigtime_t timeout, float iconSize);
 	virtual						~NotificationView();
 
 	virtual	void 				AttachedToWindow();
@@ -62,9 +61,10 @@ private:
 
 			typedef std::list<LineInfo*> LineInfoList;
 
-			NotificationWindow*	fParent;
+//			NotificationWindow*	fParent;
 			BNotification*		fNotification;
 			bigtime_t			fTimeout;
+			float				fIconSize;
 
 			BMessageRunner*		fRunner;
 
