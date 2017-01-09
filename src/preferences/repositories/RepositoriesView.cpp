@@ -560,11 +560,11 @@ RepositoriesView::_GetPathIdentifier(BString urlPath)
 status_t
 RepositoriesView::_EmptyList()
 {
-	BRow* row = fListView->RowAt((int32)0, NULL);
-	while (row != NULL) {
+	BRow* row = fListView->RowAt((int32)0);
+	while (row) {
 		fListView->RemoveRow(row);
 		delete row;
-		row = fListView->RowAt((int32)0, NULL);
+		row = fListView->RowAt((int32)0);
 	}
 	return B_OK;
 }
