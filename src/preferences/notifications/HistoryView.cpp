@@ -51,6 +51,13 @@ const int32 kCountIndex = 1;
 //const int32 kTypeIndex = 3;
 //const int32 kShownIndex = 4;
 
+//TODO undo duplication
+const float kCloseSize				= 6;
+const float kExpandSize				= 8;
+const float kPenSize				= 1;
+//const float kEdgePadding			= 2;
+const float kSmallPadding			= 2;
+
 
 HistoryView::HistoryView(SettingsHost* host)
 	:
@@ -108,7 +115,11 @@ HistoryView::HistoryView(SettingsHost* host)
 		be_plain_font->StringWidth(B_TRANSLATE("Shown")) +
 		(kCLVTitlePadding * 2), rect.Width(), B_TRUNCATE_END, B_ALIGN_LEFT);
 	fNotifications->AddColumn(fShownCol, kShownIndex);
-
+	
+	// Preview view
+	fGroupView = new AppGroupView(BMessenger(this),
+		B_TRANSLATE("Notification Preview"));
+							
 	// Add views
 	BLayoutBuilder::Group<>(this, B_VERTICAL)
 		.AddGroup(B_HORIZONTAL)
@@ -117,6 +128,7 @@ HistoryView::HistoryView(SettingsHost* host)
 		.End()
 		.Add(fGroups)
 		.Add(fNotifications)
+		.Add(fGroupView)
 		.SetInsets(B_USE_WINDOW_SPACING, B_USE_WINDOW_SPACING,
 			B_USE_WINDOW_SPACING, B_USE_DEFAULT_SPACING);
 }
@@ -302,7 +314,7 @@ HistoryView::_UpdatePreview(NotificationView* view)
 		fCurrentPreview = NULL;
 		fShowingPreview = false;
 	} else {
-		GetLayout()->AddView(view);
+		fGroupView->AddInfo(view);
 		fCurrentPreview = view;
 		fShowingPreview = true;
 	}

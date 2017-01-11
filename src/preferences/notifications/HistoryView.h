@@ -10,6 +10,7 @@
 
 #include <notification/AppUsage.h>
 
+#include "AppGroupView.h"
 #include "NotificationView.h"
 #include "SettingsPane.h"
 
@@ -20,6 +21,12 @@ class BTextControl;
 class BColumnListView;
 class BStringColumn;
 class BDateColumn;
+
+extern const float kEdgePadding;
+extern const float kSmallPadding;
+extern const float kCloseSize;
+extern const float kExpandSize;
+extern const float kPenSize;
 
 class HistoryView : public SettingsPane {
 public:
@@ -50,6 +57,7 @@ private:
 			BStringColumn*		fContentCol;
 			BStringColumn*		fTypeCol;
 			BStringColumn*		fShownCol;
+			AppGroupView*		fGroupView;
 			NotificationView* 	fCurrentPreview;
 };
 

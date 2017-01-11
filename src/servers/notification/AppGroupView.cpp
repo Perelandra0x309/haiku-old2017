@@ -26,11 +26,11 @@
 static const int kHeaderSize = 23;
 
 
-AppGroupView::AppGroupView(NotificationWindow* win, const char* label)
+AppGroupView::AppGroupView(const BMessenger& messenger, const char* label)
 	:
 	BGroupView("appGroup", B_VERTICAL, 0),
 	fLabel(label),
-	fParent(win),
+	fMessenger(messenger),
 	fCollapsed(false),
 	fCloseClicked(false)
 {
@@ -144,7 +144,7 @@ AppGroupView::MouseDown(BPoint point)
 		// Remove ourselves from the parent view
 		BMessage message(kRemoveGroupView);
 		message.AddPointer("view", this);
-		fParent->PostMessage(&message);
+		fMessenger.SendMessage(&message);
 	} else if (BRect(fCollapseRect).InsetBySelf(-5, -5).Contains(point)) {
 		fCollapsed = !fCollapsed;
 		int32 children = fInfo.size();
@@ -186,13 +186,13 @@ AppGroupView::MessageReceived(BMessage* msg)
 			view->RemoveSelf();
 			delete view;
 
-			fParent->PostMessage(msg);
+			fMessenger.SendMessage(msg);
 
 			if (!this->HasChildren()) {
 				Hide();
 				BMessage removeSelfMessage(kRemoveGroupView);
 				removeSelfMessage.AddPointer("view", this);
-				fParent->PostMessage(&removeSelfMessage);
+				fMessenger.SendMessage(&removeSelfMessage);
 			}
 			
 			break;
@@ -215,7 +215,7 @@ AppGroupView::AddInfo(NotificationView* view)
 		for (int32 i = 0; i < children; i++) {
 			if (id == fInfo[i]->MessageID()) {
 				NotificationView* oldView = fInfo[i];
-				fParent->NotificationViewSwapped(oldView, view);
+		//TODO		fParent->NotificationViewSwapped(oldView, view);
 				oldView->RemoveSelf();
 				delete oldView;
 				
