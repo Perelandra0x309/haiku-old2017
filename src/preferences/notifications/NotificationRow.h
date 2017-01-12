@@ -11,7 +11,6 @@
 
 #include <ColumnListView.h>
 #include <Message.h>
-#include <Notification.h>
 
 enum {
 	kTitleIndex,
@@ -25,12 +24,11 @@ enum {
 class NotificationRow : public BRow {
 public:
 								NotificationRow(BMessage notificationData);
-								~NotificationRow();
 			status_t			InitStatus() { return fInitStatus; }
-			BNotification*		GetNotification() { return fNotification; }
+			BMessage			GetMessage() { return fNotificationMessage; }
 private:
-			BNotification*		fNotification;
 			status_t			fInitStatus;
+			BMessage			fNotificationMessage;
 };
 
 

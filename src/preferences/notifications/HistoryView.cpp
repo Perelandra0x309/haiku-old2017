@@ -11,6 +11,7 @@
 #include "HistoryView.h"
 
 #include <Alert.h>
+#include <Box.h>
 #include <Catalog.h>
 #include <CheckBox.h>
 #include <ColumnListView.h>
@@ -117,8 +118,12 @@ HistoryView::HistoryView(SettingsHost* host)
 	fNotifications->AddColumn(fShownCol, kShownIndex);
 	
 	// Preview view
-	fGroupView = new AppGroupView(BMessenger(this),
-		B_TRANSLATE("Notification Preview"));
+	fGroupView = new AppGroupView(BMessenger(this), "");
+	BBox *box = new BBox("preview");
+	box->SetLabel(B_TRANSLATE("Notification Preview"));
+	BGroupLayout *boxLayout = BLayoutBuilder::Group<>(B_HORIZONTAL)
+    	.SetInsets(0, B_USE_DEFAULT_SPACING, 0, 0).Add(fGroupView);
+    box->AddChild(boxLayout->View());
 							
 	// Add views
 	BLayoutBuilder::Group<>(this, B_VERTICAL)
@@ -128,7 +133,7 @@ HistoryView::HistoryView(SettingsHost* host)
 		.End()
 		.Add(fGroups)
 		.Add(fNotifications)
-		.Add(fGroupView)
+		.Add(box)
 		.SetInsets(B_USE_WINDOW_SPACING, B_USE_WINDOW_SPACING,
 			B_USE_WINDOW_SPACING, B_USE_DEFAULT_SPACING);
 }
@@ -185,9 +190,11 @@ HistoryView::MessageReceived(BMessage* message)
 			if (row == NULL)
 				_UpdatePreview(NULL);
 			else {
-				
+				BMessage data = row->GetMessage();
+				BNotification* newNotification = new BNotification(&data);
 				NotificationView* newPreview = new NotificationView(
-					row->GetNotification(), bigtime_t(10), B_MINI_ICON); //TODO change
+					newNotification, bigtime_t(10), B_LARGE_ICON, true); //TODO change
+			//	newPreview->SetText();
 				_UpdatePreview(newPreview);
 			}
 			break;
@@ -307,8 +314,11 @@ void
 HistoryView::_UpdatePreview(NotificationView* view)
 {
 	if (fShowingPreview && fCurrentPreview != NULL) {
-		fCurrentPreview->RemoveSelf();
+		BMessage msg(kRemoveView);
+		msg.AddPointer("view", fCurrentPreview);
+		fGroupView->MessageReceived(&msg);
 		delete fCurrentPreview;
+		fCurrentPreview = NULL;
 	}
 	if (view == NULL) {
 		fCurrentPreview = NULL;

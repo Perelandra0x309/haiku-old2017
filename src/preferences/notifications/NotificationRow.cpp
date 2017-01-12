@@ -12,6 +12,7 @@
 
 #include <Catalog.h>
 #include <ColumnTypes.h>
+#include <Notification.h>
 #include <notification/Notifications.h>
 
 #undef B_TRANSLATION_CONTEXT
@@ -20,13 +21,11 @@
 
 NotificationRow::NotificationRow(BMessage notificationData)
 	:
-	BRow(),
-	fNotification(NULL)
+	BRow()
 {
 	fInitStatus = B_ERROR;
 	
-	BMessage notificationMessage;
-	status_t result = notificationData.FindMessage(kNameNotificationMessage, &notificationMessage);
+	status_t result = notificationData.FindMessage(kNameNotificationMessage, &fNotificationMessage);
 	if (result != B_OK)
 		return;
 	int32 timestamp;
@@ -38,9 +37,9 @@ NotificationRow::NotificationRow(BMessage notificationData)
 	if (result != B_OK)
 		return;
 	
-	fNotification = new BNotification(&notificationMessage);
+	BNotification notification(&fNotificationMessage);
 	BString type;
-	switch (fNotification->Type()) {
+	switch (notification.Type()) {
 	case B_INFORMATION_NOTIFICATION:
 		type = B_TRANSLATE("Information");
 		break;
@@ -57,18 +56,12 @@ NotificationRow::NotificationRow(BMessage notificationData)
 		type = B_TRANSLATE("Unknown");
 	}
 	
-	SetField(new BStringField(fNotification->Title()), kTitleIndex);
+	SetField(new BStringField(notification.Title()), kTitleIndex);
 	SetField(new BDateField(&timestamp), kDateIndex);
-	SetField(new BStringField(fNotification->Content()), kContentIndex);
+	SetField(new BStringField(notification.Content()), kContentIndex);
 	SetField(new BStringField(type), kTypeIndex);
 	SetField(new BStringField(wasShown ?
 		B_TRANSLATE("True") : B_TRANSLATE("False")), kShownIndex);
 	
 	fInitStatus = B_OK;
-}
-
-
-NotificationRow::~NotificationRow()
-{
-	delete fNotification;
 }

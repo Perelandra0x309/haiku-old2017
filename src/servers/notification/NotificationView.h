@@ -26,7 +26,8 @@ const uint32 kRemoveView = 'ReVi';
 class NotificationView : public BView {
 public:
 								NotificationView(BNotification* notification,
-									bigtime_t timeout, float iconSize);
+									bigtime_t timeout, float iconSize,
+									bool disableTimeout = false);
 	virtual						~NotificationView();
 
 	virtual	void 				AttachedToWindow();
@@ -65,6 +66,7 @@ private:
 			BNotification*		fNotification;
 			bigtime_t			fTimeout;
 			float				fIconSize;
+			bool				fDisableTimeout;
 
 			BMessageRunner*		fRunner;
 

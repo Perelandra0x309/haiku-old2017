@@ -231,10 +231,6 @@ NotificationWindow::MessageReceived(BMessage* message)
 				BFile file(path.Path(), B_READ_ONLY | B_CREATE_FILE);
 				archive.Unflatten(&file);
 				file.Unset();
-				// ---temp fix
-				if (archive.what != kNotificationsArchive)
-					archive.what = kNotificationsArchive;
-				// ---
 				BMessage notificationData(kNotificationData);
 				notificationData.AddMessage(kNameNotificationMessage, message);
 				notificationData.AddBool(kNameWasShown, allow);

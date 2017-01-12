@@ -55,13 +55,14 @@ property_info message_prop_list[] = {
 
 
 NotificationView::NotificationView(BNotification* notification, bigtime_t timeout,
-	float iconSize)
+	float iconSize, bool disableTimeout)
 	:
 	BView("NotificationView", B_WILL_DRAW),
 //	fParent(win),
 	fNotification(notification),
 	fTimeout(timeout),
 	fIconSize(iconSize),
+	fDisableTimeout(disableTimeout),
 	fRunner(NULL),
 	fBitmap(NULL),
 	fCloseClicked(false)
@@ -123,11 +124,12 @@ void
 NotificationView::AttachedToWindow()
 {
 	SetText();
-
-	BMessage msg(kRemoveView);
-	msg.AddPointer("view", this);
-
-	fRunner = new BMessageRunner(BMessenger(Parent()), &msg, fTimeout, 1);
+	
+	if (!fDisableTimeout) {
+		BMessage msg(kRemoveView);
+		msg.AddPointer("view", this);
+		fRunner = new BMessageRunner(BMessenger(Parent()), &msg, fTimeout, 1);
+	}
 }
 
 
