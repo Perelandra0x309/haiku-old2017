@@ -214,7 +214,48 @@ NotificationWindow::MessageReceived(BMessage* message)
 			message->SendReply(&reply);
 			break;
 		}
-		case kRemoveView:
+		case kAddView:
+		{
+			NotificationView* view = NULL;
+			if (message->FindPointer("view", (void**)&view) != B_OK)
+				return;
+			
+		// TODO can we assume it has already gone through filtering?
+/*			bool allow = false;
+		appfilter_t::iterator it = fAppFilters.find(info.signature);
+
+		if (it == fAppFilters.end()) {
+			AppUsage* appUsage = new AppUsage(notification->Group(),
+				true);
+
+			appUsage->Allowed(notification->Title(),
+					notification->Type());
+			fAppFilters[info.signature] = appUsage;
+			allow = true;
+		} else {
+			allow = it->second->Allowed(notification->Title(),
+				notification->Type());
+		}
+
+		if (allow) {*/
+			BString groupName(view->Group());
+			appview_t::iterator aIt = fAppViews.find(groupName);
+			AppGroupView* group = NULL;
+			if (aIt == fAppViews.end()) {
+				group = new AppGroupView(this,
+					groupName == "" ? NULL : groupName.String());
+				fAppViews[groupName] = group;
+				GetLayout()->AddView(group);
+			} else
+				group = aIt->second;
+
+			view->EnableTimeout(false);
+			group->AddInfo(view);
+
+			_ShowHide();
+		}
+		case kViewClosed:
+		case kTimeoutExpired:
 		{
 			NotificationView* view = NULL;
 			if (message->FindPointer("view", (void**)&view) != B_OK)
@@ -224,6 +265,7 @@ NotificationWindow::MessageReceived(BMessage* message)
 
 			if (it != fViews.end())
 				fViews.erase(it);
+			
 			break;
 		}
 		case kRemoveGroupView:

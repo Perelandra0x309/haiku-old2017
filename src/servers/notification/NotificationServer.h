@@ -27,6 +27,7 @@ public:
 
 private:
 			NotificationWindow*	fWindow;
+			NotificationWindow*	fCenter;
 };
 
 

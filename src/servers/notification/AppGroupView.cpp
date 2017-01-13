@@ -13,6 +13,7 @@
 
 #include <algorithm>
 
+#include <Application.h>
 #include <ControlLook.h>
 #include <GroupLayout.h>
 #include <GroupView.h>
@@ -172,7 +173,8 @@ void
 AppGroupView::MessageReceived(BMessage* msg)
 {
 	switch (msg->what) {
-		case kRemoveView:
+		case kViewClosed:
+		case kTimeoutExpired:
 		{
 			NotificationView* view = NULL;
 			if (msg->FindPointer("view", (void**)&view) != B_OK)
@@ -184,7 +186,9 @@ AppGroupView::MessageReceived(BMessage* msg)
 
 			fInfo.erase(vIt);
 			view->RemoveSelf();
-			delete view;
+			
+			if (msg->what != kTimeoutExpired)
+				delete view;
 
 			fParent->PostMessage(msg);
 
@@ -193,6 +197,12 @@ AppGroupView::MessageReceived(BMessage* msg)
 				BMessage removeSelfMessage(kRemoveGroupView);
 				removeSelfMessage.AddPointer("view", this);
 				fParent->PostMessage(&removeSelfMessage);
+			}
+			
+			// Send message to add view to notification center
+			if (msg->what == kTimeoutExpired) {
+				msg->what = kAddView;
+				be_app->PostMessage(msg);
 			}
 			
 			break;

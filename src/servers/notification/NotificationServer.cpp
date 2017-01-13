@@ -43,6 +43,7 @@ void
 NotificationServer::ReadyToRun()
 {
 	fWindow = new NotificationWindow();
+	fCenter = new NotificationWindow();
 }
 
 
@@ -68,6 +69,13 @@ NotificationServer::MessageReceived(BMessage* message)
 			BMessenger(fWindow).SendMessage(message);
 			break;
 		}
+		
+		case kAddView:
+		{
+			BMessenger(fCenter).SendMessage(message);
+			break;
+		}
+		
 		default:
 			BApplication::MessageReceived(message);
 	}

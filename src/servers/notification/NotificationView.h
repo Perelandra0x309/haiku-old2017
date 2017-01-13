@@ -20,7 +20,9 @@ class BNotification;
 
 class NotificationWindow;
 
-const uint32 kRemoveView = 'ReVi';
+const uint32 kViewClosed = 'ReVi';
+const uint32 kTimeoutExpired = 'TiEx';
+const uint32 kAddView = 'AdVi';
 
 
 class NotificationView : public BView {
@@ -47,8 +49,10 @@ public:
 	virtual	status_t			GetSupportedSuites(BMessage* msg);
 
 			void 				SetText(float newMaxWidth = -1);
+			void				EnableTimeout(bool enabled = true);
 
 			const char*			MessageID() const;
+			const char*			Group() const;
 
 private:
 			void				_CalculateSize();
@@ -65,6 +69,7 @@ private:
 			NotificationWindow*	fParent;
 			BNotification*		fNotification;
 			bigtime_t			fTimeout;
+			bool				fTimeoutEnabled;
 
 			BMessageRunner*		fRunner;
 

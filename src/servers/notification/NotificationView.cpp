@@ -61,6 +61,7 @@ NotificationView::NotificationView(NotificationWindow* win,
 	fParent(win),
 	fNotification(notification),
 	fTimeout(timeout),
+	fTimeoutEnabled(true),
 	fRunner(NULL),
 	fBitmap(NULL),
 	fCloseClicked(false)
@@ -123,10 +124,12 @@ NotificationView::AttachedToWindow()
 {
 	SetText();
 
-	BMessage msg(kRemoveView);
-	msg.AddPointer("view", this);
+	if (fTimeoutEnabled) {
+		BMessage msg(kTimeoutExpired);
+		msg.AddPointer("view", this);
 
-	fRunner = new BMessageRunner(BMessenger(Parent()), &msg, fTimeout, 1);
+		fRunner = new BMessageRunner(BMessenger(Parent()), &msg, fTimeout, 1);
+	}
 }
 
 
@@ -396,7 +399,7 @@ NotificationView::MouseDown(BPoint point)
 			}
 
 			// Remove the info view after a click
-			BMessage remove_msg(kRemoveView);
+			BMessage remove_msg(kViewClosed);
 			remove_msg.AddPointer("view", this);
 
 			BMessenger msgr(Parent());
@@ -548,10 +551,24 @@ NotificationView::SetText(float newMaxWidth)
 }
 
 
+void
+NotificationView::EnableTimeout(bool enabled)
+{
+	fTimeoutEnabled = enabled;
+}
+
+
 const char*
 NotificationView::MessageID() const
 {
 	return fNotification->MessageID();
+}
+
+
+const char*
+NotificationView::Group() const
+{
+	return fNotification->Group();
 }
 
 
