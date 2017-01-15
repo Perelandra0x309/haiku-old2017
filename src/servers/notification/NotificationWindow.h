@@ -36,10 +36,16 @@ extern const float kPenSize;
 
 const uint32 kRemoveGroupView = 'RGVi';
 
+enum {
+	NEW_NOTIFICATIONS_WINDOW = 0,
+	SHELVED_NOTIFICATIONS_WINDOW
+};
+
 
 class NotificationWindow : public BWindow {
 public:
-									NotificationWindow();
+									NotificationWindow(uint32 type =
+										NEW_NOTIFICATIONS_WINDOW);
 	virtual							~NotificationWindow();
 
 	virtual	bool					QuitRequested();
@@ -52,6 +58,7 @@ public:
 										
 			icon_size				IconSize();
 			int32					Timeout();
+			uint32					Type();
 			float					Width();
 
 			void					_ShowHide();
@@ -78,6 +85,7 @@ private:
 			float					fWidth;
 			icon_size				fIconSize;
 			int32					fTimeout;
+			uint32					fType;
 
 			appfilter_t				fAppFilters;
 };

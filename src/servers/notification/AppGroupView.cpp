@@ -53,6 +53,11 @@ AppGroupView::Draw(BRect updateRect)
 	// Draw the header background
 	SetHighColor(tint_color(menuColor, 1.22));
 	SetLowColor(ui_color(B_PANEL_BACKGROUND_COLOR));
+	if (fParent->Type() == SHELVED_NOTIFICATIONS_WINDOW) {
+		SetLowColor(tint_color(ui_color(B_PANEL_BACKGROUND_COLOR), B_DARKEN_2_TINT));
+		SetViewColor(tint_color(ui_color(B_PANEL_BACKGROUND_COLOR), B_DARKEN_2_TINT));
+		Invalidate();
+	}
 	StrokeLine(bounds.LeftTop(), bounds.LeftBottom());
 	uint32 borders = BControlLook::B_TOP_BORDER
 		| BControlLook::B_BOTTOM_BORDER | BControlLook::B_RIGHT_BORDER;

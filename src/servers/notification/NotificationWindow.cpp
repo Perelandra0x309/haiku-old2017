@@ -54,13 +54,14 @@ const float kPenSize				= 1;
 const float kEdgePadding			= 2;
 const float kSmallPadding			= 2;
 
-NotificationWindow::NotificationWindow()
+NotificationWindow::NotificationWindow(uint32 type)
 	:
 	BWindow(BRect(0, 0, -1, -1), B_TRANSLATE_MARK("Notification"), 
 		B_BORDERED_WINDOW_LOOK, B_FLOATING_ALL_WINDOW_FEEL, B_AVOID_FRONT
 		| B_AVOID_FOCUS | B_NOT_CLOSABLE | B_NOT_ZOOMABLE | B_NOT_MINIMIZABLE
 		| B_NOT_RESIZABLE | B_NOT_MOVABLE | B_AUTO_UPDATE_SIZE_LIMITS, 
-		B_ALL_WORKSPACES)
+		B_ALL_WORKSPACES),
+	fType(type)
 {
 	SetLayout(new BGroupLayout(B_VERTICAL, 0));
 
@@ -249,7 +250,7 @@ NotificationWindow::MessageReceived(BMessage* message)
 			} else
 				group = aIt->second;
 
-			view->EnableTimeout(false);
+			view->SetType(SHELVED_NOTIFICATION);
 			group->AddInfo(view);
 
 			_ShowHide();
@@ -353,6 +354,13 @@ int32
 NotificationWindow::Timeout()
 {
 	return fTimeout;
+}
+
+
+uint32
+NotificationWindow::Type()
+{
+	return fType;
 }
 
 

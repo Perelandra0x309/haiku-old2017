@@ -8,7 +8,6 @@
 
 #include <Server.h>
 
-
 class NotificationWindow;
 
 
@@ -26,8 +25,10 @@ public:
 									const char* prop);
 
 private:
-			NotificationWindow*	fWindow;
-			NotificationWindow*	fCenter;
+	void						_ShowShelfView(bool show);
+	
+	NotificationWindow*			fWindow;
+	NotificationWindow*			fCenter;
 };
 
 

@@ -14,7 +14,9 @@
 #include <Beep.h>
 #include <Notifications.h>
 #include <PropertyInfo.h>
+#include <Roster.h>
 
+#include "DeskbarShelfView.h"
 #include "NotificationWindow.h"
 
 
@@ -36,14 +38,17 @@ NotificationServer::NotificationServer(status_t& error)
 
 NotificationServer::~NotificationServer()
 {
+	_ShowShelfView(false);
 }
 
 
 void
 NotificationServer::ReadyToRun()
 {
-	fWindow = new NotificationWindow();
-	fCenter = new NotificationWindow();
+	fWindow = new NotificationWindow(NEW_NOTIFICATIONS_WINDOW);
+	fCenter = new NotificationWindow(SHELVED_NOTIFICATIONS_WINDOW);
+	
+	_ShowShelfView(true);
 }
 
 
@@ -107,6 +112,43 @@ NotificationServer::ResolveSpecifier(BMessage* msg, int32 index,
 	}
 
 	return BApplication::ResolveSpecifier(msg, index, spec, from, prop);
+}
+
+
+void
+NotificationServer::_ShowShelfView(bool show)
+{
+	BDeskbar deskbar;
+	// Don't add another DeskbarShelfView to the Deskbar if one is already
+	// attached
+	if (show && !deskbar.HasItem(kShelfviewName)) {
+		BView* shelfView = new DeskbarShelfView();
+		status_t status = deskbar.AddItem(shelfView);
+		if (status < B_OK) {
+			fprintf(stderr, "Can't add deskbar replicant: %s\n",
+				strerror(status));
+			return;
+		}
+		delete shelfView;
+		
+	/*	entry_ref ref;
+		status_t status = be_roster->FindApp("application/x-vnd.Haiku-notification_server", &ref);
+		if (status < B_OK) {
+			fprintf(stderr, "Can't find application to tell deskbar: %s\n",
+				strerror(status));
+			return;
+		}
+		status = deskbar.AddItem(&ref);
+		if (status < B_OK) {
+			fprintf(stderr, "Can't add deskbar replicant: %s\n",
+				strerror(status));
+			return;
+		}*/
+		
+	}
+	// Remove DeskbarShelfView if there is one in the deskbar
+	else if (!show && deskbar.HasItem(kShelfviewName))
+		deskbar.RemoveItem(kShelfviewName);
 }
 
 

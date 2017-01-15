@@ -24,12 +24,18 @@ const uint32 kViewClosed = 'ReVi';
 const uint32 kTimeoutExpired = 'TiEx';
 const uint32 kAddView = 'AdVi';
 
+enum {
+	NEW_NOTIFICATION = 0,
+	SHELVED_NOTIFICATION
+};
+
 
 class NotificationView : public BView {
 public:
 								NotificationView(NotificationWindow* win,
 									BNotification* notification,
-									bigtime_t timeout = -1);
+									bigtime_t timeout = -1,
+									uint32 type = NEW_NOTIFICATION);
 	virtual						~NotificationView();
 
 	virtual	void 				AttachedToWindow();
@@ -49,7 +55,7 @@ public:
 	virtual	status_t			GetSupportedSuites(BMessage* msg);
 
 			void 				SetText(float newMaxWidth = -1);
-			void				EnableTimeout(bool enabled = true);
+			void				SetType(uint32 type);
 
 			const char*			MessageID() const;
 			const char*			Group() const;
@@ -69,7 +75,7 @@ private:
 			NotificationWindow*	fParent;
 			BNotification*		fNotification;
 			bigtime_t			fTimeout;
-			bool				fTimeoutEnabled;
+			uint32				fType;
 
 			BMessageRunner*		fRunner;
 

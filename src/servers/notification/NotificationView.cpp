@@ -55,13 +55,13 @@ property_info message_prop_list[] = {
 
 
 NotificationView::NotificationView(NotificationWindow* win,
-	BNotification* notification, bigtime_t timeout)
+	BNotification* notification, bigtime_t timeout, uint32 type)
 	:
 	BView("NotificationView", B_WILL_DRAW),
 	fParent(win),
 	fNotification(notification),
 	fTimeout(timeout),
-	fTimeoutEnabled(true),
+	fType(type),
 	fRunner(NULL),
 	fBitmap(NULL),
 	fCloseClicked(false)
@@ -124,7 +124,7 @@ NotificationView::AttachedToWindow()
 {
 	SetText();
 
-	if (fTimeoutEnabled) {
+	if (fType == NEW_NOTIFICATION) {
 		BMessage msg(kTimeoutExpired);
 		msg.AddPointer("view", this);
 
@@ -246,15 +246,26 @@ NotificationView::Draw(BRect updateRect)
 
 	BRect stripeRect = Bounds();
 	stripeRect.right = kIconStripeWidth;
-	SetHighColor(tint_color(ui_color(B_PANEL_BACKGROUND_COLOR),
-		B_DARKEN_1_TINT));
+	float darkenTint;
+	if (fType == NEW_NOTIFICATION)
+		darkenTint = B_DARKEN_1_TINT;
+	else
+		darkenTint = B_DARKEN_1_TINT;
+	SetHighColor(tint_color(ui_color(B_PANEL_BACKGROUND_COLOR), darkenTint));
 	FillRect(stripeRect);
 
-	SetHighColor(fStripeColor);
+	if (fType == NEW_NOTIFICATION)
+		SetHighColor(fStripeColor);
+	else
+		SetHighColor(tint_color(fStripeColor, darkenTint));
 	stripeRect.right = 2;
 	FillRect(stripeRect);
-
 	SetHighColor(ui_color(B_PANEL_TEXT_COLOR));
+	if (fType == SHELVED_NOTIFICATION) {
+		SetHighColor(tint_color(ui_color(B_PANEL_TEXT_COLOR), B_LIGHTEN_1_TINT));
+	//	SetViewColor(tint_color(ui_color(B_PANEL_BACKGROUND_COLOR), darkenTint));
+		Invalidate();
+	}
 	// Rectangle for icon and overlay icon
 	BRect iconRect(0, 0, 0, 0);
 
@@ -291,7 +302,7 @@ NotificationView::Draw(BRect updateRect)
 	if (groupView != NULL && groupView->ChildrenCount() > 1)
 		_DrawCloseButton(updateRect);
 
-	SetHighColor(tint_color(ViewColor(), B_DARKEN_1_TINT));
+	SetHighColor(tint_color(ViewColor(), darkenTint));
 	BPoint left(Bounds().left, Bounds().top);
 	BPoint right(Bounds().right, Bounds().top);
 	StrokeLine(left, right);
@@ -552,9 +563,9 @@ NotificationView::SetText(float newMaxWidth)
 
 
 void
-NotificationView::EnableTimeout(bool enabled)
+NotificationView::SetType(uint32 type)
 {
-	fTimeoutEnabled = enabled;
+	fType = type;
 }
 
 
