@@ -22,7 +22,7 @@ class NotificationWindow;
 
 const uint32 kViewClosed = 'ReVi';
 const uint32 kTimeoutExpired = 'TiEx';
-const uint32 kAddView = 'AdVi';
+const uint32 kAddViewToCenter = 'AdVi';
 
 enum {
 	NEW_NOTIFICATION = 0,

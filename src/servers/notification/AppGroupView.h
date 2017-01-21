@@ -13,6 +13,8 @@
 #include <GroupView.h>
 #include <String.h>
 
+#include "GroupHeaderView.h"
+
 class BGroupView;
 
 class NotificationWindow;
@@ -24,9 +26,7 @@ class AppGroupView : public BGroupView {
 public:
 								AppGroupView(NotificationWindow* win, const char* label);
 
-	virtual	void				MouseDown(BPoint point);
 	virtual	void				MessageReceived(BMessage* msg);
-			void				Draw(BRect updateRect);
 
 			bool				HasChildren();
 			int32				ChildrenCount();
@@ -36,15 +36,11 @@ public:
 			const BString&		Group() const;
 
 private:
-			void				_DrawCloseButton(const BRect& updateRect);
 
 			BString				fLabel;
 			NotificationWindow*	fParent;
 			infoview_t			fInfo;
-			bool				fCollapsed;
-			BRect				fCloseRect;
-			BRect				fCollapseRect;
-			bool				fCloseClicked;
+			GroupHeaderView*	fHeaderView;
 };
 
 #endif	// _APP_GROUP_VIEW_H

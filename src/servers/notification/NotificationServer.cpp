@@ -47,7 +47,7 @@ NotificationServer::ReadyToRun()
 {
 	fWindow = new NotificationWindow(NEW_NOTIFICATIONS_WINDOW);
 	fCenter = new NotificationWindow(SHELVED_NOTIFICATIONS_WINDOW);
-	
+
 	_ShowShelfView(true);
 }
 
@@ -74,13 +74,14 @@ NotificationServer::MessageReceived(BMessage* message)
 			BMessenger(fWindow).SendMessage(message);
 			break;
 		}
-		
-		case kAddView:
+
+		case kAddViewToCenter:
+		case kDeskbarReplicantClicked:
 		{
-			BMessenger(fCenter).SendMessage(message);
+			fCenter->PostMessage(message);
 			break;
 		}
-		
+
 		default:
 			BApplication::MessageReceived(message);
 	}
@@ -130,21 +131,6 @@ NotificationServer::_ShowShelfView(bool show)
 			return;
 		}
 		delete shelfView;
-		
-	/*	entry_ref ref;
-		status_t status = be_roster->FindApp("application/x-vnd.Haiku-notification_server", &ref);
-		if (status < B_OK) {
-			fprintf(stderr, "Can't find application to tell deskbar: %s\n",
-				strerror(status));
-			return;
-		}
-		status = deskbar.AddItem(&ref);
-		if (status < B_OK) {
-			fprintf(stderr, "Can't add deskbar replicant: %s\n",
-				strerror(status));
-			return;
-		}*/
-		
 	}
 	// Remove DeskbarShelfView if there is one in the deskbar
 	else if (!show && deskbar.HasItem(kShelfviewName))

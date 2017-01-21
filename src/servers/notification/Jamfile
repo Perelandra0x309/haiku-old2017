@@ -5,6 +5,7 @@ UsePrivateHeaders app notification ;
 Server notification_server :
 	AppGroupView.cpp
 	DeskbarShelfView.cpp
+	GroupHeaderView.cpp
 	NotificationServer.cpp
 	NotificationView.cpp
 	NotificationWindow.cpp

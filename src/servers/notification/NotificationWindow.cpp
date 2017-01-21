@@ -15,6 +15,7 @@
 #include <algorithm>
 
 #include <Alert.h>
+#include <Button.h>
 #include <Application.h>
 #include <Catalog.h>
 #include <Deskbar.h>
@@ -22,13 +23,18 @@
 #include <File.h>
 #include <FindDirectory.h>
 #include <GroupLayout.h>
+#include <LayoutBuilder.h>
 #include <NodeMonitor.h>
 #include <Notifications.h>
 #include <Path.h>
 #include <PropertyInfo.h>
+#include <ScrollBar.h>
+#include <SeparatorView.h>
+#include <StringView.h>
 
 #include "AppGroupView.h"
 #include "AppUsage.h"
+#include "DeskbarShelfView.h"
 
 
 #undef B_TRANSLATION_CONTEXT
@@ -36,7 +42,7 @@
 
 
 property_info main_prop_list[] = {
-	{"message", {B_GET_PROPERTY, 0}, {B_INDEX_SPECIFIER, 0}, 
+	{"message", {B_GET_PROPERTY, 0}, {B_INDEX_SPECIFIER, 0},
 		"get a message"},
 	{"message", {B_COUNT_PROPERTIES, 0}, {B_DIRECT_SPECIFIER, 0},
 		"count messages"},
@@ -56,14 +62,53 @@ const float kSmallPadding			= 2;
 
 NotificationWindow::NotificationWindow(uint32 type)
 	:
-	BWindow(BRect(0, 0, -1, -1), B_TRANSLATE_MARK("Notification"), 
+	BWindow(BRect(0, 0, -1, -1), B_TRANSLATE_MARK("Notification"),
 		B_BORDERED_WINDOW_LOOK, B_FLOATING_ALL_WINDOW_FEEL, B_AVOID_FRONT
 		| B_AVOID_FOCUS | B_NOT_CLOSABLE | B_NOT_ZOOMABLE | B_NOT_MINIMIZABLE
-		| B_NOT_RESIZABLE | B_NOT_MOVABLE | B_AUTO_UPDATE_SIZE_LIMITS, 
+		| B_NOT_RESIZABLE | B_NOT_MOVABLE | B_AUTO_UPDATE_SIZE_LIMITS,
 		B_ALL_WORKSPACES),
 	fType(type)
+//	fContainerView(NULL),
+//	fScrollView(NULL)
 {
-	SetLayout(new BGroupLayout(B_VERTICAL, 0));
+	if (fType == NEW_NOTIFICATIONS_WINDOW)
+		SetLayout(new BGroupLayout(B_VERTICAL, 0));
+	else {
+		BStringView* label = new BStringView("label", "Notification Center");
+		BFont labelFont(be_plain_font);
+		labelFont.SetFace(B_BOLD_FACE);
+		label->SetFont(&labelFont, B_FONT_FACE);
+		label->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT,
+			B_ALIGN_VERTICAL_UNSET));
+		BButton* settingsButton = new BButton("Settings");
+		settingsButton->SetExplicitAlignment(BAlignment(B_ALIGN_RIGHT,
+			B_ALIGN_VERTICAL_UNSET));
+		settingsButton->SetFlat(true);
+
+		fContainerView = new BGroupView(B_VERTICAL, 0);
+	//	fContainerView = new ScrollableGroupView();
+	//	fScrollView = new BScrollView("Notifications",
+	//				fContainerView, 0, false, true, B_NO_BORDER);
+		fScrollBar = new BScrollBar("scrollbar", fContainerView,
+			0, 0, B_VERTICAL);
+		fScrollBar->SetExplicitAlignment(BAlignment(B_ALIGN_RIGHT,
+			B_ALIGN_VERTICAL_UNSET));
+
+		BLayoutBuilder::Group<>(this, B_VERTICAL, 0)
+			.AddGroup(B_HORIZONTAL, 0)
+				.SetInsets(B_USE_DEFAULT_SPACING, 0, B_USE_DEFAULT_SPACING, 0)
+				.Add(label)
+				.AddGlue()
+				.Add(settingsButton)
+			.End()
+			.Add(new BSeparatorView(B_HORIZONTAL))
+	//		.Add(fScrollView)
+			.AddGroup(B_HORIZONTAL, 0)
+				.Add(fContainerView)
+				.Add(fScrollBar)
+			.End()
+		.End();
+	}
 
 	_LoadSettings(true);
 
@@ -215,12 +260,12 @@ NotificationWindow::MessageReceived(BMessage* message)
 			message->SendReply(&reply);
 			break;
 		}
-		case kAddView:
+		case kAddViewToCenter:
 		{
 			NotificationView* view = NULL;
 			if (message->FindPointer("view", (void**)&view) != B_OK)
 				return;
-			
+
 		// TODO can we assume it has already gone through filtering?
 /*			bool allow = false;
 		appfilter_t::iterator it = fAppFilters.find(info.signature);
@@ -246,7 +291,7 @@ NotificationWindow::MessageReceived(BMessage* message)
 				group = new AppGroupView(this,
 					groupName == "" ? NULL : groupName.String());
 				fAppViews[groupName] = group;
-				GetLayout()->AddView(group);
+				fContainerView->GroupLayout()->AddView(group);
 			} else
 				group = aIt->second;
 
@@ -266,7 +311,7 @@ NotificationWindow::MessageReceived(BMessage* message)
 
 			if (it != fViews.end())
 				fViews.erase(it);
-			
+
 			break;
 		}
 		case kRemoveGroupView:
@@ -291,6 +336,17 @@ NotificationWindow::MessageReceived(BMessage* message)
 			_ShowHide();
 			break;
 		}
+
+		case kDeskbarReplicantClicked: {
+			if (IsHidden()) {
+				SetPosition();
+				Show();
+			}
+			else
+				Hide();
+			break;
+		}
+
 		default:
 			BWindow::MessageReceived(message);
 	}
@@ -411,7 +467,7 @@ NotificationWindow::SetPosition()
 	float rightOffset = bounds.right - Frame().right;
 	float bottomOffset = bounds.bottom - Frame().bottom;
 		// Size of the borders around the window
-	
+
 	float x = Frame().left, y = Frame().top;
 		// If we can't guess, don't move...
 

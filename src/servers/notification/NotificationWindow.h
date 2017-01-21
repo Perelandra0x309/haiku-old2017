@@ -13,10 +13,13 @@
 #include <map>
 
 #include <AppFileInfo.h>
+#include <GroupView.h>
+#include <ScrollView.h>
 #include <String.h>
 #include <Window.h>
 
 #include "NotificationView.h"
+//#include "ScrollableGroupView.h"
 
 
 class AppGroupView;
@@ -55,7 +58,7 @@ public:
 	virtual	void					ScreenChanged(BRect frame, color_space mode);
 	virtual	BHandler*				ResolveSpecifier(BMessage*, int32, BMessage*,
 										int32, const char*);
-										
+
 			icon_size				IconSize();
 			int32					Timeout();
 			uint32					Type();
@@ -86,6 +89,10 @@ private:
 			icon_size				fIconSize;
 			int32					fTimeout;
 			uint32					fType;
+		//	ScrollableGroupView*	fContainerView;
+		//	BScrollView*			fScrollView;
+			BGroupView*				fContainerView;
+			BScrollBar*				fScrollBar;
 
 			appfilter_t				fAppFilters;
 };
