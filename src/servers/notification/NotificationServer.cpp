@@ -77,6 +77,7 @@ NotificationServer::MessageReceived(BMessage* message)
 
 		case kAddViewToCenter:
 		case kDeskbarReplicantClicked:
+		case kDeskbarRegistration:
 		{
 			fCenter->PostMessage(message);
 			break;

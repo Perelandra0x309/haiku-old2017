@@ -9,6 +9,7 @@ Server notification_server :
 	NotificationServer.cpp
 	NotificationView.cpp
 	NotificationWindow.cpp
+	ScrollableGroupView.cpp
 	: be translation [ TargetLibstdc++ ] libnotification.a localestub
 	: notification_server.rdef
 ;

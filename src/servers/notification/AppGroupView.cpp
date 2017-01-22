@@ -29,20 +29,22 @@ AppGroupView::AppGroupView(NotificationWindow* win, const char* label)
 	fLabel(label),
 	fParent(win)
 {
+	SetExplicitAlignment(BAlignment(B_ALIGN_HORIZONTAL_UNSET,
+			B_ALIGN_TOP));
 	fHeaderView = new GroupHeaderView(this, label, fParent->Type());
 	GetLayout()->AddView(fHeaderView);
 }
 
 
 void
-AppGroupView::MessageReceived(BMessage* msg)
+AppGroupView::MessageReceived(BMessage* message)
 {
-	switch (msg->what) {
+	switch (message->what) {
 		case kViewClosed:
 		case kTimeoutExpired:
 		{
 			NotificationView* view = NULL;
-			if (msg->FindPointer("view", (void**)&view) != B_OK)
+			if (message->FindPointer("view", (void**)&view) != B_OK)
 				return;
 
 			infoview_t::iterator vIt = find(fInfo.begin(), fInfo.end(), view);
@@ -52,10 +54,10 @@ AppGroupView::MessageReceived(BMessage* msg)
 			fInfo.erase(vIt);
 			view->RemoveSelf();
 
-			if (msg->what != kTimeoutExpired)
+			if (message->what != kTimeoutExpired)
 				delete view;
 
-			fParent->PostMessage(msg);
+			fParent->PostMessage(message);
 
 			if (!this->HasChildren()) {
 				Hide();
@@ -65,9 +67,9 @@ AppGroupView::MessageReceived(BMessage* msg)
 			}
 
 			// Send message to add view to notification center
-			if (msg->what == kTimeoutExpired) {
-				msg->what = kAddViewToCenter;
-				be_app->PostMessage(msg);
+			if (message->what == kTimeoutExpired) {
+				message->what = kAddViewToCenter;
+				be_app->PostMessage(message);
 			}
 
 			break;
@@ -83,9 +85,9 @@ AppGroupView::MessageReceived(BMessage* msg)
 			fInfo.clear();
 
 			// Remove ourselves from the parent view
-			BMessage message(kRemoveGroupView);
-			message.AddPointer("view", this);
-			fParent->PostMessage(&message);
+			BMessage removeMessage(kRemoveGroupView);
+			removeMessage.AddPointer("view", this);
+			fParent->PostMessage(&removeMessage);
 			break;
 		}
 
@@ -112,7 +114,7 @@ AppGroupView::MessageReceived(BMessage* msg)
 			break;
 		}
 		default:
-			BView::MessageReceived(msg);
+			BView::MessageReceived(message);
 	}
 }
 

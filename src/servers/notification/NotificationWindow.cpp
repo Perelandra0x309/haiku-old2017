@@ -67,47 +67,58 @@ NotificationWindow::NotificationWindow(uint32 type)
 		| B_AVOID_FOCUS | B_NOT_CLOSABLE | B_NOT_ZOOMABLE | B_NOT_MINIMIZABLE
 		| B_NOT_RESIZABLE | B_NOT_MOVABLE | B_AUTO_UPDATE_SIZE_LIMITS,
 		B_ALL_WORKSPACES),
-	fType(type)
-//	fContainerView(NULL),
-//	fScrollView(NULL)
+	fType(type),
+	fContainerView(NULL),
+	fScrollBar(NULL)
 {
 	if (fType == NEW_NOTIFICATIONS_WINDOW)
 		SetLayout(new BGroupLayout(B_VERTICAL, 0));
 	else {
-		BStringView* label = new BStringView("label", "Notification Center");
+		BStringView* label = new BStringView("label",
+			B_TRANSLATE("Notification Center"));
 		BFont labelFont(be_plain_font);
 		labelFont.SetFace(B_BOLD_FACE);
 		label->SetFont(&labelFont, B_FONT_FACE);
 		label->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT,
 			B_ALIGN_VERTICAL_UNSET));
-		BButton* settingsButton = new BButton("Settings");
+		BButton* settingsButton = new BButton(B_TRANSLATE("Settings"),
+			new BMessage(kSettingsButtonClicked));
 		settingsButton->SetExplicitAlignment(BAlignment(B_ALIGN_RIGHT,
 			B_ALIGN_VERTICAL_UNSET));
 		settingsButton->SetFlat(true);
 
-		fContainerView = new BGroupView(B_VERTICAL, 0);
-	//	fContainerView = new ScrollableGroupView();
-	//	fScrollView = new BScrollView("Notifications",
-	//				fContainerView, 0, false, true, B_NO_BORDER);
+//		fContainerView = new BGroupView(B_VERTICAL, 0); // testing
+		fContainerView = new ScrollableGroupView();
+		//fContainerView->GetLayout()->SetExplicitMaxSize(BSize(B_SIZE_UNSET, 200));
+		//fContainerView->InvalidateLayout();
+
 		fScrollBar = new BScrollBar("scrollbar", fContainerView,
 			0, 0, B_VERTICAL);
 		fScrollBar->SetExplicitAlignment(BAlignment(B_ALIGN_RIGHT,
 			B_ALIGN_VERTICAL_UNSET));
+		fScrollBar->Hide();
 
 		BLayoutBuilder::Group<>(this, B_VERTICAL, 0)
 			.AddGroup(B_HORIZONTAL, 0)
-				.SetInsets(B_USE_DEFAULT_SPACING, 0, B_USE_DEFAULT_SPACING, 0)
+				.SetInsets(B_USE_DEFAULT_SPACING, 0, 0, 0)
 				.Add(label)
 				.AddGlue()
+				.Add(new BSeparatorView(B_VERTICAL))
 				.Add(settingsButton)
 			.End()
 			.Add(new BSeparatorView(B_HORIZONTAL))
-	//		.Add(fScrollView)
 			.AddGroup(B_HORIZONTAL, 0)
 				.Add(fContainerView)
 				.Add(fScrollBar)
 			.End()
 		.End();
+
+		//GetLayout()->SetExplicitMaxSize(BSize(B_SIZE_UNSET, 200));
+//	UpdateSizeLimits();
+//	InvalidateLayout();
+//	Layout(true);
+	//ResizeTo(Bounds().Width(), 200);
+		//SetSizeLimits(B_SIZE_UNSET, B_SIZE_UNSET, B_SIZE_UNSET, 200);
 	}
 
 	_LoadSettings(true);
@@ -145,21 +156,21 @@ NotificationWindow::WorkspaceActivated(int32 /*workspace*/, bool active)
 {
 	// Ensure window is in the correct position
 	if (active)
-		SetPosition();
+		_SetPosition();
 }
 
 
 void
 NotificationWindow::FrameResized(float width, float height)
 {
-	SetPosition();
+	_SetPosition();
 }
 
 
 void
 NotificationWindow::ScreenChanged(BRect frame, color_space mode)
 {
-	SetPosition();
+	_SetPosition();
 }
 
 
@@ -172,6 +183,7 @@ NotificationWindow::MessageReceived(BMessage* message)
 			_LoadSettings();
 			break;
 		}
+
 		case B_COUNT_PROPERTIES:
 		{
 			BMessage reply(B_REPLY);
@@ -196,6 +208,7 @@ NotificationWindow::MessageReceived(BMessage* message)
 			message->SendReply(&reply);
 			break;
 		}
+
 		case B_CREATE_PROPERTY:
 		case kNotificationMessage:
 		{
@@ -260,6 +273,7 @@ NotificationWindow::MessageReceived(BMessage* message)
 			message->SendReply(&reply);
 			break;
 		}
+
 		case kAddViewToCenter:
 		{
 			NotificationView* view = NULL;
@@ -297,9 +311,15 @@ NotificationWindow::MessageReceived(BMessage* message)
 
 			view->SetType(SHELVED_NOTIFICATION);
 			group->AddInfo(view);
+			view->Invalidate();
+			_DrawDeskbarNewIcon();
 
-			_ShowHide();
+	//		fContainerView->GetLayout()->SetExplicitMaxSize(BSize(B_SIZE_UNSET, 200));
+	//		fContainerView->InvalidateLayout();
+	//		_ResizeScrollbar();
+			//_ShowHide(); // TODO for testing
 		}
+
 		case kViewClosed:
 		case kTimeoutExpired:
 		{
@@ -314,6 +334,7 @@ NotificationWindow::MessageReceived(BMessage* message)
 
 			break;
 		}
+
 		case kRemoveGroupView:
 		{
 			AppGroupView* view = NULL;
@@ -337,13 +358,34 @@ NotificationWindow::MessageReceived(BMessage* message)
 			break;
 		}
 
-		case kDeskbarReplicantClicked: {
+		case kSettingsButtonClicked:
+			be_roster->Launch("application/x-vnd.Haiku-Notifications");
+			break;
+
+		case kDeskbarReplicantClicked:
 			if (IsHidden()) {
-				SetPosition();
+				_SetPosition();
 				Show();
 			}
-			else
+			else {
 				Hide();
+			}
+			break;
+
+		case kDeskbarRegistration:
+		{
+			status_t result = message->FindMessenger(kKeyMessenger,
+				&fDeskbarViewMessenger);
+			if (result != B_OK) {
+				BAlert* alert = new BAlert("error",
+					B_TRANSLATE("The Notification server could not "
+					"successfully connect to its deskbar replicant.  The "
+					"replicant will not indicate when new notifications are "
+					"in the Notification Center"), B_TRANSLATE("OK"),
+					NULL, NULL, B_WIDTH_AS_USUAL, B_WARNING_ALERT);
+				alert->SetShortcut(0, B_ESCAPE);
+				alert->Go(NULL);
+			}
 			break;
 		}
 
@@ -432,11 +474,12 @@ NotificationWindow::_ShowHide()
 {
 	if (fAppViews.empty() && !IsHidden()) {
 		Hide();
+		_DrawDeskbarStandardIcon();
 		return;
 	}
 
 	if (IsHidden()) {
-		SetPosition();
+		_SetPosition();
 		Show();
 	}
 }
@@ -454,7 +497,7 @@ NotificationWindow::NotificationViewSwapped(NotificationView* stale,
 
 
 void
-NotificationWindow::SetPosition()
+NotificationWindow::_SetPosition()
 {
 	Layout(true);
 
@@ -506,6 +549,30 @@ NotificationWindow::SetPosition()
 	}
 
 	MoveTo(x, y);
+}
+
+
+void
+NotificationWindow::_ResizeScrollbar()
+{
+	if (fScrollBar == NULL)
+		return;
+
+	BRect layoutArea = fContainerView->GroupLayout()->LayoutArea();
+	float layoutHeight = layoutArea.Height();
+
+	BLayoutItem* lastItem = fContainerView->GroupLayout()->ItemAt(
+		fContainerView->GroupLayout()->CountItems() - 1);
+	if (lastItem != NULL)
+		layoutHeight = lastItem->Frame().bottom;
+
+	float viewHeight = fContainerView->Bounds().Height();
+	float max = layoutHeight- viewHeight;
+	fScrollBar->SetRange(0, max);
+	if (layoutHeight > 0)
+		fScrollBar->SetProportion(viewHeight / layoutHeight);
+	else
+		fScrollBar->SetProportion(1);
 }
 
 
@@ -603,4 +670,20 @@ NotificationWindow::_LoadDisplaySettings(BMessage& settings)
 		NotificationView* view = (*it);
 		view->Invalidate();
 	}
+}
+
+
+void
+NotificationWindow::_DrawDeskbarNewIcon()
+{
+	if (fDeskbarViewMessenger.IsValid())
+		fDeskbarViewMessenger.SendMessage(kShowNewIcon);
+}
+
+
+void
+NotificationWindow::_DrawDeskbarStandardIcon()
+{
+	if (fDeskbarViewMessenger.IsValid())
+		fDeskbarViewMessenger.SendMessage(kShowStandardIcon);
 }

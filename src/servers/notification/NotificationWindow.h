@@ -19,7 +19,7 @@
 #include <Window.h>
 
 #include "NotificationView.h"
-//#include "ScrollableGroupView.h"
+#include "ScrollableGroupView.h"
 
 
 class AppGroupView;
@@ -38,6 +38,7 @@ extern const float kExpandSize;
 extern const float kPenSize;
 
 const uint32 kRemoveGroupView = 'RGVi';
+const uint32 kSettingsButtonClicked = 'SeCl';
 
 enum {
 	NEW_NOTIFICATIONS_WINDOW = 0,
@@ -64,7 +65,6 @@ public:
 			uint32					Type();
 			float					Width();
 
-			void					_ShowHide();
 
 private:
 	friend class AppGroupView;
@@ -73,11 +73,15 @@ private:
 										NotificationView* stale,
 										NotificationView* fresh);
 
-			void					SetPosition();
+			void					_SetPosition();
+			void					_ResizeScrollbar();
+			void					_ShowHide();
 			void					_LoadSettings(bool startMonitor = false);
 			void					_LoadAppFilters(BMessage& settings);
 			void					_LoadGeneralSettings(BMessage& settings);
 			void					_LoadDisplaySettings(BMessage& settings);
+			void					_DrawDeskbarNewIcon();
+			void					_DrawDeskbarStandardIcon();
 
 			views_t					fViews;
 			appview_t				fAppViews;
@@ -89,12 +93,13 @@ private:
 			icon_size				fIconSize;
 			int32					fTimeout;
 			uint32					fType;
-		//	ScrollableGroupView*	fContainerView;
-		//	BScrollView*			fScrollView;
-			BGroupView*				fContainerView;
+			ScrollableGroupView*	fContainerView;
+		//	BGroupView*				fContainerView;
 			BScrollBar*				fScrollBar;
 
 			appfilter_t				fAppFilters;
+
+			BMessenger				fDeskbarViewMessenger;
 };
 
 extern property_info main_prop_list[];
