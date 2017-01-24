@@ -11,13 +11,22 @@
 
 #include <stdlib.h>
 
+#include <Alert.h>
 #include <Beep.h>
+#include <Catalog.h>
+#include <File.h>
+#include <FindDirectory.h>
+#include <NodeMonitor.h>
 #include <Notifications.h>
+#include <Path.h>
 #include <PropertyInfo.h>
 #include <Roster.h>
 
 #include "DeskbarShelfView.h"
 #include "NotificationWindow.h"
+
+#undef B_TRANSLATION_CONTEXT
+#define B_TRANSLATION_CONTEXT "NotificationServer"
 
 
 const char* kSoundNames[] = {
@@ -45,10 +54,12 @@ NotificationServer::~NotificationServer()
 void
 NotificationServer::ReadyToRun()
 {
-	fWindow = new NotificationWindow(NEW_NOTIFICATIONS_WINDOW);
+	fWindow = new NotificationWindow();
 	fCenter = new NotificationWindow(SHELVED_NOTIFICATIONS_WINDOW);
 
 	_ShowShelfView(true);
+
+	_LoadSettings();
 }
 
 
@@ -56,6 +67,12 @@ void
 NotificationServer::MessageReceived(BMessage* message)
 {
 	switch (message->what) {
+		case B_NODE_MONITOR:
+		{
+			_LoadSettings();
+			break;
+		}
+
 		case kNotificationMessage:
 		{
 			// Skip this message if we don't have the window
@@ -116,6 +133,32 @@ NotificationServer::ResolveSpecifier(BMessage* msg, int32 index,
 	return BApplication::ResolveSpecifier(msg, index, spec, from, prop);
 }
 
+
+void
+NotificationServer::_LoadSettings()
+{
+	BPath path;
+	BMessage settings;
+	if (find_directory(B_USER_SETTINGS_DIRECTORY, &path) != B_OK)
+		return;
+
+	path.Append(kSettingsFile);
+	BFile file(path.Path(), B_READ_ONLY);
+	settings.Unflatten(&file);
+	fWindow->LoadSettings(settings);
+	fCenter->LoadSettings(settings);
+
+	node_ref nref;
+	BEntry entry(path.Path());
+	entry.GetNodeRef(&nref);
+	if (watch_node(&nref, B_WATCH_ALL, BMessenger(this)) != B_OK) {
+		BAlert* alert = new BAlert(B_TRANSLATE("Warning"),
+					B_TRANSLATE("Couldn't start general settings monitor.\n"
+					"Live filter changes disabled."), B_TRANSLATE("OK"));
+		alert->SetFlags(alert->Flags() | B_CLOSE_ON_ESCAPE);
+		alert->Go();
+	}
+}
 
 void
 NotificationServer::_ShowShelfView(bool show)

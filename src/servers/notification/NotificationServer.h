@@ -25,8 +25,9 @@ public:
 									const char* prop);
 
 private:
+	void						_LoadSettings();
 	void						_ShowShelfView(bool show);
-	
+
 	NotificationWindow*			fWindow;
 	NotificationWindow*			fCenter;
 };

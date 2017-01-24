@@ -121,8 +121,6 @@ NotificationWindow::NotificationWindow(uint32 type)
 		//SetSizeLimits(B_SIZE_UNSET, B_SIZE_UNSET, B_SIZE_UNSET, 200);
 	}
 
-	_LoadSettings(true);
-
 	// Start the message loop
 	Hide();
 	Show();
@@ -178,12 +176,6 @@ void
 NotificationWindow::MessageReceived(BMessage* message)
 {
 	switch (message->what) {
-		case B_NODE_MONITOR:
-		{
-			_LoadSettings();
-			break;
-		}
-
 		case B_COUNT_PROPERTIES:
 		{
 			BMessage reply(B_REPLY);
@@ -199,7 +191,7 @@ NotificationWindow::MessageReceived(BMessage* message)
 				messageOkay = false;
 
 			if (messageOkay)
-				reply.AddInt32("result", fViews.size());
+				reply.AddInt32("result", fAppViews.size());
 			else {
 				reply.what = B_MESSAGE_NOT_UNDERSTOOD;
 				reply.AddInt32("error", B_ERROR);
@@ -320,21 +312,6 @@ NotificationWindow::MessageReceived(BMessage* message)
 			//_ShowHide(); // TODO for testing
 		}
 
-		case kViewClosed:
-		case kTimeoutExpired:
-		{
-			NotificationView* view = NULL;
-			if (message->FindPointer("view", (void**)&view) != B_OK)
-				return;
-
-			views_t::iterator it = find(fViews.begin(), fViews.end(), view);
-
-			if (it != fViews.end())
-				fViews.erase(it);
-
-			break;
-		}
-
 		case kRemoveGroupView:
 		{
 			AppGroupView* view = NULL;
@@ -418,9 +395,9 @@ NotificationWindow::ResolveSpecifier(BMessage* msg, int32 index,
 				if (spec->FindInt32("index", &i) != B_OK)
 					i = -1;
 
-				if (i >= 0 && i < (int32)fViews.size()) {
+				if (i >= 0 && i < (int32)fAppViews.size()) {
 					msg->PopSpecifier();
-					handler = fViews[i];
+				//	handler = fAppViews[i]; //TODO fix this
 				} else
 					handler = NULL;
 				break;
@@ -482,17 +459,6 @@ NotificationWindow::_ShowHide()
 		_SetPosition();
 		Show();
 	}
-}
-
-
-void
-NotificationWindow::NotificationViewSwapped(NotificationView* stale,
-	NotificationView* fresh)
-{
-	views_t::iterator it = find(fViews.begin(), fViews.end(), stale);
-
-	if (it != fViews.end())
-		*it = fresh;
 }
 
 
@@ -577,36 +543,11 @@ NotificationWindow::_ResizeScrollbar()
 
 
 void
-NotificationWindow::_LoadSettings(bool startMonitor)
+NotificationWindow::LoadSettings(BMessage& settings)
 {
-	BPath path;
-	BMessage settings;
-
-	if (find_directory(B_USER_SETTINGS_DIRECTORY, &path) != B_OK)
-		return;
-
-	path.Append(kSettingsFile);
-
-	BFile file(path.Path(), B_READ_ONLY);
-	settings.Unflatten(&file);
-
 	_LoadGeneralSettings(settings);
 	_LoadDisplaySettings(settings);
 	_LoadAppFilters(settings);
-
-	if (startMonitor) {
-		node_ref nref;
-		BEntry entry(path.Path());
-		entry.GetNodeRef(&nref);
-
-		if (watch_node(&nref, B_WATCH_ALL, BMessenger(this)) != B_OK) {
-			BAlert* alert = new BAlert(B_TRANSLATE("Warning"),
-						B_TRANSLATE("Couldn't start general settings monitor.\n"
-						"Live filter changes disabled."), B_TRANSLATE("OK"));
-			alert->SetFlags(alert->Flags() | B_CLOSE_ON_ESCAPE);
-			alert->Go();
-		}
-	}
 }
 
 
@@ -639,13 +580,6 @@ NotificationWindow::_LoadGeneralSettings(BMessage& settings)
 	}
 	if (settings.FindInt32(kTimeoutName, &fTimeout) != B_OK)
 		fTimeout = kDefaultTimeout;
-
-	// Notify the view about the change
-	views_t::iterator it;
-	for (it = fViews.begin(); it != fViews.end(); ++it) {
-		NotificationView* view = (*it);
-		view->Invalidate();
-	}
 }
 
 
@@ -664,12 +598,7 @@ NotificationWindow::_LoadDisplaySettings(BMessage& settings)
 	else
 		fIconSize = (icon_size)setting;
 
-	// Notify the view about the change
-	views_t::iterator it;
-	for (it = fViews.begin(); it != fViews.end(); ++it) {
-		NotificationView* view = (*it);
-		view->Invalidate();
-	}
+	//TODO Notify the group views about the change?
 }
 
 

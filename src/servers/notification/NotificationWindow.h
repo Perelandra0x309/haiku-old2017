@@ -29,7 +29,6 @@ struct property_info;
 
 typedef std::map<BString, AppGroupView*> appview_t;
 typedef std::map<BString, AppUsage*> appfilter_t;
-typedef std::vector<NotificationView*> views_t;
 
 extern const float kEdgePadding;
 extern const float kSmallPadding;
@@ -60,6 +59,7 @@ public:
 	virtual	BHandler*				ResolveSpecifier(BMessage*, int32, BMessage*,
 										int32, const char*);
 
+			void					LoadSettings(BMessage& settings);
 			icon_size				IconSize();
 			int32					Timeout();
 			uint32					Type();
@@ -69,22 +69,17 @@ public:
 private:
 	friend class AppGroupView;
 
-			void					NotificationViewSwapped(
-										NotificationView* stale,
-										NotificationView* fresh);
-
 			void					_SetPosition();
 			void					_ResizeScrollbar();
 			void					_ShowHide();
-			void					_LoadSettings(bool startMonitor = false);
 			void					_LoadAppFilters(BMessage& settings);
 			void					_LoadGeneralSettings(BMessage& settings);
 			void					_LoadDisplaySettings(BMessage& settings);
 			void					_DrawDeskbarNewIcon();
 			void					_DrawDeskbarStandardIcon();
 
-			views_t					fViews;
 			appview_t				fAppViews;
+			appfilter_t				fAppFilters;
 
 			BString					fStatusText;
 			BString					fMessageText;
@@ -96,8 +91,6 @@ private:
 			ScrollableGroupView*	fContainerView;
 		//	BGroupView*				fContainerView;
 			BScrollBar*				fScrollBar;
-
-			appfilter_t				fAppFilters;
 
 			BMessenger				fDeskbarViewMessenger;
 };

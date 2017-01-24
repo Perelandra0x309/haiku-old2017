@@ -57,8 +57,6 @@ AppGroupView::MessageReceived(BMessage* message)
 			if (message->what != kTimeoutExpired)
 				delete view;
 
-			fParent->PostMessage(message);
-
 			if (!this->HasChildren()) {
 				Hide();
 				BMessage removeSelfMessage(kRemoveGroupView);
@@ -131,7 +129,6 @@ AppGroupView::AddInfo(NotificationView* view)
 		for (int32 i = 0; i < children; i++) {
 			if (id == fInfo[i]->MessageID()) {
 				NotificationView* oldView = fInfo[i];
-				fParent->NotificationViewSwapped(oldView, view);
 				oldView->RemoveSelf();
 				delete oldView;
 
