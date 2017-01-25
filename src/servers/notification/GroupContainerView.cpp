@@ -4,22 +4,39 @@
  */
 
 
-#include "ScrollableGroupView.h"
+#include "GroupContainerView.h"
 
+#include <Catalog.h>
+#include <LayoutBuilder.h>
 #include <ScrollBar.h>
 #include <SpaceLayoutItem.h>
+#include <StringView.h>
+
+#undef B_TRANSLATION_CONTEXT
+#define B_TRANSLATION_CONTEXT "GroupContainerView"
 
 
-ScrollableGroupView::ScrollableGroupView()
+GroupContainerView::GroupContainerView()
 	:
 	BGroupView(B_VERTICAL, 0.0)
 {
 //	AddChild(BSpaceLayoutItem::CreateGlue());
+// TODO add string when there are no notifications
+/*	fNoNotificationsLabel = new BGroupView();
+	BStringView* stringView = new BStringView("none",
+		B_TRANSLATE("There are no new notifications"));
+	stringView->SetExplicitAlignment(BAlignment(B_ALIGN_CENTER,
+		B_ALIGN_VERTICAL_UNSET));
+	BLayoutBuilder::Group<>(fNoNotificationsLabel, B_VERTICAL, 0)
+		.SetInsets(0, 10, 0, 10)
+		.Add(stringView)
+	.End();
+	GroupLayout()->AddView(fNoNotificationsLabel);*/
 }
 
 /*
 BSize
-ScrollableGroupView::MinSize()
+GroupContainerView::MinSize()
 {
 	BSize minSize = BGroupView::MinSize();
 	return BSize(minSize.width, 60);
@@ -27,7 +44,7 @@ ScrollableGroupView::MinSize()
 
 /*
 BSize
-ScrollableGroupView::MaxSize()
+GroupContainerView::MaxSize()
 {
 	BSize maxSize = BGroupView::MaxSize();
 	return BSize(maxSize.width, 200);
@@ -35,7 +52,16 @@ ScrollableGroupView::MaxSize()
 
 
 void
-ScrollableGroupView::DoLayout()
+GroupContainerView::AddGroup(AppGroupView* group)
+{
+//	if (fNoNotificationsLabel->Parent() != NULL)
+//		fNoNotificationsLabel->RemoveSelf();
+	GroupLayout()->AddView(group);
+}
+
+
+void
+GroupContainerView::DoLayout()
 {
 	BGroupView::DoLayout();
 

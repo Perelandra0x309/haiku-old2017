@@ -5,11 +5,11 @@ UsePrivateHeaders app notification ;
 Server notification_server :
 	AppGroupView.cpp
 	DeskbarShelfView.cpp
+	GroupContainerView.cpp
 	GroupHeaderView.cpp
 	NotificationServer.cpp
 	NotificationView.cpp
 	NotificationWindow.cpp
-	ScrollableGroupView.cpp
 	: be translation [ TargetLibstdc++ ] libnotification.a localestub
 	: notification_server.rdef
 ;

@@ -28,9 +28,9 @@
 #include <Notifications.h>
 #include <Path.h>
 #include <PropertyInfo.h>
+#include <Screen.h>
 #include <ScrollBar.h>
 #include <SeparatorView.h>
-#include <StringView.h>
 
 #include "AppGroupView.h"
 #include "AppUsage.h"
@@ -65,15 +65,18 @@ NotificationWindow::NotificationWindow(uint32 type)
 	BWindow(BRect(0, 0, -1, -1), B_TRANSLATE_MARK("Notification"),
 		B_BORDERED_WINDOW_LOOK, B_FLOATING_ALL_WINDOW_FEEL, B_AVOID_FRONT
 		| B_AVOID_FOCUS | B_NOT_CLOSABLE | B_NOT_ZOOMABLE | B_NOT_MINIMIZABLE
-		| B_NOT_RESIZABLE | B_NOT_MOVABLE | B_AUTO_UPDATE_SIZE_LIMITS,
+		| B_NOT_RESIZABLE | B_NOT_MOVABLE /*| B_AUTO_UPDATE_SIZE_LIMITS*/ ,
 		B_ALL_WORKSPACES),
 	fType(type),
 	fContainerView(NULL),
 	fScrollBar(NULL)
 {
-	if (fType == NEW_NOTIFICATIONS_WINDOW)
+	if (fType == NEW_NOTIFICATIONS_WINDOW) {
+		SetFlags(Flags() | B_AUTO_UPDATE_SIZE_LIMITS);
 		SetLayout(new BGroupLayout(B_VERTICAL, 0));
+	}
 	else {
+		// Notification Center header label and buttons
 		BStringView* label = new BStringView("label",
 			B_TRANSLATE("Notification Center"));
 		BFont labelFont(be_plain_font);
@@ -81,14 +84,27 @@ NotificationWindow::NotificationWindow(uint32 type)
 		label->SetFont(&labelFont, B_FONT_FACE);
 		label->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT,
 			B_ALIGN_VERTICAL_UNSET));
+		
+		// TODO use bitmap buttons instead of text
 		BButton* settingsButton = new BButton(B_TRANSLATE("Settings"),
 			new BMessage(kSettingsButtonClicked));
 		settingsButton->SetExplicitAlignment(BAlignment(B_ALIGN_RIGHT,
 			B_ALIGN_VERTICAL_UNSET));
 		settingsButton->SetFlat(true);
-
+		
+		BButton* hideButton = new BButton(">", new BMessage(kHideButtonClicked));
+		float buttonHeight;
+		settingsButton->GetPreferredSize(NULL, &buttonHeight);
+			// make hide button square with the same height as settings button
+		BSize btnSize(buttonHeight, buttonHeight);
+		hideButton->SetExplicitSize(btnSize);
+		hideButton->SetExplicitAlignment(BAlignment(B_ALIGN_RIGHT,
+			B_ALIGN_VERTICAL_UNSET));
+		hideButton->SetFlat(true);
+		
+		// Conatainer view for notifications and the scrollbar
 //		fContainerView = new BGroupView(B_VERTICAL, 0); // testing
-		fContainerView = new ScrollableGroupView();
+		fContainerView = new GroupContainerView();
 		//fContainerView->GetLayout()->SetExplicitMaxSize(BSize(B_SIZE_UNSET, 200));
 		//fContainerView->InvalidateLayout();
 
@@ -105,12 +121,14 @@ NotificationWindow::NotificationWindow(uint32 type)
 				.AddGlue()
 				.Add(new BSeparatorView(B_VERTICAL))
 				.Add(settingsButton)
+				.Add(hideButton)
 			.End()
 			.Add(new BSeparatorView(B_HORIZONTAL))
 			.AddGroup(B_HORIZONTAL, 0)
 				.Add(fContainerView)
 				.Add(fScrollBar)
 			.End()
+			.AddGlue()
 		.End();
 
 		//GetLayout()->SetExplicitMaxSize(BSize(B_SIZE_UNSET, 200));
@@ -297,7 +315,8 @@ NotificationWindow::MessageReceived(BMessage* message)
 				group = new AppGroupView(this,
 					groupName == "" ? NULL : groupName.String());
 				fAppViews[groupName] = group;
-				fContainerView->GroupLayout()->AddView(group);
+				fContainerView->AddGroup(group);
+	//			fContainerView->InvalidateLayout();
 			} else
 				group = aIt->second;
 
@@ -338,7 +357,11 @@ NotificationWindow::MessageReceived(BMessage* message)
 		case kSettingsButtonClicked:
 			be_roster->Launch("application/x-vnd.Haiku-Notifications");
 			break;
-
+		
+		case kHideButtonClicked:
+			Hide();
+			break;
+			
 		case kDeskbarReplicantClicked:
 			if (IsHidden()) {
 				_SetPosition();
@@ -465,6 +488,16 @@ NotificationWindow::_ShowHide()
 void
 NotificationWindow::_SetPosition()
 {
+	BDeskbar deskbar;
+	BRect frame = deskbar.Frame();
+	
+	if (fType == SHELVED_NOTIFICATIONS_WINDOW) {
+		BScreen screen;
+		float centerHeight = screen.Frame().Height() - frame.Height();
+		GetLayout()->SetExplicitMaxSize(BSize(fWidth, centerHeight));
+		ResizeTo(fWidth, centerHeight);
+	}
+	
 	Layout(true);
 
 	BRect bounds = DecoratorFrame();
@@ -479,39 +512,64 @@ NotificationWindow::_SetPosition()
 
 	float x = Frame().left, y = Frame().top;
 		// If we can't guess, don't move...
-
-	BDeskbar deskbar;
-	BRect frame = deskbar.Frame();
-
-	switch (deskbar.Location()) {
-		case B_DESKBAR_TOP:
-			// Put it just under, top right corner
-			y = frame.bottom + topOffset;
-			x = frame.right - width + rightOffset;
-			break;
-		case B_DESKBAR_BOTTOM:
-			// Put it just above, lower left corner
-			y = frame.top - height - bottomOffset;
-			x = frame.right - width + rightOffset;
-			break;
-		case B_DESKBAR_RIGHT_TOP:
-			x = frame.left - width - rightOffset;
-			y = frame.top - topOffset + 1;
-			break;
-		case B_DESKBAR_LEFT_TOP:
-			x = frame.right + leftOffset;
-			y = frame.top - topOffset + 1;
-			break;
-		case B_DESKBAR_RIGHT_BOTTOM:
-			y = frame.bottom - height + bottomOffset;
-			x = frame.left - width - rightOffset;
-			break;
-		case B_DESKBAR_LEFT_BOTTOM:
-			y = frame.bottom - height + bottomOffset;
-			x = frame.right + leftOffset;
-			break;
-		default:
-			break;
+	
+	if (fType == NEW_NOTIFICATIONS_WINDOW) {
+		switch (deskbar.Location()) {
+			case B_DESKBAR_TOP:
+				// Put it just under, top right corner
+				y = frame.bottom + topOffset;
+				x = frame.right - width + rightOffset;
+				break;
+			case B_DESKBAR_BOTTOM:
+				// Put it just above, lower left corner
+				y = frame.top - height - bottomOffset;
+				x = frame.right - width + rightOffset;
+				break;
+			case B_DESKBAR_RIGHT_TOP:
+				x = frame.left - width - rightOffset;
+				y = frame.top - topOffset + 1;
+				break;
+			case B_DESKBAR_LEFT_TOP:
+				x = frame.right + leftOffset;
+				y = frame.top - topOffset + 1;
+				break;
+			case B_DESKBAR_RIGHT_BOTTOM:
+				y = frame.bottom - height + bottomOffset;
+				x = frame.left - width - rightOffset;
+				break;
+			case B_DESKBAR_LEFT_BOTTOM:
+				y = frame.bottom - height + bottomOffset;
+				x = frame.right + leftOffset;
+				break;
+			default:
+				break;
+		}
+	}
+	else {
+		switch (deskbar.Location()) {
+			case B_DESKBAR_TOP:
+			case B_DESKBAR_RIGHT_TOP:
+				// Put it just under, top right corner
+				y = frame.bottom + topOffset;
+				x = frame.right - width + rightOffset;
+				break;
+			case B_DESKBAR_BOTTOM:
+			case B_DESKBAR_RIGHT_BOTTOM:
+				// Put it just above, lower left corner
+				y = frame.top - height - bottomOffset;
+				x = frame.right - width + rightOffset;
+				break;
+			case B_DESKBAR_LEFT_TOP:
+				x = 0;
+				y = frame.bottom + topOffset;
+				break;
+			case B_DESKBAR_LEFT_BOTTOM:
+				y = 0;
+				x = 0;
+				break;
+			default:
+				break;
+		}
 	}
 
 	MoveTo(x, y);

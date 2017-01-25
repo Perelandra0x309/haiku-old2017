@@ -16,10 +16,11 @@
 #include <GroupView.h>
 #include <ScrollView.h>
 #include <String.h>
+#include <StringView.h>
 #include <Window.h>
 
 #include "NotificationView.h"
-#include "ScrollableGroupView.h"
+#include "GroupContainerView.h"
 
 
 class AppGroupView;
@@ -37,7 +38,8 @@ extern const float kExpandSize;
 extern const float kPenSize;
 
 const uint32 kRemoveGroupView = 'RGVi';
-const uint32 kSettingsButtonClicked = 'SeCl';
+const uint32 kSettingsButtonClicked = 'SBCl';
+const uint32 kHideButtonClicked = 'HBCl';
 
 enum {
 	NEW_NOTIFICATIONS_WINDOW = 0,
@@ -88,7 +90,7 @@ private:
 			icon_size				fIconSize;
 			int32					fTimeout;
 			uint32					fType;
-			ScrollableGroupView*	fContainerView;
+			GroupContainerView*		fContainerView;
 		//	BGroupView*				fContainerView;
 			BScrollBar*				fScrollBar;
 
