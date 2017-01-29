@@ -298,9 +298,7 @@ NotificationView::Draw(BRect updateRect)
 		DrawString(l->text.String(), l->text.Length(), l->location);
 	}
 
-	AppGroupView* groupView = dynamic_cast<AppGroupView*>(Parent());
-	if (groupView != NULL && groupView->ChildrenCount() > 1)
-		_DrawCloseButton(updateRect);
+	_DrawCloseButton(updateRect);
 
 	SetHighColor(tint_color(ViewColor(), darkenTint));
 	BPoint left(Bounds().left, Bounds().top);
@@ -316,13 +314,18 @@ NotificationView::_DrawCloseButton(const BRect& updateRect)
 {
 	PushState();
 	BRect closeRect = Bounds();
+	
+	closeRect.left = closeRect.right - kCloseSize - 6 * kEdgePadding - 1;
+	rgb_color base = ui_color(B_PANEL_BACKGROUND_COLOR);
+	float tint = 1.05;
+	SetHighColor(tint_color(base, tint));
+	FillRect(closeRect);
 
 	closeRect.InsetBy(3 * kEdgePadding, 3 * kEdgePadding);
 	closeRect.left = closeRect.right - kCloseSize;
 	closeRect.bottom = closeRect.top + kCloseSize;
 
-	rgb_color base = ui_color(B_PANEL_BACKGROUND_COLOR);
-	float tint = B_DARKEN_2_TINT;
+	tint = B_DARKEN_2_TINT;
 
 	if (fCloseClicked) {
 		BRect buttonRect(closeRect.InsetByCopy(-4, -4));
@@ -335,11 +338,15 @@ NotificationView::_DrawCloseButton(const BRect& updateRect)
 		closeRect.OffsetBy(1, 1);
 	}
 
-	base = tint_color(base, tint);
-	SetHighColor(base);
+	SetHighColor(tint_color(base, tint));
 	SetPenSize(2);
 	StrokeLine(closeRect.LeftTop(), closeRect.RightBottom());
 	StrokeLine(closeRect.LeftBottom(), closeRect.RightTop());
+	BPoint lineTop(closeRect.left - 3 * kEdgePadding - 1, Bounds().top);
+	BPoint lineBottom(lineTop.x, Bounds().bottom);
+	SetHighColor(tint_color(base, 1.2));
+	SetPenSize(1);
+	StrokeLine(lineTop, lineBottom);
 	PopState();
 }
 
@@ -353,9 +360,9 @@ NotificationView::MouseDown(BPoint point)
 	switch (buttons) {
 		case B_PRIMARY_MOUSE_BUTTON:
 		{
-			BRect closeRect = Bounds().InsetByCopy(2,2);
-			closeRect.left = closeRect.right - kCloseSize;
-			closeRect.bottom = closeRect.top + kCloseSize;
+			BRect closeRect = Bounds();//.InsetByCopy(3 * kEdgePadding, 3 * kEdgePadding);
+			closeRect.left = closeRect.right - kCloseSize - 6 * kEdgePadding;
+	//		closeRect.bottom = closeRect.top + kCloseSize;
 
 			if (!closeRect.Contains(point)) {
 				entry_ref launchRef;
@@ -407,15 +414,14 @@ NotificationView::MouseDown(BPoint point)
 					be_roster->Launch(fNotification->OnClickFile(), &messages);
 			} else {
 				fCloseClicked = true;
+				// Remove the info view after a click
+				BMessage remove_msg(kViewClosed);
+				remove_msg.AddPointer("view", this);
+	
+				BMessenger msgr(Parent());
+				msgr.SendMessage(&remove_msg);
+				break;
 			}
-
-			// Remove the info view after a click
-			BMessage remove_msg(kViewClosed);
-			remove_msg.AddPointer("view", this);
-
-			BMessenger msgr(Parent());
-			msgr.SendMessage(&remove_msg);
-			break;
 		}
 	}
 }
