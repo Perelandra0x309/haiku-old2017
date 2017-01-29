@@ -46,6 +46,13 @@ enum {
 	SHELVED_NOTIFICATIONS_WINDOW
 };
 
+class CenterLabelView : public BStringView {
+public:
+									CenterLabelView(const char *name,
+										const char *text);
+	virtual void					MouseDown(BPoint);
+};
+
 
 class NotificationWindow : public BWindow {
 public:
@@ -55,6 +62,7 @@ public:
 
 	virtual	bool					QuitRequested();
 	virtual	void					MessageReceived(BMessage*);
+//	virtual void					WindowActivated(bool active);
 	virtual	void					WorkspaceActivated(int32, bool);
 	virtual	void					FrameResized(float width, float height);
 	virtual	void					ScreenChanged(BRect frame, color_space mode);

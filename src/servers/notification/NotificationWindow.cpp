@@ -60,11 +60,32 @@ const float kPenSize				= 1;
 const float kEdgePadding			= 2;
 const float kSmallPadding			= 2;
 
+
+CenterLabelView::CenterLabelView(const char *name, const char *text)
+	:
+	BStringView(name, text)
+{
+	BFont labelFont(be_plain_font);
+	labelFont.SetFace(B_BOLD_FACE);
+	SetFont(&labelFont, B_FONT_FACE);
+	SetExplicitAlignment(BAlignment(B_ALIGN_LEFT,
+		B_ALIGN_VERTICAL_UNSET));
+	SetExplicitMaxSize(BSize(B_SIZE_UNLIMITED, B_SIZE_UNLIMITED));
+}
+
+
+void
+CenterLabelView::MouseDown(BPoint /*point*/)
+{
+	Window()->Hide();
+}
+
+
 NotificationWindow::NotificationWindow(uint32 type)
 	:
 	BWindow(BRect(0, 0, -1, -1), B_TRANSLATE_MARK("Notification"),
 		B_BORDERED_WINDOW_LOOK, B_FLOATING_ALL_WINDOW_FEEL, B_AVOID_FRONT
-		| B_AVOID_FOCUS | B_NOT_CLOSABLE | B_NOT_ZOOMABLE | B_NOT_MINIMIZABLE
+		/*| B_AVOID_FOCUS*/ | B_NOT_CLOSABLE | B_NOT_ZOOMABLE | B_NOT_MINIMIZABLE
 		| B_NOT_RESIZABLE | B_NOT_MOVABLE /*| B_AUTO_UPDATE_SIZE_LIMITS*/ ,
 		B_ALL_WORKSPACES),
 	fType(type),
@@ -72,18 +93,17 @@ NotificationWindow::NotificationWindow(uint32 type)
 	fScrollBar(NULL)
 {
 	if (fType == NEW_NOTIFICATIONS_WINDOW) {
-		SetFlags(Flags() | B_AUTO_UPDATE_SIZE_LIMITS);
+		SetFlags(Flags() | B_AVOID_FOCUS | B_AUTO_UPDATE_SIZE_LIMITS);
 		SetLayout(new BGroupLayout(B_VERTICAL, 0));
 	}
 	else {
+		AddShortcut('w', B_COMMAND_KEY, new BMessage(kHideButtonClicked));
+		AddShortcut('q', B_COMMAND_KEY, new BMessage(kHideButtonClicked));
+			// prevent quitting the server- hide window instead
+		
 		// Notification Center header label and buttons
-		BStringView* label = new BStringView("label",
+		CenterLabelView* label = new CenterLabelView("label",
 			B_TRANSLATE("Notification Center"));
-		BFont labelFont(be_plain_font);
-		labelFont.SetFace(B_BOLD_FACE);
-		label->SetFont(&labelFont, B_FONT_FACE);
-		label->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT,
-			B_ALIGN_VERTICAL_UNSET));
 		
 		// TODO use bitmap buttons instead of text
 		BButton* settingsButton = new BButton(B_TRANSLATE("Settings"),
@@ -92,7 +112,7 @@ NotificationWindow::NotificationWindow(uint32 type)
 			B_ALIGN_VERTICAL_UNSET));
 		settingsButton->SetFlat(true);
 		
-		BButton* hideButton = new BButton(">", new BMessage(kHideButtonClicked));
+/*		BButton* hideButton = new BButton(">", new BMessage(kHideButtonClicked));
 		float buttonHeight;
 		settingsButton->GetPreferredSize(NULL, &buttonHeight);
 			// make hide button square with the same height as settings button
@@ -100,9 +120,9 @@ NotificationWindow::NotificationWindow(uint32 type)
 		hideButton->SetExplicitSize(btnSize);
 		hideButton->SetExplicitAlignment(BAlignment(B_ALIGN_RIGHT,
 			B_ALIGN_VERTICAL_UNSET));
-		hideButton->SetFlat(true);
+		hideButton->SetFlat(true);*/
 		
-		// Conatainer view for notifications and the scrollbar
+		// Container view for notifications and the scrollbar
 //		fContainerView = new BGroupView(B_VERTICAL, 0); // testing
 		fContainerView = new GroupContainerView();
 		//fContainerView->GetLayout()->SetExplicitMaxSize(BSize(B_SIZE_UNSET, 200));
@@ -118,10 +138,9 @@ NotificationWindow::NotificationWindow(uint32 type)
 			.AddGroup(B_HORIZONTAL, 0)
 				.SetInsets(B_USE_DEFAULT_SPACING, 0, 0, 0)
 				.Add(label)
-				.AddGlue()
 				.Add(new BSeparatorView(B_VERTICAL))
 				.Add(settingsButton)
-				.Add(hideButton)
+			//	.Add(hideButton)
 			.End()
 			.Add(new BSeparatorView(B_HORIZONTAL))
 			.AddGroup(B_HORIZONTAL, 0)
@@ -165,6 +184,14 @@ NotificationWindow::QuitRequested()
 	BMessenger(be_app).SendMessage(B_QUIT_REQUESTED);
 	return BWindow::QuitRequested();
 }
+
+/*
+void
+NotificationWindow::WindowActivated(bool active)
+{
+	if (fType == SHELVED_NOTIFICATIONS_WINDOW && !active)
+		Hide();
+}*/
 
 
 void
@@ -362,14 +389,24 @@ NotificationWindow::MessageReceived(BMessage* message)
 			Hide();
 			break;
 			
+		case B_KEY_DOWN:
+		{
+			char byte;
+			if (message->FindInt8("byte", (int8*)&byte) == B_OK) {
+				// Hide notification center window when ESC key pressed
+				if (fType == SHELVED_NOTIFICATIONS_WINDOW && byte == B_ESCAPE)
+					Hide();
+			}
+			break;
+		}
+		
 		case kDeskbarReplicantClicked:
 			if (IsHidden()) {
 				_SetPosition();
 				Show();
 			}
-			else {
+			else
 				Hide();
-			}
 			break;
 
 		case kDeskbarRegistration:
