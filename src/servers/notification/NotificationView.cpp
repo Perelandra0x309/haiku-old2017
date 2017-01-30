@@ -315,17 +315,20 @@ NotificationView::_DrawCloseButton(const BRect& updateRect)
 	PushState();
 	BRect closeRect = Bounds();
 	
-	closeRect.left = closeRect.right - kCloseSize - 6 * kEdgePadding - 1;
+	// Draw shaded close area on right
+	closeRect.left = closeRect.right - kCloseSize - 2 * kClosePadding - 1;
 	rgb_color base = ui_color(B_PANEL_BACKGROUND_COLOR);
-	float tint = 1.05;
-	SetHighColor(tint_color(base, tint));
+	SetHighColor(tint_color(base, 1.05));
 	FillRect(closeRect);
+	SetHighColor(tint_color(base, 1.2));
+	SetPenSize(1);
+	StrokeLine(closeRect.LeftTop(), closeRect.LeftBottom());
 
-	closeRect.InsetBy(3 * kEdgePadding, 3 * kEdgePadding);
+	closeRect.InsetBy(kClosePadding, kClosePadding);
 	closeRect.left = closeRect.right - kCloseSize;
 	closeRect.bottom = closeRect.top + kCloseSize;
 
-	tint = B_DARKEN_2_TINT;
+	float tint = B_DARKEN_2_TINT;
 
 	if (fCloseClicked) {
 		BRect buttonRect(closeRect.InsetByCopy(-4, -4));
@@ -342,11 +345,6 @@ NotificationView::_DrawCloseButton(const BRect& updateRect)
 	SetPenSize(2);
 	StrokeLine(closeRect.LeftTop(), closeRect.RightBottom());
 	StrokeLine(closeRect.LeftBottom(), closeRect.RightTop());
-	BPoint lineTop(closeRect.left - 3 * kEdgePadding - 1, Bounds().top);
-	BPoint lineBottom(lineTop.x, Bounds().bottom);
-	SetHighColor(tint_color(base, 1.2));
-	SetPenSize(1);
-	StrokeLine(lineTop, lineBottom);
 	PopState();
 }
 
@@ -360,9 +358,8 @@ NotificationView::MouseDown(BPoint point)
 	switch (buttons) {
 		case B_PRIMARY_MOUSE_BUTTON:
 		{
-			BRect closeRect = Bounds();//.InsetByCopy(3 * kEdgePadding, 3 * kEdgePadding);
-			closeRect.left = closeRect.right - kCloseSize - 6 * kEdgePadding;
-	//		closeRect.bottom = closeRect.top + kCloseSize;
+			BRect closeRect = Bounds();
+			closeRect.left = closeRect.right - kCloseSize - 2 * kClosePadding;
 
 			if (!closeRect.Contains(point)) {
 				entry_ref launchRef;

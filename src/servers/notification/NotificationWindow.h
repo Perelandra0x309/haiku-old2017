@@ -34,6 +34,7 @@ typedef std::map<BString, AppUsage*> appfilter_t;
 extern const float kEdgePadding;
 extern const float kSmallPadding;
 extern const float kCloseSize;
+extern const float kClosePadding;
 extern const float kExpandSize;
 extern const float kPenSize;
 

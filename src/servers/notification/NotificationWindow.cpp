@@ -59,6 +59,7 @@ const float kExpandSize				= 8;
 const float kPenSize				= 1;
 const float kEdgePadding			= 2;
 const float kSmallPadding			= 2;
+const float kClosePadding			= 3 * kEdgePadding;
 
 
 CenterLabelView::CenterLabelView(const char *name, const char *text)
@@ -692,7 +693,12 @@ NotificationWindow::_LoadDisplaySettings(BMessage& settings)
 		fIconSize = kDefaultIconSize;
 	else
 		fIconSize = (icon_size)setting;
-
+	
+	InvalidateLayout();
+	Lock();
+	_SetPosition();
+	Unlock();
+		
 	//TODO Notify the group views about the change?
 }
 
