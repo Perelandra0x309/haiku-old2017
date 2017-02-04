@@ -6,6 +6,7 @@
  *		Axel Dörfler <axeld@pinc-software.de>
  *		Rene Gollent <rene@gollent.com>
  *		Ingo Weinhold <ingo_weinhold@gmx.de>
+ *		Brian Hill <supernova@warpmail.net>
  */
 
 
@@ -14,15 +15,19 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include <Alert.h>
+
 #include <package/CommitTransactionResult.h>
 #include <package/DownloadFileRequest.h>
 #include <package/RefreshRepositoryRequest.h>
+#include <package/manager/Exceptions.h>
 #include <package/solver/SolverPackage.h>
 #include <package/solver/SolverProblem.h>
 #include <package/solver/SolverProblemSolution.h>
 
 
 using namespace BPackageKit;
+using namespace BPackageKit::BManager::BPrivate;
 
 
 UpdateManager::UpdateManager(BPackageInstallationLocation location)
@@ -136,6 +141,11 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 		//exit(1);
 	}
 	*/
+	throw BAbortedByUserException();
+		// quit here for now
+	
+	BAlert* alert = new BAlert("Warning", "Confirmation", "OK");
+	alert->Go();
 }
 
 

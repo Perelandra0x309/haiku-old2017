@@ -10,12 +10,11 @@
 
 
 #include <Button.h>
-#include <Roster.h>
 #include <StringView.h>
 #include <Window.h>
 
 #include "StripeView.h"
-#include "UpdateManager.h"
+//#include "UpdateManager.h"
 
 
 class SoftwareUpdaterWindow : public BWindow {
@@ -28,11 +27,11 @@ public:
 
 private:
 			void			_Error(const char* error);
-			void			_Refresh();
+//			void			_Refresh();
 
-			UpdateManager*	fUpdateManager;
+//			UpdateManager*	fUpdateManager;
 			StripeView*		fStripeView;
-			app_info*		fAppInfo;
+//			app_info*		fAppInfo;
 
 			BStringView*	fHeaderView;
 			BStringView*	fDetailView;

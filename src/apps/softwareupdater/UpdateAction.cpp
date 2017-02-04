@@ -1,0 +1,85 @@
+/*
+ * Copyright 2017, Haiku, Inc. All Rights Reserved.
+ * Distributed under the terms of the MIT License.
+ *
+ * Authors:
+ *		Brian Hill <supernova@warpmail.net>
+ */
+
+
+#include "UpdateAction.h"
+
+#include <Alert.h>
+#include <Catalog.h>
+#include <package/manager/Exceptions.h>
+
+#include "UpdateManager.h"
+
+
+#undef B_TRANSLATION_CONTEXT
+#define B_TRANSLATION_CONTEXT "UpdateAction"
+
+
+using namespace BPackageKit;
+//using namespace BPackageKit::BPrivate;
+using namespace BPackageKit::BManager::BPrivate;
+
+UpdateAction::UpdateAction()
+{
+	fUpdateManager = new(std::nothrow)
+		UpdateManager(B_PACKAGE_INSTALLATION_LOCATION_SYSTEM);
+}
+
+
+UpdateAction::~UpdateAction()
+{
+	delete fUpdateManager;
+}
+
+
+status_t
+UpdateAction::Perform()
+{
+	fUpdateManager->Init(BPackageManager::B_ADD_INSTALLED_REPOSITORIES
+		| BPackageManager::B_ADD_REMOTE_REPOSITORIES
+		| BPackageManager::B_REFRESH_REPOSITORIES);
+//	fPackageManager->AddProgressListener(this);
+	
+	try {
+		// These values indicate that all updates should be installed
+		int packageCount = 0;
+		const char* const packages = "";
+
+		// perform the update
+		fUpdateManager->SetDebugLevel(1);
+		fUpdateManager->Update(&packages, packageCount);
+	} catch (BFatalErrorException ex) {
+		BString errorString;
+		errorString.SetToFormat(
+			"Fatal error occurred while updating packages: "
+			"%s (%s)\n", ex.Message().String(),
+			ex.Details().String());
+		BAlert* alert(new(std::nothrow) BAlert(B_TRANSLATE("Fatal error"),
+			errorString, B_TRANSLATE("Close"), NULL, NULL,
+			B_WIDTH_AS_USUAL, B_STOP_ALERT));
+		if (alert != NULL)
+			alert->Go();
+		return ex.Error();
+	} catch (BAbortedByUserException ex) {
+		fprintf(stderr, "Updates aborted by user: %s\n",
+			ex.Message().String());
+		return B_OK;
+	} catch (BNothingToDoException ex) {
+		fprintf(stderr, "Nothing to do while updating packages : %s\n",
+			ex.Message().String());
+		return B_OK;
+	} catch (BException ex) {
+		fprintf(stderr, "Exception occurred while updating packages : %s\n",
+			ex.Message().String());
+		return B_ERROR;
+	}
+
+//	fPackageManager->RemoveProgressListener(this);
+	
+	return B_OK;
+}

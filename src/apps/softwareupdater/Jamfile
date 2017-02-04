@@ -4,7 +4,9 @@ Application SoftwareUpdater :
 	SoftwareUpdaterApp.cpp
 	SoftwareUpdaterWindow.cpp
 	StripeView.cpp
+	UpdateAction.cpp
 	UpdateManager.cpp
+	WorkingLooper.cpp
 	: be localestub package translation [ TargetLibsupc++ ]
 	: SoftwareUpdater.rdef
 ;
