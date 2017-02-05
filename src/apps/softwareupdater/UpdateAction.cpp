@@ -10,10 +10,11 @@
 #include "UpdateAction.h"
 
 #include <Alert.h>
+#include <Application.h>
 #include <Catalog.h>
 #include <package/manager/Exceptions.h>
 
-#include "UpdateManager.h"
+#include "constants.h"
 
 
 #undef B_TRANSLATION_CONTEXT
@@ -23,6 +24,7 @@
 using namespace BPackageKit;
 //using namespace BPackageKit::BPrivate;
 using namespace BPackageKit::BManager::BPrivate;
+
 
 UpdateAction::UpdateAction()
 {
@@ -40,12 +42,16 @@ UpdateAction::~UpdateAction()
 status_t
 UpdateAction::Perform()
 {
+	_SetCurrentStep(ACTION_STEP_INIT);
 	fUpdateManager->Init(BPackageManager::B_ADD_INSTALLED_REPOSITORIES
 		| BPackageManager::B_ADD_REMOTE_REPOSITORIES
 		| BPackageManager::B_REFRESH_REPOSITORIES);
-//	fPackageManager->AddProgressListener(this);
+	fUpdateManager->AddProgressListener(this);
 	
 	try {
+//		_SetStatus(NULL, "Checking for updates to installed packages");
+		_SetCurrentStep(ACTION_STEP_START);
+		
 		// These values indicate that all updates should be installed
 		int packageCount = 0;
 		const char* const packages = "";
@@ -79,7 +85,59 @@ UpdateAction::Perform()
 		return B_ERROR;
 	}
 
-//	fPackageManager->RemoveProgressListener(this);
+	fUpdateManager->RemoveProgressListener(this);
 	
 	return B_OK;
+}
+
+
+void
+UpdateAction::_SetStatus(const char* header, const char* detail)
+{
+	if (header == NULL && detail == NULL)
+		return;
+	
+	BMessage message(kMsgUpdate);
+	if (header != NULL)
+		message.AddString(kKeyHeader, header);
+	if (detail != NULL)
+		message.AddString(kKeyDetail, detail);
+	be_app->PostMessage(&message);
+}
+
+
+void
+UpdateAction::_SetCurrentStep(int32 step)
+{
+	fCurrentStep = step;
+}
+
+
+void
+UpdateAction::DownloadProgressChanged(const char* packageName, float progress)
+{
+//	if (fCurrentStep != ACTION_STEP_DOWNLOAD)
+//		return;
+	
+	int32 percent = int(100 * progress);
+	BString header("Downloading packages");
+	BString detail(packageName);
+	detail.Append(" ");
+	detail << percent;
+	detail.Append("% complete.");
+	_SetStatus(header.String(), detail.String());
+}
+
+
+void
+UpdateAction::DownloadProgressComplete(const char* packageName)
+{
+	
+}
+
+
+void
+UpdateAction::SetUpdateStep(int32 step)
+{
+	_SetCurrentStep(step);
 }

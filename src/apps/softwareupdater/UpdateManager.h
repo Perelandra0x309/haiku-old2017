@@ -5,6 +5,7 @@
  * Authors:
  *		Ingo Weinhold <ingo_weinhold@gmx.de>
  *		Rene Gollent <rene@gollent.com>
+ *		Brian Hill <supernova@warpmail.net>
  */
 #ifndef UPDATE_MANAGER_H
 #define UPDATE_MANAGER_H
@@ -19,6 +20,29 @@ using BPackageKit::BPrivate::BDaemonClient;
 using BPackageKit::BManager::BPrivate::BPackageManager;
 
 
+class UpdateProgressListener {
+	public:
+	virtual	~UpdateProgressListener();
+
+	virtual	void				DownloadProgressChanged(
+									const char* packageName,
+									float progress);
+	virtual	void				DownloadProgressComplete(
+									const char* packageName);
+
+	virtual	void				StartApplyingChanges(
+									BPackageManager::InstalledRepository&
+										repository);
+	virtual	void				ApplyingChangesDone(
+									BPackageManager::InstalledRepository&
+										repository);
+	virtual	void				SetUpdateStep(int32 step);
+};
+
+
+typedef BObjectList<UpdateProgressListener> UpdateProgressListenerList;
+
+
 class UpdateManager : public BPackageManager,
 	private BPackageManager::UserInteractionHandler {
 public:
@@ -28,6 +52,11 @@ public:
 
 	virtual	void				JobFailed(BSupportKit::BJob* job);
 	virtual	void				JobAborted(BSupportKit::BJob* job);
+	
+			void				AddProgressListener(
+									UpdateProgressListener* listener);
+			void				RemoveProgressListener(
+									UpdateProgressListener* listener);
 
 private:
 	// UserInteractionHandler
@@ -60,11 +89,17 @@ private:
 
 private:
 			void				_PrintResult(InstalledRepository&
-									installationRepository);
+									installationRepository,
+									int32& upgradeCount,
+									int32& installCount,
+									int32& uninstallCount);
 
 private:
 			BPackageManager::ClientInstallationInterface
 									fClientInstallationInterface;
+
+			UpdateProgressListenerList
+								fUpdateProgressListeners;
 };
 
 

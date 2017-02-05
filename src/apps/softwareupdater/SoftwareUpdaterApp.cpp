@@ -9,8 +9,7 @@
 
 #include "SoftwareUpdaterApp.h"
 
-#include "SoftwareUpdaterWindow.h"
-
+#include "constants.h"
 
 //#undef B_TRANSLATION_CONTEXT
 //#define B_TRANSLATION_CONTEXT "SoftwareUpdater"
@@ -41,7 +40,22 @@ SoftwareUpdaterApp::ReadyToRun()
 	fWindow = new SoftwareUpdaterWindow();
 	
 	fWorker = new WorkingLooper();
-	fWorker->PostMessage(kMsgStart);
+}
+
+
+void
+SoftwareUpdaterApp::MessageReceived(BMessage* message)
+{
+	switch (message->what) {
+		case kMsgUpdate:
+		{
+			fWindow->PostMessage(message);
+			break;
+		}
+		
+		default:
+			BApplication::MessageReceived(message);
+	}
 }
 
 

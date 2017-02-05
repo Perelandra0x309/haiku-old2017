@@ -20,6 +20,7 @@ WorkingLooper::WorkingLooper()
 	BLooper("WorkingLooper")
 {
 	Run();
+	PostMessage(kMsgStart);
 }
 
 /*

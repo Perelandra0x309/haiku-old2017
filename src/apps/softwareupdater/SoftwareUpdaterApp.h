@@ -22,6 +22,7 @@ public:
 							~SoftwareUpdaterApp();
 
 			void			ReadyToRun();
+			void			MessageReceived(BMessage* message);
 
 private:
 			SoftwareUpdaterWindow*	fWindow;

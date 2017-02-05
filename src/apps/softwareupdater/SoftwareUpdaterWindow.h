@@ -4,6 +4,7 @@
  *
  * Authors:
  *		Alexander von Gluck IV <kallisti5@unixzen.com>
+ *		Brian Hill <supernova@warpmail.net>
  */
 #ifndef _SOFTWARE_UPDATER_WINDOW_H
 #define _SOFTWARE_UPDATER_WINDOW_H

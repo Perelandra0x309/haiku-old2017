@@ -25,9 +25,48 @@
 #include <package/solver/SolverProblem.h>
 #include <package/solver/SolverProblemSolution.h>
 
+#include "constants.h"
 
 using namespace BPackageKit;
 using namespace BPackageKit::BManager::BPrivate;
+
+
+UpdateProgressListener::~UpdateProgressListener()
+{
+}
+
+
+void
+UpdateProgressListener::DownloadProgressChanged(const char* packageName,
+	float progress)
+{
+}
+
+
+void
+UpdateProgressListener::DownloadProgressComplete(const char* packageName)
+{
+}
+
+
+void
+UpdateProgressListener::StartApplyingChanges(
+	BPackageManager::InstalledRepository& repository)
+{
+}
+
+
+void
+UpdateProgressListener::ApplyingChangesDone(
+	BPackageManager::InstalledRepository& repository)
+{
+}
+
+
+void
+UpdateProgressListener::SetUpdateStep(int32 step)
+{
+}
 
 
 UpdateManager::UpdateManager(BPackageInstallationLocation location)
@@ -59,6 +98,21 @@ void
 UpdateManager::JobAborted(BSupportKit::BJob* job)
 {
 	//DIE(job->Result(), "aborted");
+}
+
+
+
+void
+UpdateManager::AddProgressListener(UpdateProgressListener* listener)
+{
+	fUpdateProgressListeners.AddItem(listener);
+}
+
+
+void
+UpdateManager::RemoveProgressListener(UpdateProgressListener* listener)
+{
+	fUpdateProgressListeners.RemoveItem(listener);
 }
 
 
@@ -127,25 +181,39 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 	printf("The following changes will be made:\n");
 
 	int32 count = fInstalledRepositories.CountItems();
+	int32 upgradeCount = 0;
+	int32 installCount = 0;
+	int32 uninstallCount = 0;
 	if (fromMostSpecific) {
 		for (int32 i = count - 1; i >= 0; i--)
-			_PrintResult(*fInstalledRepositories.ItemAt(i));
+			_PrintResult(*fInstalledRepositories.ItemAt(i), upgradeCount,
+				installCount, uninstallCount);
 	} else {
 		for (int32 i = 0; i < count; i++)
-			_PrintResult(*fInstalledRepositories.ItemAt(i));
+			_PrintResult(*fInstalledRepositories.ItemAt(i), upgradeCount,
+				installCount, uninstallCount);
 	}
-
-	/*
-	if (!fDecisionProvider.YesNoDecisionNeeded(BString(), "Continue?", "yes",
-			"no", "yes")) {
-		//exit(1);
-	}
-	*/
-	throw BAbortedByUserException();
-		// quit here for now
 	
-	BAlert* alert = new BAlert("Warning", "Confirmation", "OK");
-	alert->Go();
+	// TODO use the status window?
+	printf("Upgrade count=%lu, Install count=%lu, Uninstall count=%lu\n",
+		upgradeCount, installCount, uninstallCount);
+	BString text("The following changes will be made:\nPackages upgraded: ");
+	text << upgradeCount;
+	text.Append("\nPackages installed: ");
+	text << installCount;
+	text.Append("\nPackages uninstalled: ");
+	text << uninstallCount;
+	text.Append("\n");
+	BAlert* alert = new BAlert("Continue", text, "Cancel", "Update Now");
+	int32 choice = alert->Go();
+	printf("Choice: %lu\n", choice);
+	
+	if (choice == 0)
+		throw BAbortedByUserException();
+	
+	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
+		fUpdateProgressListeners.ItemAt(i)->SetUpdateStep(ACTION_STEP_DOWNLOAD);
+	}
 }
 
 
@@ -175,11 +243,15 @@ void
 UpdateManager::ProgressPackageDownloadActive(const char* packageName,
 	float completionPercentage, off_t bytes, off_t totalBytes)
 {
-	return;
-	/*
+	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
+		fUpdateProgressListeners.ItemAt(i)->DownloadProgressChanged(
+			packageName, completionPercentage);
+	}
+/*	return;
+	
 	if (!fInteractive)
 		return;
-
+*/
 	static const char* progressChars[] = {
 		"\xE2\x96\x8F",
 		"\xE2\x96\x8E",
@@ -223,13 +295,18 @@ UpdateManager::ProgressPackageDownloadActive(const char* packageName,
 	printf(" %3d%%", (int)(completionPercentage * 100));
 
 	fflush(stdout);
-	*/
+	
 }
 
 
 void
 UpdateManager::ProgressPackageDownloadComplete(const char* packageName)
 {
+	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
+		fUpdateProgressListeners.ItemAt(i)->DownloadProgressComplete(
+			packageName);
+	}
+	
 	// Overwrite the progress bar with whitespace
 	printf("\r");
 	struct winsize w;
@@ -260,6 +337,9 @@ void
 UpdateManager::ProgressStartApplyingChanges(InstalledRepository& repository)
 {
 	printf("[%s] Applying changes ...\n", repository.Name().String());
+	
+	// TODO prevent completion for now during testing
+	throw BAbortedByUserException();
 }
 
 
@@ -295,7 +375,8 @@ UpdateManager::ProgressApplyingChangesDone(InstalledRepository& repository)
 
 
 void
-UpdateManager::_PrintResult(InstalledRepository& installationRepository)
+UpdateManager::_PrintResult(InstalledRepository& installationRepository,
+	int32& upgradeCount, int32& installCount, int32& uninstallCount)
 {
 	if (!installationRepository.HasChanges())
 		return;
@@ -338,11 +419,13 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository)
 				upgradedPackageVersions.StringAt(position).String(),
 				package->Info().Version().ToString().String(),
 				repository.String());
+				upgradeCount++;
 		} else {
 			printf("    install package %s-%s from %s\n",
 				package->Info().Name().String(),
 				package->Info().Version().ToString().String(),
 				repository.String());
+				installCount++;
 		}
 	}
 
@@ -351,5 +434,6 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository)
 		if (upgradedPackages.HasString(package->Info().Name()))
 			continue;
 		printf("    uninstall package %s\n", package->VersionedName().String());
+		uninstallCount++;
 	}
 }

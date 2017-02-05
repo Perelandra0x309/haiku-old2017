@@ -4,6 +4,7 @@
  *
  * Authors:
  *		Alexander von Gluck IV <kallisti5@unixzen.com>
+ *		Brian Hill <supernova@warpmail.net>
  */
 
 
@@ -12,6 +13,7 @@
 //#include <stdio.h>
 #include <AppDefs.h>
 #include <Application.h>
+#include <Catalog.h>
 //#include <GroupLayout.h>
 //#include <GroupLayoutBuilder.h>
 #include <NodeInfo.h>
@@ -25,13 +27,10 @@
 #include <SeparatorView.h>
 #include <String.h>
 
+#include "constants.h"
 
 #undef B_TRANSLATION_CONTEXT
 #define B_TRANSLATION_CONTEXT "SoftwareUpdater"
-
-
-const uint32 kMsgUpdate = 'iUPD';
-const uint32 kMsgExit = 'iEXT';
 
 
 //using namespace BPackageKit;
@@ -40,7 +39,8 @@ const uint32 kMsgExit = 'iEXT';
 SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	:
 	BWindow(BRect(0, 0, 0, 300), "Software Update",
-		B_TITLED_WINDOW, B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE),
+		B_TITLED_WINDOW, B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE
+		| B_NOT_CLOSABLE | B_NOT_RESIZABLE),
 //	fUpdateManager(NULL),
 	fStripeView(NULL),
 	fHeaderView(NULL),
@@ -63,15 +63,19 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 
 	fStripeView = new StripeView(icon);
 
-	fUpdateButton = new BButton("Update now", new BMessage(kMsgUpdate));
+	fUpdateButton = new BButton(B_TRANSLATE("Update now"),
+		new BMessage(kMsgUpdate));
 	fUpdateButton->Hide();
 
-	fCancelButton = new BButton("Cancel", new BMessage(kMsgExit));
+	fCancelButton = new BButton(B_TRANSLATE("Cancel"),
+		new BMessage(kMsgExit));
 
 	fHeaderView = new BStringView("header",
 		"Checking for updates...", B_WILL_DRAW);
+//	fHeaderView->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT, B_ALIGN_MIDDLE));
 	fDetailView = new BStringView("detail", "Contacting software repositories"
 		" to check for package updates.", B_WILL_DRAW);
+//	fDetailView->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT, B_ALIGN_MIDDLE));
 
 	BFont font;
 	fHeaderView->GetFont(&font);
@@ -85,18 +89,20 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 		.AddGroup(B_VERTICAL, B_USE_SMALL_SPACING)
 			.SetInsets(0, B_USE_DEFAULT_SPACING,
 				B_USE_DEFAULT_SPACING, B_USE_DEFAULT_SPACING)
-			.Add(fHeaderView)
-			.Add(fDetailView)
+			.AddGroup(B_HORIZONTAL, 0)
+				.AddGroup(B_VERTICAL, B_USE_DEFAULT_SPACING)
+					.Add(fHeaderView)
+					.Add(fDetailView)
+				.End()
+				.AddGlue()
+			.End()
 			.AddStrut(B_USE_DEFAULT_SPACING)
 			.AddGroup(B_HORIZONTAL, B_USE_DEFAULT_SPACING)
 				.AddGlue()
 				.Add(fCancelButton)
 				.Add(fUpdateButton)
 			.End()
-		.End()
-		.AddGlue()
-		//.Add(new BSeparatorView(B_HORIZONTAL, B_PLAIN_BORDER))
-	;
+		.End();
 	CenterOnScreen();
 	Show();
 
@@ -113,7 +119,7 @@ SoftwareUpdaterWindow::~SoftwareUpdaterWindow()
 bool
 SoftwareUpdaterWindow::QuitRequested()
 {
-	be_app->PostMessage(B_QUIT_REQUESTED);
+//	be_app->PostMessage(B_QUIT_REQUESTED);
 	return true;
 }
 
@@ -126,7 +132,19 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 			QuitRequested();
 			break;
 		case kMsgUpdate:
+		{
+			Lock();
+			BString header;
+			BString detail;
+			status_t result = message->FindString(kKeyHeader, &header);
+			if (result == B_OK && header != fHeaderView->Text())
+				fHeaderView->SetText(header.String());
+			result = message->FindString(kKeyDetail, &detail);
+			if (result == B_OK)
+				fDetailView->SetText(detail.String());
+			Unlock();
 			break;
+		}
 		default:
 			BWindow::MessageReceived(message);
 	}
