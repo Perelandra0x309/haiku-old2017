@@ -73,13 +73,17 @@ UpdateManager::UpdateManager(BPackageInstallationLocation location)
 	:
 	BPackageManager(location, &fClientInstallationInterface, this),
 	BPackageManager::UserInteractionHandler(),
-	fClientInstallationInterface()
+	fClientInstallationInterface(),
+	fStatusWindow(NULL),
+	fChangesConfirmed(false)
 {
+	fStatusWindow = new SoftwareUpdaterWindow();
 }
 
 
 UpdateManager::~UpdateManager()
 {
+	delete fStatusWindow;
 }
 
 
@@ -105,14 +109,21 @@ UpdateManager::JobAborted(BSupportKit::BJob* job)
 void
 UpdateManager::AddProgressListener(UpdateProgressListener* listener)
 {
-	fUpdateProgressListeners.AddItem(listener);
+//	fUpdateProgressListeners.AddItem(listener);
 }
 
 
 void
 UpdateManager::RemoveProgressListener(UpdateProgressListener* listener)
 {
-	fUpdateProgressListeners.RemoveItem(listener);
+//	fUpdateProgressListeners.RemoveItem(listener);
+}
+
+
+void
+UpdateManager::FatalError(const char* error)
+{
+	fStatusWindow->FinalUpdate("Error encountered:", error);
 }
 
 
@@ -197,23 +208,27 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 	// TODO use the status window?
 	printf("Upgrade count=%lu, Install count=%lu, Uninstall count=%lu\n",
 		upgradeCount, installCount, uninstallCount);
-	BString text("The following changes will be made:\nPackages upgraded: ");
+	BString text;
 	text << upgradeCount;
-	text.Append("\nPackages installed: ");
+	text.Append(" packages upgraded, ");
 	text << installCount;
-	text.Append("\nPackages uninstalled: ");
+	text.Append(" packages installed, ");
 	text << uninstallCount;
-	text.Append("\n");
+	text.Append(" packages uninstalled.\n");
+	fChangesConfirmed = fStatusWindow->ConfirmUpdates(text.String());
+	if (!fChangesConfirmed)
+		throw BAbortedByUserException();
+	
 	BAlert* alert = new BAlert("Continue", text, "Cancel", "Update Now");
 	int32 choice = alert->Go();
 	printf("Choice: %lu\n", choice);
-	
 	if (choice == 0)
 		throw BAbortedByUserException();
 	
 	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
 		fUpdateProgressListeners.ItemAt(i)->SetUpdateStep(ACTION_STEP_DOWNLOAD);
 	}
+	
 }
 
 
@@ -246,6 +261,15 @@ UpdateManager::ProgressPackageDownloadActive(const char* packageName,
 	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
 		fUpdateProgressListeners.ItemAt(i)->DownloadProgressChanged(
 			packageName, completionPercentage);
+	}
+	if (fChangesConfirmed) {
+		int32 percent = int(100 * completionPercentage);
+		BString header("Downloading packages");
+		BString detail(packageName);
+		detail.Append(" ");
+		detail << percent;
+		detail.Append("% complete.");
+		_UpdateStatusWindow(header.String(), detail.String());
 	}
 /*	return;
 	
@@ -436,4 +460,19 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 		printf("    uninstall package %s\n", package->VersionedName().String());
 		uninstallCount++;
 	}
+}
+
+
+void
+UpdateManager::_UpdateStatusWindow(const char* header, const char* detail)
+{
+	if (header == NULL && detail == NULL)
+		return;
+	
+	BMessage message(kMsgUpdate);
+	if (header != NULL)
+		message.AddString(kKeyHeader, header);
+	if (detail != NULL)
+		message.AddString(kKeyDetail, detail);
+	fStatusWindow->PostMessage(&message);
 }

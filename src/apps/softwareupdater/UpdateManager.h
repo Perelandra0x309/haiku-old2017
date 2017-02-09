@@ -14,6 +14,7 @@
 #include <package/DaemonClient.h>
 #include <package/manager/PackageManager.h>
 
+#include "SoftwareUpdaterWindow.h"
 
 //using namespace BPackageKit;
 using BPackageKit::BPrivate::BDaemonClient;
@@ -58,6 +59,7 @@ public:
 			void				RemoveProgressListener(
 									UpdateProgressListener* listener);
 
+			void				FatalError(const char* error);
 private:
 	// UserInteractionHandler
 	virtual	void				HandleProblems();
@@ -93,6 +95,8 @@ private:
 									int32& upgradeCount,
 									int32& installCount,
 									int32& uninstallCount);
+			void				_UpdateStatusWindow(const char* header,
+									const char* detail);
 
 private:
 			BPackageManager::ClientInstallationInterface
@@ -100,6 +104,9 @@ private:
 
 			UpdateProgressListenerList
 								fUpdateProgressListeners;
+			
+			SoftwareUpdaterWindow*	fStatusWindow;
+			bool					fChangesConfirmed;
 };
 
 

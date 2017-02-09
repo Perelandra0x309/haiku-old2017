@@ -25,6 +25,9 @@ public:
 			bool			QuitRequested();
 
 			void			MessageReceived(BMessage* message);
+			bool			ConfirmUpdates(const char* text);
+			void			FinalUpdate(const char* header,
+								const char* detail);
 
 private:
 			void			_Error(const char* error);

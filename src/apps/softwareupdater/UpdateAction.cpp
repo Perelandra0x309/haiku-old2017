@@ -70,18 +70,26 @@ UpdateAction::Perform()
 			B_WIDTH_AS_USUAL, B_STOP_ALERT));
 		if (alert != NULL)
 			alert->Go();
+		BString text("Fatal error occurred: ");
+		text.Append(ex.Message());
+		fUpdateManager->FatalError(text.String());
 		return ex.Error();
 	} catch (BAbortedByUserException ex) {
 		fprintf(stderr, "Updates aborted by user: %s\n",
 			ex.Message().String());
+		fUpdateManager->FatalError("Updates were aborted by the user.");
 		return B_OK;
 	} catch (BNothingToDoException ex) {
 		fprintf(stderr, "Nothing to do while updating packages : %s\n",
 			ex.Message().String());
+		fUpdateManager->FatalError("Nothing to do while updating packages.");
 		return B_OK;
 	} catch (BException ex) {
 		fprintf(stderr, "Exception occurred while updating packages : %s\n",
 			ex.Message().String());
+		BString text("Exception occurred: ");
+		text.Append(ex.Message());
+		fUpdateManager->FatalError(text.String());
 		return B_ERROR;
 	}
 

@@ -44,7 +44,7 @@ WorkingLooper::MessageReceived(BMessage* message)
 		case kMsgStart:
 		{
 			fAction.Perform();
-			be_app->PostMessage(B_QUIT_REQUESTED);
+		//	be_app->PostMessage(B_QUIT_REQUESTED);
 			break;
 		}
 		

@@ -119,7 +119,7 @@ SoftwareUpdaterWindow::~SoftwareUpdaterWindow()
 bool
 SoftwareUpdaterWindow::QuitRequested()
 {
-//	be_app->PostMessage(B_QUIT_REQUESTED);
+	be_app->PostMessage(B_QUIT_REQUESTED);
 	return true;
 }
 
@@ -151,13 +151,41 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 }
 
 
+bool
+SoftwareUpdaterWindow::ConfirmUpdates(const char* text)
+{
+	Lock();
+	fHeaderView->SetText("Changes pending:");
+	fDetailView->SetText(text);
+	fUpdateButton->Show();
+	fCancelButton->Show();
+	Unlock();
+	return true;
+}
+
+
+void
+SoftwareUpdaterWindow::FinalUpdate(const char* header, const char* detail)
+{
+	Lock();
+	fHeaderView->SetText(header);
+	fDetailView->SetText(detail);
+	fUpdateButton->Hide();
+	fCancelButton->SetLabel("Quit");
+	fCancelButton->Show();
+	Unlock();
+}
+
+
 void
 SoftwareUpdaterWindow::_Error(const char* error)
 {
+	Lock();
 	fHeaderView->SetText("Error encountered!");
 	fDetailView->SetText(error);
 	fUpdateButton->Hide();
 	fCancelButton->Show();
+	Unlock();
 }
 /*
 void

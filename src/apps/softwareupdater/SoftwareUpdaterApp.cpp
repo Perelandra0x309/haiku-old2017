@@ -37,7 +37,7 @@ SoftwareUpdaterApp::~SoftwareUpdaterApp()
 void
 SoftwareUpdaterApp::ReadyToRun()
 {
-	fWindow = new SoftwareUpdaterWindow();
+//	fWindow = new SoftwareUpdaterWindow();
 	
 	fWorker = new WorkingLooper();
 }
@@ -47,11 +47,11 @@ void
 SoftwareUpdaterApp::MessageReceived(BMessage* message)
 {
 	switch (message->what) {
-		case kMsgUpdate:
+	/*	case kMsgUpdate:
 		{
 			fWindow->PostMessage(message);
 			break;
-		}
+		}*/
 		
 		default:
 			BApplication::MessageReceived(message);
