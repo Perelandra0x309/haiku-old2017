@@ -15,7 +15,6 @@
 #include <Window.h>
 
 #include "StripeView.h"
-//#include "UpdateManager.h"
 
 
 class SoftwareUpdaterWindow : public BWindow {
@@ -31,16 +30,15 @@ public:
 
 private:
 			void			_Error(const char* error);
-//			void			_Refresh();
-
-//			UpdateManager*	fUpdateManager;
+			
 			StripeView*		fStripeView;
-//			app_info*		fAppInfo;
-
 			BStringView*	fHeaderView;
 			BStringView*	fDetailView;
 			BButton*		fUpdateButton;
 			BButton*		fCancelButton;
+			
+			sem_id			fConfirmSem;
+			bool			fConfirmed;
 };
 
 

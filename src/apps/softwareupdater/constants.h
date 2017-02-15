@@ -12,12 +12,14 @@ enum {
 	ACTION_STEP_INIT = 0,
 	ACTION_STEP_START,
 	ACTION_STEP_DOWNLOAD,
+	ACTION_STEP_APPLY,
 	ACTION_STEP_MAX
 };
 
 // Message what values
 static const uint32 kMsgUpdate = 'iUPD';
 static const uint32 kMsgExit = 'iEXT';
+static const uint32 kMsgConfirm = 'iCON';
 
 // Message data keys
 #define kKeyHeader "key_header"

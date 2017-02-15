@@ -20,7 +20,7 @@
 using BPackageKit::BPrivate::BDaemonClient;
 using BPackageKit::BManager::BPrivate::BPackageManager;
 
-
+/*
 class UpdateProgressListener {
 	public:
 	virtual	~UpdateProgressListener();
@@ -39,9 +39,9 @@ class UpdateProgressListener {
 										repository);
 	virtual	void				SetUpdateStep(int32 step);
 };
+*/
 
-
-typedef BObjectList<UpdateProgressListener> UpdateProgressListenerList;
+//typedef BObjectList<UpdateProgressListener> UpdateProgressListenerList;
 
 
 class UpdateManager : public BPackageManager,
@@ -54,11 +54,11 @@ public:
 	virtual	void				JobFailed(BSupportKit::BJob* job);
 	virtual	void				JobAborted(BSupportKit::BJob* job);
 	
-			void				AddProgressListener(
+/*			void				AddProgressListener(
 									UpdateProgressListener* listener);
 			void				RemoveProgressListener(
 									UpdateProgressListener* listener);
-
+*/
 			void				FatalError(const char* error);
 private:
 	// UserInteractionHandler
@@ -97,15 +97,17 @@ private:
 									int32& uninstallCount);
 			void				_UpdateStatusWindow(const char* header,
 									const char* detail);
+			void				_SetCurrentStep(int32 step);
 
 private:
 			BPackageManager::ClientInstallationInterface
 									fClientInstallationInterface;
 
-			UpdateProgressListenerList
-								fUpdateProgressListeners;
+//			UpdateProgressListenerList
+//								fUpdateProgressListeners;
 			
 			SoftwareUpdaterWindow*	fStatusWindow;
+			int32					fCurrentStep;
 			bool					fChangesConfirmed;
 };
 

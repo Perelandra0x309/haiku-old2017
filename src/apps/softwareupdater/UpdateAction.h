@@ -14,26 +14,26 @@
 #include "UpdateManager.h"
 
 
-class UpdateAction : private UpdateProgressListener {
+class UpdateAction /*: private UpdateProgressListener*/ {
 public:
 								UpdateAction();
 								~UpdateAction();
 		status_t				Perform();
 
-	virtual	void				DownloadProgressChanged(
+/*	virtual	void				DownloadProgressChanged(
 									const char* packageName,
 									float progress);
 	virtual	void				DownloadProgressComplete(
 									const char* packageName);
 	virtual	void				SetUpdateStep(int32 step);
-
+*/
 private:
-		void					_SetStatus(const char* header,
-									const char* detail);
-		void					_SetCurrentStep(int32 step);
+//		void					_SetStatus(const char* header,
+//									const char* detail);
+//		void					_SetCurrentStep(int32 step);
 		
 		UpdateManager*			fUpdateManager;
-		int32					fCurrentStep;
+//		int32					fCurrentStep;
 };
 
 

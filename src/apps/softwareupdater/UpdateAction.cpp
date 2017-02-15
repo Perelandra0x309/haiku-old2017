@@ -42,15 +42,15 @@ UpdateAction::~UpdateAction()
 status_t
 UpdateAction::Perform()
 {
-	_SetCurrentStep(ACTION_STEP_INIT);
+//	_SetCurrentStep(ACTION_STEP_INIT);
 	fUpdateManager->Init(BPackageManager::B_ADD_INSTALLED_REPOSITORIES
 		| BPackageManager::B_ADD_REMOTE_REPOSITORIES
 		| BPackageManager::B_REFRESH_REPOSITORIES);
-	fUpdateManager->AddProgressListener(this);
+//	fUpdateManager->AddProgressListener(this);
 	
 	try {
 //		_SetStatus(NULL, "Checking for updates to installed packages");
-		_SetCurrentStep(ACTION_STEP_START);
+//		_SetCurrentStep(ACTION_STEP_START);
 		
 		// These values indicate that all updates should be installed
 		int packageCount = 0;
@@ -93,12 +93,12 @@ UpdateAction::Perform()
 		return B_ERROR;
 	}
 
-	fUpdateManager->RemoveProgressListener(this);
+//	fUpdateManager->RemoveProgressListener(this);
 	
 	return B_OK;
 }
 
-
+/*
 void
 UpdateAction::_SetStatus(const char* header, const char* detail)
 {
@@ -111,16 +111,16 @@ UpdateAction::_SetStatus(const char* header, const char* detail)
 	if (detail != NULL)
 		message.AddString(kKeyDetail, detail);
 	be_app->PostMessage(&message);
-}
+}*/
 
-
+/*
 void
 UpdateAction::_SetCurrentStep(int32 step)
 {
 	fCurrentStep = step;
-}
+}*/
 
-
+/*
 void
 UpdateAction::DownloadProgressChanged(const char* packageName, float progress)
 {
@@ -141,11 +141,11 @@ void
 UpdateAction::DownloadProgressComplete(const char* packageName)
 {
 	
-}
+}*/
 
-
+/*
 void
 UpdateAction::SetUpdateStep(int32 step)
 {
 	_SetCurrentStep(step);
-}
+}*/

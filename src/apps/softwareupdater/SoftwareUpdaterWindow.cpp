@@ -10,22 +10,17 @@
 
 #include "SoftwareUpdaterWindow.h"
 
-//#include <stdio.h>
+#include <Alert.h>
 #include <AppDefs.h>
 #include <Application.h>
 #include <Catalog.h>
-//#include <GroupLayout.h>
-//#include <GroupLayoutBuilder.h>
 #include <NodeInfo.h>
 #include <LayoutBuilder.h>
 #include <Message.h>
-//#include <package/Context.h>
-//#include <package/RefreshRepositoryRequest.h>
-//#include <package/PackageRoster.h>
-//#include <Resources.h>
 #include <Roster.h>
 #include <SeparatorView.h>
 #include <String.h>
+#include <package/manager/Exceptions.h>
 
 #include "constants.h"
 
@@ -33,27 +28,19 @@
 #define B_TRANSLATION_CONTEXT "SoftwareUpdater"
 
 
-//using namespace BPackageKit;
-
-
 SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	:
 	BWindow(BRect(0, 0, 0, 300), "Software Update",
 		B_TITLED_WINDOW, B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE
 		| B_NOT_CLOSABLE | B_NOT_RESIZABLE),
-//	fUpdateManager(NULL),
 	fStripeView(NULL),
 	fHeaderView(NULL),
 	fDetailView(NULL),
 	fUpdateButton(NULL),
-	fCancelButton(NULL)
+	fCancelButton(NULL),
+	fConfirmSem(-1),
+	fConfirmed(false)
 {
-/*	fUpdateManager = new UpdateManager(
-		BPackageKit::B_PACKAGE_INSTALLATION_LOCATION_HOME);
-	fUpdateManager->SetDebugLevel(10);
-	fUpdateManager->Init(BPackageManager::B_ADD_INSTALLED_REPOSITORIES
-		| BPackageManager::B_ADD_REMOTE_REPOSITORIES);
-*/
 	BBitmap* icon = new BBitmap(BRect(0, 0, 31, 31), 0, B_RGBA32);
 	team_info teamInfo;
 	get_team_info(B_CURRENT_TEAM, &teamInfo);
@@ -64,7 +51,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fStripeView = new StripeView(icon);
 
 	fUpdateButton = new BButton(B_TRANSLATE("Update now"),
-		new BMessage(kMsgUpdate));
+		new BMessage(kMsgConfirm));
 	fUpdateButton->Hide();
 
 	fCancelButton = new BButton(B_TRANSLATE("Cancel"),
@@ -105,9 +92,6 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 		.End();
 	CenterOnScreen();
 	Show();
-
-	// Refresh our repos and update UI
-//	_Refresh();
 }
 
 
@@ -129,14 +113,26 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 {
 	switch (message->what) {
 		case kMsgExit:
-			QuitRequested();
+		{
+			// Check if we are waiting for update confirmation
+			if (fConfirmSem > 0) {
+				fConfirmed = false;
+				delete_sem(fConfirmSem);
+				fConfirmSem = -1;
+			}
+			else
+				QuitRequested();
+				// TODO quit gracefully
+			//	throw BAbortedByUserException();
 			break;
+		}
+		
 		case kMsgUpdate:
 		{
-			Lock();
 			BString header;
 			BString detail;
 			status_t result = message->FindString(kKeyHeader, &header);
+			Lock();
 			if (result == B_OK && header != fHeaderView->Text())
 				fHeaderView->SetText(header.String());
 			result = message->FindString(kKeyDetail, &detail);
@@ -145,6 +141,13 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 			Unlock();
 			break;
 		}
+		
+		case kMsgConfirm:
+			fConfirmed = true;
+			delete_sem(fConfirmSem);
+			fConfirmSem = -1;
+			break;
+		
 		default:
 			BWindow::MessageReceived(message);
 	}
@@ -154,13 +157,26 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 bool
 SoftwareUpdaterWindow::ConfirmUpdates(const char* text)
 {
+	fConfirmSem = create_sem(0, "AlertSem");
+	if (fConfirmSem < 0) {
+		// Alert backup method
+		Lock();
+		fDetailView->SetText("");
+		Unlock();
+		BAlert* alert = new BAlert("Continue", text, "Cancel", "Update Now");
+		int32 choice = alert->Go();
+		return choice == 1;
+	}
 	Lock();
-	fHeaderView->SetText("Changes pending:");
+	fHeaderView->SetText("Updates found:");
 	fDetailView->SetText(text);
 	fUpdateButton->Show();
 	fCancelButton->Show();
 	Unlock();
-	return true;
+	
+	while (acquire_sem(fConfirmSem) == B_INTERRUPTED) {
+	}
+	return fConfirmed;
 }
 
 
@@ -187,35 +203,3 @@ SoftwareUpdaterWindow::_Error(const char* error)
 	fCancelButton->Show();
 	Unlock();
 }
-/*
-void
-SoftwareUpdaterWindow::_Refresh()
-{
-	BPackageRoster roster;
-	BStringList repoNames(20);
-
-	status_t result = roster.GetRepositoryNames(repoNames);
-	if (result != B_OK) {
-		_Error("Unable to obtain repository names.");
-		return;
-	}
-
-	for (int i = 0; i < repoNames.CountStrings(); i++) {
-		const BString& repoName = repoNames.StringAt(i);
-		BRepositoryConfig repoConfig;
-		result = roster.GetRepositoryConfig(repoName, &repoConfig);
-		if (result != B_OK) {
-			printf("Skipping '%s' repo due to unknown config\n",
-				repoName.String());
-			continue;
-		}
-		
-		BRefreshRepositoryRequest request(context, repoConfig);
-		result = request.Process();
-		if (result != B_OK) {
-			printf("Skipping %s repo due to unreachable repo");
-			continue;
-		}
-		
-	}
-}*/

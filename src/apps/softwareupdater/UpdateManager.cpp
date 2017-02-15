@@ -30,7 +30,7 @@
 using namespace BPackageKit;
 using namespace BPackageKit::BManager::BPrivate;
 
-
+/*
 UpdateProgressListener::~UpdateProgressListener()
 {
 }
@@ -66,7 +66,7 @@ UpdateProgressListener::ApplyingChangesDone(
 void
 UpdateProgressListener::SetUpdateStep(int32 step)
 {
-}
+}*/
 
 
 UpdateManager::UpdateManager(BPackageInstallationLocation location)
@@ -75,9 +75,11 @@ UpdateManager::UpdateManager(BPackageInstallationLocation location)
 	BPackageManager::UserInteractionHandler(),
 	fClientInstallationInterface(),
 	fStatusWindow(NULL),
+	fCurrentStep(ACTION_STEP_INIT),
 	fChangesConfirmed(false)
 {
 	fStatusWindow = new SoftwareUpdaterWindow();
+	_SetCurrentStep(ACTION_STEP_START);
 }
 
 
@@ -105,7 +107,7 @@ UpdateManager::JobAborted(BSupportKit::BJob* job)
 }
 
 
-
+/*
 void
 UpdateManager::AddProgressListener(UpdateProgressListener* listener)
 {
@@ -117,7 +119,7 @@ void
 UpdateManager::RemoveProgressListener(UpdateProgressListener* listener)
 {
 //	fUpdateProgressListeners.RemoveItem(listener);
-}
+}*/
 
 
 void
@@ -205,29 +207,19 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 				installCount, uninstallCount);
 	}
 	
-	// TODO use the status window?
 	printf("Upgrade count=%lu, Install count=%lu, Uninstall count=%lu\n",
 		upgradeCount, installCount, uninstallCount);
-	BString text;
+	BString text("There are ");
 	text << upgradeCount;
-	text.Append(" packages upgraded, ");
-	text << installCount;
-	text.Append(" packages installed, ");
-	text << uninstallCount;
-	text.Append(" packages uninstalled.\n");
+	text.Append(" updates available.");
 	fChangesConfirmed = fStatusWindow->ConfirmUpdates(text.String());
 	if (!fChangesConfirmed)
 		throw BAbortedByUserException();
 	
-	BAlert* alert = new BAlert("Continue", text, "Cancel", "Update Now");
-	int32 choice = alert->Go();
-	printf("Choice: %lu\n", choice);
-	if (choice == 0)
-		throw BAbortedByUserException();
-	
-	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
+	_SetCurrentStep(ACTION_STEP_DOWNLOAD);
+/*	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
 		fUpdateProgressListeners.ItemAt(i)->SetUpdateStep(ACTION_STEP_DOWNLOAD);
-	}
+	}*/
 	
 }
 
@@ -250,6 +242,12 @@ UpdateManager::Warn(status_t error, const char* format, ...)
 void
 UpdateManager::ProgressPackageDownloadStarted(const char* packageName)
 {
+	if (fCurrentStep == ACTION_STEP_DOWNLOAD) {
+		BString header("Downloading packages");
+		BString detail(packageName);
+		_UpdateStatusWindow(header.String(), detail.String());
+	}
+	
 	printf("Downloading %s...\n", packageName);
 }
 
@@ -258,11 +256,11 @@ void
 UpdateManager::ProgressPackageDownloadActive(const char* packageName,
 	float completionPercentage, off_t bytes, off_t totalBytes)
 {
-	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
+/*	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
 		fUpdateProgressListeners.ItemAt(i)->DownloadProgressChanged(
 			packageName, completionPercentage);
-	}
-	if (fChangesConfirmed) {
+	}*/
+	if (fCurrentStep == ACTION_STEP_DOWNLOAD) {
 		int32 percent = int(100 * completionPercentage);
 		BString header("Downloading packages");
 		BString detail(packageName);
@@ -326,10 +324,10 @@ UpdateManager::ProgressPackageDownloadActive(const char* packageName,
 void
 UpdateManager::ProgressPackageDownloadComplete(const char* packageName)
 {
-	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
+/*	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
 		fUpdateProgressListeners.ItemAt(i)->DownloadProgressComplete(
 			packageName);
-	}
+	}*/
 	
 	// Overwrite the progress bar with whitespace
 	printf("\r");
@@ -346,6 +344,10 @@ UpdateManager::ProgressPackageDownloadComplete(const char* packageName)
 void
 UpdateManager::ProgressPackageChecksumStarted(const char* title)
 {
+	// Repository checksums
+	if (fCurrentStep == ACTION_STEP_START)
+		_UpdateStatusWindow(NULL, title);
+	
 	printf("%s...", title);
 }
 
@@ -360,6 +362,8 @@ UpdateManager::ProgressPackageChecksumComplete(const char* title)
 void
 UpdateManager::ProgressStartApplyingChanges(InstalledRepository& repository)
 {
+	_SetCurrentStep(ACTION_STEP_APPLY);
+	
 	printf("[%s] Applying changes ...\n", repository.Name().String());
 	
 	// TODO prevent completion for now during testing
@@ -475,4 +479,11 @@ UpdateManager::_UpdateStatusWindow(const char* header, const char* detail)
 	if (detail != NULL)
 		message.AddString(kKeyDetail, detail);
 	fStatusWindow->PostMessage(&message);
+}
+
+
+void
+UpdateManager::_SetCurrentStep(int32 step)
+{
+	fCurrentStep = step;
 }
