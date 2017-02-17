@@ -30,7 +30,7 @@ public:
 			bool			UserCancelRequested();
 
 private:
-			void			_Error(const char* error);
+//			void			_Error(const char* error);
 			uint32			_WaitForButtonClick();
 			void			_SetState(uint32 state);
 			uint32			_GetState();

@@ -9,7 +9,7 @@
 
 #include "UpdateAction.h"
 
-#include <Alert.h>
+//#include <Alert.h>
 #include <Application.h>
 #include <Catalog.h>
 #include <package/manager/Exceptions.h>
@@ -42,16 +42,12 @@ UpdateAction::~UpdateAction()
 status_t
 UpdateAction::Perform()
 {
-//	_SetCurrentStep(ACTION_STEP_INIT);
 	fUpdateManager->Init(BPackageManager::B_ADD_INSTALLED_REPOSITORIES
 		| BPackageManager::B_ADD_REMOTE_REPOSITORIES
 		| BPackageManager::B_REFRESH_REPOSITORIES);
 //	fUpdateManager->AddProgressListener(this);
 	
 	try {
-//		_SetStatus(NULL, "Checking for updates to installed packages");
-//		_SetCurrentStep(ACTION_STEP_START);
-		
 		// These values indicate that all updates should be installed
 		int packageCount = 0;
 		const char* const packages = "";
@@ -65,31 +61,35 @@ UpdateAction::Perform()
 			"Fatal error occurred while updating packages: "
 			"%s (%s)\n", ex.Message().String(),
 			ex.Details().String());
-		BAlert* alert(new(std::nothrow) BAlert(B_TRANSLATE("Fatal error"),
+	/*	BAlert* alert(new(std::nothrow) BAlert(B_TRANSLATE("Fatal error"),
 			errorString, B_TRANSLATE("Close"), NULL, NULL,
 			B_WIDTH_AS_USUAL, B_STOP_ALERT));
 		if (alert != NULL)
-			alert->Go();
-		BString text("Fatal error occurred: ");
-		text.Append(ex.Message());
-		fUpdateManager->FatalError(text.String());
+			alert->Go();*/
+		BString text(B_TRANSLATE("Error message:"));
+		text.Append(" ").Append(ex.Message());
+		fUpdateManager->FinalError(B_TRANSLATE("Error detected"),
+			text.String());
 		return ex.Error();
 	} catch (BAbortedByUserException ex) {
 		fprintf(stderr, "Updates aborted by user: %s\n",
 			ex.Message().String());
-		fUpdateManager->FatalError("Updates were aborted by the user.");
+		fUpdateManager->FinalError(B_TRANSLATE("Updates cancelled"),
+			B_TRANSLATE("Updates were cancelled by the user."));
 		return B_OK;
 	} catch (BNothingToDoException ex) {
 		fprintf(stderr, "Nothing to do while updating packages : %s\n",
 			ex.Message().String());
-		fUpdateManager->FatalError("Nothing to do while updating packages.");
+		fUpdateManager->FinalError(B_TRANSLATE("No actions taken"),
+			B_TRANSLATE("Nothing to do while updating the packages."));
 		return B_OK;
 	} catch (BException ex) {
 		fprintf(stderr, "Exception occurred while updating packages : %s\n",
 			ex.Message().String());
-		BString text("Exception occurred: ");
-		text.Append(ex.Message());
-		fUpdateManager->FatalError(text.String());
+		BString text(B_TRANSLATE("Error message:"));
+		text.Append(" ").Append(ex.Message());
+		fUpdateManager->FinalError(B_TRANSLATE("General error detected"),
+			text.String());
 		return B_ERROR;
 	}
 
@@ -97,29 +97,6 @@ UpdateAction::Perform()
 	
 	return B_OK;
 }
-
-
-/*
-void
-UpdateAction::_SetStatus(const char* header, const char* detail)
-{
-	if (header == NULL && detail == NULL)
-		return;
-	
-	BMessage message(kMsgUpdate);
-	if (header != NULL)
-		message.AddString(kKeyHeader, header);
-	if (detail != NULL)
-		message.AddString(kKeyDetail, detail);
-	be_app->PostMessage(&message);
-}*/
-
-/*
-void
-UpdateAction::_SetCurrentStep(int32 step)
-{
-	fCurrentStep = step;
-}*/
 
 /*
 void
@@ -142,11 +119,4 @@ void
 UpdateAction::DownloadProgressComplete(const char* packageName)
 {
 	
-}*/
-
-/*
-void
-UpdateAction::SetUpdateStep(int32 step)
-{
-	_SetCurrentStep(step);
 }*/

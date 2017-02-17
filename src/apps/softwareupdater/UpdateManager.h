@@ -59,7 +59,8 @@ public:
 			void				RemoveProgressListener(
 									UpdateProgressListener* listener);
 */
-			void				FatalError(const char* error);
+			void				FinalError(const char* header,
+									const char* text);
 private:
 	// UserInteractionHandler
 	virtual	void				HandleProblems();

@@ -25,15 +25,9 @@ public:
 									float progress);
 	virtual	void				DownloadProgressComplete(
 									const char* packageName);
-	virtual	void				SetUpdateStep(int32 step);
 */
 private:
-//		void					_SetStatus(const char* header,
-//									const char* detail);
-//		void					_SetCurrentStep(int32 step);
-		
 		UpdateManager*			fUpdateManager;
-//		int32					fCurrentStep;
 };
 
 

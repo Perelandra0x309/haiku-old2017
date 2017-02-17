@@ -16,6 +16,7 @@
 #include <unistd.h>
 
 #include <Alert.h>
+#include <Catalog.h>
 
 #include <package/CommitTransactionResult.h>
 #include <package/DownloadFileRequest.h>
@@ -29,6 +30,10 @@
 
 using namespace BPackageKit;
 using namespace BPackageKit::BManager::BPrivate;
+
+#undef B_TRANSLATION_CONTEXT
+#define B_TRANSLATION_CONTEXT "UpdateManager"
+
 
 /*
 UpdateProgressListener::~UpdateProgressListener()
@@ -124,9 +129,9 @@ UpdateManager::RemoveProgressListener(UpdateProgressListener* listener)
 
 
 void
-UpdateManager::FatalError(const char* error)
+UpdateManager::FinalError(const char* header, const char* text)
 {
-	fStatusWindow->FinalUpdate("Error encountered:", error);
+	fStatusWindow->FinalUpdate(header, text);
 }
 
 
@@ -210,9 +215,11 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 	
 	printf("Upgrade count=%lu, Install count=%lu, Uninstall count=%lu\n",
 		upgradeCount, installCount, uninstallCount);
-	BString text("There are ");
-	text << upgradeCount;
-	text.Append(" updates available.");
+	BString text(B_TRANSLATE_COMMENT("There are %count% updates available.",
+		"Do not translate %count%"));
+	BString countString;
+	countString << upgradeCount;
+	text.ReplaceFirst("%count%", countString);
 	fChangesConfirmed = fStatusWindow->ConfirmUpdates(text.String());
 	if (!fChangesConfirmed)
 		throw BAbortedByUserException();
@@ -244,7 +251,7 @@ void
 UpdateManager::ProgressPackageDownloadStarted(const char* packageName)
 {
 	if (fCurrentStep == ACTION_STEP_DOWNLOAD) {
-		BString header("Downloading packages");
+		BString header(B_TRANSLATE("Downloading packages"));
 		BString detail(packageName);
 		_UpdateStatusWindow(header.String(), detail.String());
 	}
@@ -262,19 +269,16 @@ UpdateManager::ProgressPackageDownloadActive(const char* packageName,
 			packageName, completionPercentage);
 	}*/
 	if (fCurrentStep == ACTION_STEP_DOWNLOAD) {
-		int32 percent = int(100 * completionPercentage);
-		BString header("Downloading packages");
+		BString header(B_TRANSLATE("Downloading packages"));
 		BString detail(packageName);
-		detail.Append(" ");
-		detail << percent;
-		detail.Append("% complete.");
+		detail.Append(" ").Append(B_TRANSLATE_COMMENT("[%percent%% complete]",
+			"Do not translate %percent%%"));
+		BString percentString;
+		percentString << int(100 * completionPercentage);
+		detail.ReplaceFirst("%percent%", percentString);
 		_UpdateStatusWindow(header.String(), detail.String());
 	}
-/*	return;
-	
-	if (!fInteractive)
-		return;
-*/
+
 	static const char* progressChars[] = {
 		"\xE2\x96\x8F",
 		"\xE2\x96\x8E",

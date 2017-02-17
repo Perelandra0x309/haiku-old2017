@@ -29,7 +29,7 @@
 
 SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	:
-	BWindow(BRect(0, 0, 0, 300), "Software Update",
+	BWindow(BRect(0, 0, 0, 300), B_TRANSLATE_SYSTEM_NAME("Software Update"),
 		B_TITLED_WINDOW, B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE
 		| B_NOT_CLOSABLE | B_NOT_RESIZABLE),
 	fStripeView(NULL),
@@ -57,10 +57,10 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fCancelButton = new BButton("", new BMessage(kMsgCancel));
 
 	fHeaderView = new BStringView("header",
-		"Checking for updates...", B_WILL_DRAW);
+		B_TRANSLATE("Checking for updates"), B_WILL_DRAW);
 //	fHeaderView->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT, B_ALIGN_MIDDLE));
-	fDetailView = new BStringView("detail", "Contacting software repositories"
-		" to check for package updates.", B_WILL_DRAW);
+	fDetailView = new BStringView("detail", B_TRANSLATE("Contacting software "
+		"repositories to check for package updates."), B_WILL_DRAW);
 //	fDetailView->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT, B_ALIGN_MIDDLE));
 
 	BFont font;
@@ -141,8 +141,14 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 			}
 			else if (fCurrentState == STATE_FINAL_MSG)
 				QuitRequested();
-			else
+			else {
+				Lock();
+				fHeaderView->SetText(B_TRANSLATE("Cancelling updates"));
+				fDetailView->SetText(
+					B_TRANSLATE("Attempting to cancel the updates..."));
+				Unlock();
 				fUserCancelRequested = true;
+			}
 			break;
 		}
 		
@@ -170,7 +176,7 @@ SoftwareUpdaterWindow::ConfirmUpdates(const char* text)
 	Lock();
 	fUpdateButton->Show();
 	 // TODO why isn't the button showing in _SetState?
-	fHeaderView->SetText("Updates found:");
+	fHeaderView->SetText(B_TRANSLATE("Updates found"));
 	fDetailView->SetText(text);
 	Unlock();
 	
@@ -195,14 +201,15 @@ bool
 SoftwareUpdaterWindow::UserCancelRequested()
 {
 	if (fUserCancelRequested) {
-		FinalUpdate("Update cancelled", "Cancelled by user");
+		FinalUpdate(B_TRANSLATE("Updates cancelled"),
+			B_TRANSLATE("No packages have been updated."));
 		_WaitForButtonClick();
 	}
 	
 	return fUserCancelRequested;
 }
 
-
+/*
 void
 SoftwareUpdaterWindow::_Error(const char* error)
 {
@@ -211,7 +218,7 @@ SoftwareUpdaterWindow::_Error(const char* error)
 	fDetailView->SetText(error);
 	Unlock();
 }
-
+*/
 
 uint32
 SoftwareUpdaterWindow::_WaitForButtonClick()
@@ -229,6 +236,8 @@ SoftwareUpdaterWindow::_WaitForButtonClick()
 void
 SoftwareUpdaterWindow::_SetState(uint32 state)
 {
+	if (state <= STATE_HEAD || state >= STATE_TAIL)
+		return;
 	fCurrentState = state;
 	
 	Lock();
@@ -236,7 +245,7 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	if (state == STATE_GET_CONFIRMATION) {
 		// TODO this isn't working, button doesn't show
 		fUpdateButton->Show();
-		fUpdateButton->Invalidate();
+		//fUpdateButton->Invalidate();
 	}
 	else
 		fUpdateButton->Hide();
