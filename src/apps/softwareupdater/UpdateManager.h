@@ -107,7 +107,7 @@ private:
 //								fUpdateProgressListeners;
 			
 			SoftwareUpdaterWindow*	fStatusWindow;
-			int32					fCurrentStep;
+			uint32					fCurrentStep;
 			bool					fChangesConfirmed;
 };
 

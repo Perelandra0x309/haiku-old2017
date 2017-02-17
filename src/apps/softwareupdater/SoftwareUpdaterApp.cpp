@@ -18,7 +18,6 @@
 SoftwareUpdaterApp::SoftwareUpdaterApp()
 	:
 	BApplication("application/x-vnd.haiku-softwareupdater"),
-	fWindow(NULL),
 	fWorker(NULL)
 {
 }
@@ -26,7 +25,6 @@ SoftwareUpdaterApp::SoftwareUpdaterApp()
 
 SoftwareUpdaterApp::~SoftwareUpdaterApp()
 {
-	delete fWindow;
 	if (fWorker) {
 		fWorker->Lock();
 		fWorker->Quit();
@@ -37,26 +35,19 @@ SoftwareUpdaterApp::~SoftwareUpdaterApp()
 void
 SoftwareUpdaterApp::ReadyToRun()
 {
-//	fWindow = new SoftwareUpdaterWindow();
-	
 	fWorker = new WorkingLooper();
 }
 
-
+/*
 void
 SoftwareUpdaterApp::MessageReceived(BMessage* message)
 {
 	switch (message->what) {
-	/*	case kMsgUpdate:
-		{
-			fWindow->PostMessage(message);
-			break;
-		}*/
 		
 		default:
 			BApplication::MessageReceived(message);
 	}
-}
+}*/
 
 
 int

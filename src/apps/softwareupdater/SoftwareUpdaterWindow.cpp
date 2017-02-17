@@ -10,7 +10,6 @@
 
 #include "SoftwareUpdaterWindow.h"
 
-#include <Alert.h>
 #include <AppDefs.h>
 #include <Application.h>
 #include <Catalog.h>
@@ -38,8 +37,9 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fDetailView(NULL),
 	fUpdateButton(NULL),
 	fCancelButton(NULL),
-	fConfirmSem(-1),
-	fConfirmed(false)
+	fWaitingSem(-1),
+	fWaitingForButton(false),
+	fUserCancelRequested(false)
 {
 	BBitmap* icon = new BBitmap(BRect(0, 0, 31, 31), 0, B_RGBA32);
 	team_info teamInfo;
@@ -54,8 +54,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 		new BMessage(kMsgConfirm));
 	fUpdateButton->Hide();
 
-	fCancelButton = new BButton(B_TRANSLATE("Cancel"),
-		new BMessage(kMsgExit));
+	fCancelButton = new BButton("", new BMessage(kMsgCancel));
 
 	fHeaderView = new BStringView("header",
 		"Checking for updates...", B_WILL_DRAW);
@@ -90,6 +89,8 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 				.Add(fUpdateButton)
 			.End()
 		.End();
+	
+	_SetState(STATE_DISPLAY_STATUS);
 	CenterOnScreen();
 	Show();
 }
@@ -112,27 +113,16 @@ void
 SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 {
 	switch (message->what) {
-		case kMsgExit:
-		{
-			// Check if we are waiting for update confirmation
-			if (fConfirmSem > 0) {
-				fConfirmed = false;
-				delete_sem(fConfirmSem);
-				fConfirmSem = -1;
-			}
-			else
-				QuitRequested();
-				// TODO quit gracefully
-			//	throw BAbortedByUserException();
-			break;
-		}
 		
 		case kMsgUpdate:
 		{
+			if (fCurrentState != STATE_DISPLAY_STATUS)
+				break;
+			
 			BString header;
 			BString detail;
-			status_t result = message->FindString(kKeyHeader, &header);
 			Lock();
+			status_t result = message->FindString(kKeyHeader, &header);
 			if (result == B_OK && header != fHeaderView->Text())
 				fHeaderView->SetText(header.String());
 			result = message->FindString(kKeyDetail, &detail);
@@ -142,11 +132,29 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 			break;
 		}
 		
-		case kMsgConfirm:
-			fConfirmed = true;
-			delete_sem(fConfirmSem);
-			fConfirmSem = -1;
+		case kMsgCancel:
+		{
+			if (fWaitingForButton) {
+				fButtonResult = message->what;
+				delete_sem(fWaitingSem);
+				fWaitingSem = -1;
+			}
+			else if (fCurrentState == STATE_FINAL_MSG)
+				QuitRequested();
+			else
+				fUserCancelRequested = true;
 			break;
+		}
+		
+		case kMsgConfirm:
+		{
+			if (fWaitingForButton) {
+				fButtonResult = message->what;
+				delete_sem(fWaitingSem);
+				fWaitingSem = -1;
+			}
+			break;
+		}
 		
 		default:
 			BWindow::MessageReceived(message);
@@ -157,26 +165,18 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 bool
 SoftwareUpdaterWindow::ConfirmUpdates(const char* text)
 {
-	fConfirmSem = create_sem(0, "AlertSem");
-	if (fConfirmSem < 0) {
-		// Alert backup method
-		Lock();
-		fDetailView->SetText("");
-		Unlock();
-		BAlert* alert = new BAlert("Continue", text, "Cancel", "Update Now");
-		int32 choice = alert->Go();
-		return choice == 1;
-	}
+	uint32 priorState = _GetState();
+	_SetState(STATE_GET_CONFIRMATION);
 	Lock();
+	fUpdateButton->Show();
+	 // TODO why isn't the button showing in _SetState?
 	fHeaderView->SetText("Updates found:");
 	fDetailView->SetText(text);
-	fUpdateButton->Show();
-	fCancelButton->Show();
 	Unlock();
 	
-	while (acquire_sem(fConfirmSem) == B_INTERRUPTED) {
-	}
-	return fConfirmed;
+	_WaitForButtonClick();
+	_SetState(priorState);
+	return fButtonResult == kMsgConfirm;
 }
 
 
@@ -186,10 +186,20 @@ SoftwareUpdaterWindow::FinalUpdate(const char* header, const char* detail)
 	Lock();
 	fHeaderView->SetText(header);
 	fDetailView->SetText(detail);
-	fUpdateButton->Hide();
-	fCancelButton->SetLabel("Quit");
-	fCancelButton->Show();
 	Unlock();
+	_SetState(STATE_FINAL_MSG);
+}
+
+
+bool
+SoftwareUpdaterWindow::UserCancelRequested()
+{
+	if (fUserCancelRequested) {
+		FinalUpdate("Update cancelled", "Cancelled by user");
+		_WaitForButtonClick();
+	}
+	
+	return fUserCancelRequested;
 }
 
 
@@ -199,7 +209,49 @@ SoftwareUpdaterWindow::_Error(const char* error)
 	Lock();
 	fHeaderView->SetText("Error encountered!");
 	fDetailView->SetText(error);
-	fUpdateButton->Hide();
-	fCancelButton->Show();
 	Unlock();
+}
+
+
+uint32
+SoftwareUpdaterWindow::_WaitForButtonClick()
+{
+	fButtonResult = 0;
+	fWaitingForButton = true;
+	fWaitingSem = create_sem(0, "WaitingSem");
+	while (acquire_sem(fWaitingSem) == B_INTERRUPTED) {
+	}
+	fWaitingForButton = false;
+	return fButtonResult;
+}
+
+
+void
+SoftwareUpdaterWindow::_SetState(uint32 state)
+{
+	fCurrentState = state;
+	
+	Lock();
+	// Update confirmation button
+	if (state == STATE_GET_CONFIRMATION) {
+		// TODO this isn't working, button doesn't show
+		fUpdateButton->Show();
+		fUpdateButton->Invalidate();
+	}
+	else
+		fUpdateButton->Hide();
+	
+	// Cancel button
+	if (fCurrentState == STATE_FINAL_MSG)
+		fCancelButton->SetLabel(B_TRANSLATE("Quit"));
+	else
+		fCancelButton->SetLabel(B_TRANSLATE("Cancel"));
+	Unlock();
+}
+
+
+uint32
+SoftwareUpdaterWindow::_GetState()
+{
+	return fCurrentState;
 }

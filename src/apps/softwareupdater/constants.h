@@ -16,9 +16,15 @@ enum {
 	ACTION_STEP_MAX
 };
 
+enum {
+	STATE_DISPLAY_STATUS = 0,
+	STATE_GET_CONFIRMATION,
+	STATE_FINAL_MSG
+};
+
 // Message what values
 static const uint32 kMsgUpdate = 'iUPD';
-static const uint32 kMsgExit = 'iEXT';
+static const uint32 kMsgCancel = 'iCAN';
 static const uint32 kMsgConfirm = 'iCON';
 
 // Message data keys

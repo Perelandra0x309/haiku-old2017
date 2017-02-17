@@ -27,9 +27,13 @@ public:
 			bool			ConfirmUpdates(const char* text);
 			void			FinalUpdate(const char* header,
 								const char* detail);
+			bool			UserCancelRequested();
 
 private:
 			void			_Error(const char* error);
+			uint32			_WaitForButtonClick();
+			void			_SetState(uint32 state);
+			uint32			_GetState();
 			
 			StripeView*		fStripeView;
 			BStringView*	fHeaderView;
@@ -37,8 +41,12 @@ private:
 			BButton*		fUpdateButton;
 			BButton*		fCancelButton;
 			
-			sem_id			fConfirmSem;
-			bool			fConfirmed;
+			uint32			fCurrentState;
+			sem_id			fWaitingSem;
+			bool			fWaitingForButton;
+			uint32			fButtonResult;
+			bool			fUserCancelRequested;
+			
 };
 
 

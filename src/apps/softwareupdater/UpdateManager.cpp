@@ -104,6 +104,7 @@ void
 UpdateManager::JobAborted(BSupportKit::BJob* job)
 {
 	//DIE(job->Result(), "aborted");
+	printf("Job aborted\n");
 }
 
 
@@ -472,6 +473,9 @@ UpdateManager::_UpdateStatusWindow(const char* header, const char* detail)
 {
 	if (header == NULL && detail == NULL)
 		return;
+	
+	if (fStatusWindow->UserCancelRequested())
+		throw BAbortedByUserException();
 	
 	BMessage message(kMsgUpdate);
 	if (header != NULL)

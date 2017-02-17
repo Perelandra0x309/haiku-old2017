@@ -12,7 +12,6 @@
 
 #include <Application.h>
 
-#include "SoftwareUpdaterWindow.h"
 #include "WorkingLooper.h"
 
 
@@ -22,10 +21,9 @@ public:
 							~SoftwareUpdaterApp();
 
 			void			ReadyToRun();
-			void			MessageReceived(BMessage* message);
+//			void			MessageReceived(BMessage* message);
 
 private:
-			SoftwareUpdaterWindow*	fWindow;
 			WorkingLooper*			fWorker;
 };
 

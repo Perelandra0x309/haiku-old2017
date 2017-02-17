@@ -98,6 +98,7 @@ UpdateAction::Perform()
 	return B_OK;
 }
 
+
 /*
 void
 UpdateAction::_SetStatus(const char* header, const char* detail)
