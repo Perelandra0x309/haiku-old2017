@@ -215,16 +215,39 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 	
 	printf("Upgrade count=%lu, Install count=%lu, Uninstall count=%lu\n",
 		upgradeCount, installCount, uninstallCount);
-	BString text(B_TRANSLATE_COMMENT("There are %count% updates available.",
-		"Do not translate %count%"));
+	// TODO print installed dependancies?
+	BString text;
+	if (upgradeCount == 1)
+		text.SetTo(B_TRANSLATE_COMMENT("There is 1 update "
+		"%dependancies%available.",
+		"Do not translate %dependancies%"));
+	else
+		text.SetTo(B_TRANSLATE_COMMENT("There are %count% updates "
+		"%dependancies%available.",
+		"Do not translate %count% or %dependancies%"));
 	BString countString;
 	countString << upgradeCount;
 	text.ReplaceFirst("%count%", countString);
+	BString dependancies("");
+	if (installCount) {
+		dependancies.SetTo("(");
+		dependancies.Append(B_TRANSLATE("with")).Append(" ");
+		if (installCount == 1)
+			dependancies.Append(B_TRANSLATE("1 new dependancy"));
+		else {
+			dependancies << installCount;
+			dependancies.Append(" ").Append(B_TRANSLATE("new dependancies"));
+		}
+		dependancies.Append(") ");
+	}
+	text.ReplaceFirst("%dependancies%", dependancies);
 	fChangesConfirmed = fStatusWindow->ConfirmUpdates(text.String());
 	if (!fChangesConfirmed)
 		throw BAbortedByUserException();
 	
 	_SetCurrentStep(ACTION_STEP_DOWNLOAD);
+	fPackageDownloadsTotal = upgradeCount + installCount;
+	fPackageDownloadsCount = 1;
 /*	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
 		fUpdateProgressListeners.ItemAt(i)->SetUpdateStep(ACTION_STEP_DOWNLOAD);
 	}*/
@@ -252,7 +275,11 @@ UpdateManager::ProgressPackageDownloadStarted(const char* packageName)
 {
 	if (fCurrentStep == ACTION_STEP_DOWNLOAD) {
 		BString header(B_TRANSLATE("Downloading packages"));
-		BString detail(packageName);
+		BString detail("(");
+		detail << fPackageDownloadsCount;
+		detail.Append("/");
+		detail << fPackageDownloadsTotal;
+		detail.Append(") ").Append(packageName);
 		_UpdateStatusWindow(header.String(), detail.String());
 	}
 	
@@ -270,7 +297,11 @@ UpdateManager::ProgressPackageDownloadActive(const char* packageName,
 	}*/
 	if (fCurrentStep == ACTION_STEP_DOWNLOAD) {
 		BString header(B_TRANSLATE("Downloading packages"));
-		BString detail(packageName);
+		BString detail("(");
+		detail << fPackageDownloadsCount;
+		detail.Append("/");
+		detail << fPackageDownloadsTotal;
+		detail.Append(") ").Append(packageName);
 		detail.Append(" ").Append(B_TRANSLATE_COMMENT("[%percent%% complete]",
 			"Do not translate %percent%%"));
 		BString percentString;
@@ -333,6 +364,8 @@ UpdateManager::ProgressPackageDownloadComplete(const char* packageName)
 		fUpdateProgressListeners.ItemAt(i)->DownloadProgressComplete(
 			packageName);
 	}*/
+	if (fCurrentStep == ACTION_STEP_DOWNLOAD)
+		fPackageDownloadsCount++;
 	
 	// Overwrite the progress bar with whitespace
 	printf("\r");
@@ -368,11 +401,16 @@ void
 UpdateManager::ProgressStartApplyingChanges(InstalledRepository& repository)
 {
 	_SetCurrentStep(ACTION_STEP_APPLY);
+	// TODO hide all status window buttons to prevent cancel request at this point?
+	// TODO message about rebooting
+	BString header(B_TRANSLATE("Applying changes"));
+	BString detail(B_TRANSLATE("Packages are being updated"));
+	_UpdateStatusWindow(header.String(), detail.String());
 	
 	printf("[%s] Applying changes ...\n", repository.Name().String());
 	
 	// TODO prevent completion for now during testing
-	throw BAbortedByUserException();
+//	throw BAbortedByUserException();
 }
 
 
@@ -380,6 +418,13 @@ void
 UpdateManager::ProgressTransactionCommitted(InstalledRepository& repository,
 	const BCommitTransactionResult& result)
 {
+	_SetCurrentStep(ACTION_STEP_COMPLETE);
+	BString header(B_TRANSLATE("Updates completed"));
+	BString detail(B_TRANSLATE_COMMENT("Old activation state backed up in %s%",
+		"Do not translate %s%"));
+	detail.ReplaceFirst("%s%", result.OldStateDirectory());
+	fStatusWindow->FinalUpdate(header.String(), detail.String());
+
 	const char* repositoryName = repository.Name().String();
 
 	int32 issueCount = result.CountIssues();

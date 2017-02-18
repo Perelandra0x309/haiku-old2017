@@ -80,8 +80,8 @@ UpdateAction::Perform()
 	} catch (BNothingToDoException ex) {
 		fprintf(stderr, "Nothing to do while updating packages : %s\n",
 			ex.Message().String());
-		fUpdateManager->FinalError(B_TRANSLATE("No actions taken"),
-			B_TRANSLATE("Nothing to do while updating the packages."));
+		fUpdateManager->FinalError(B_TRANSLATE("No updates available"),
+			B_TRANSLATE("There were no updates found."));
 		return B_OK;
 	} catch (BException ex) {
 		fprintf(stderr, "Exception occurred while updating packages : %s\n",

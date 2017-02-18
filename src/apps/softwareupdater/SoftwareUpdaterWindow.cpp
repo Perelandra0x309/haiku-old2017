@@ -200,6 +200,9 @@ SoftwareUpdaterWindow::FinalUpdate(const char* header, const char* detail)
 bool
 SoftwareUpdaterWindow::UserCancelRequested()
 {
+	if (_GetState() > STATE_DISPLAY_STATUS)
+		return false;
+	
 	if (fUserCancelRequested) {
 		FinalUpdate(B_TRANSLATE("Updates cancelled"),
 			B_TRANSLATE("No packages have been updated."));
@@ -236,7 +239,7 @@ SoftwareUpdaterWindow::_WaitForButtonClick()
 void
 SoftwareUpdaterWindow::_SetState(uint32 state)
 {
-	if (state <= STATE_HEAD || state >= STATE_TAIL)
+	if (state <= STATE_HEAD || state >= STATE_MAX)
 		return;
 	fCurrentState = state;
 	

@@ -110,6 +110,8 @@ private:
 			SoftwareUpdaterWindow*	fStatusWindow;
 			uint32					fCurrentStep;
 			bool					fChangesConfirmed;
+			int32					fPackageDownloadsTotal;
+			int32					fPackageDownloadsCount;
 };
 
 
