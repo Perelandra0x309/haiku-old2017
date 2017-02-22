@@ -27,6 +27,54 @@
 #define B_TRANSLATION_CONTEXT "SoftwareUpdater"
 
 
+DetailsWindow::DetailsWindow(const char* details)
+	:
+	BWindow(BRect(0, 0, 400, 400),
+		B_TRANSLATE_SYSTEM_NAME("Update Package Details"),
+		B_TITLED_WINDOW_LOOK, B_MODAL_APP_WINDOW_FEEL,
+		B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE)
+{
+	fLabelView = new BStringView("label", B_TRANSLATE("The following changes "
+		"will be made:"));
+	fTextView = new BTextView("details");
+	fTextView->SetText(details);
+	fScrollView = new BScrollView("scrollview", fTextView, B_WILL_DRAW,
+		false, true);
+	fCloseButton = new BButton("Close", new BMessage(kMsgClose));
+	fCloseButton->MakeDefault(true);
+	
+	BLayoutBuilder::Group<>(this, B_VERTICAL)
+		.SetInsets(B_USE_WINDOW_SPACING)
+		.AddGroup(B_HORIZONTAL)
+			.Add(fLabelView)
+			.AddGlue()
+		.End()
+		.Add(fScrollView)
+		.AddGroup(B_HORIZONTAL)
+			.AddGlue()
+			.Add(fCloseButton)
+		.End()
+	.End();
+	
+	CenterOnScreen();
+	// TODO add ESC shortcut to close window
+}
+
+
+void
+DetailsWindow::MessageReceived(BMessage* message)
+{
+	switch (message->what) {
+		case kMsgClose:
+			Quit();
+			break;
+		
+		default:
+			BWindow::MessageReceived(message);
+	}
+}
+
+
 SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	:
 	BWindow(BRect(0, 0, 0, 300), B_TRANSLATE_SYSTEM_NAME("Software Update"),
@@ -37,9 +85,11 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fDetailView(NULL),
 	fUpdateButton(NULL),
 	fCancelButton(NULL),
+	fViewDetailsButton(NULL),
 	fWaitingSem(-1),
 	fWaitingForButton(false),
-	fUserCancelRequested(false)
+	fUserCancelRequested(false),
+	fPackageDetails(NULL)
 {
 	BBitmap* icon = new BBitmap(BRect(0, 0, 31, 31), 0, B_RGBA32);
 	team_info teamInfo;
@@ -52,9 +102,11 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 
 	fUpdateButton = new BButton(B_TRANSLATE("Update now"),
 		new BMessage(kMsgConfirm));
+	fUpdateButton->MakeDefault(true);
 	fUpdateButton->Hide();
-
 	fCancelButton = new BButton("", new BMessage(kMsgCancel));
+	fViewDetailsButton = new BButton(B_TRANSLATE("View Details"),
+		new BMessage(kMsgViewDetails));
 
 	fHeaderView = new BStringView("header",
 		B_TRANSLATE("Checking for updates"), B_WILL_DRAW);
@@ -93,6 +145,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 			.AddGroup(B_HORIZONTAL, B_USE_DEFAULT_SPACING)
 				.AddGlue()
 				.Add(fCancelButton)
+				.Add(fViewDetailsButton)
 				.Add(fUpdateButton)
 			.End()
 		.End()
@@ -170,6 +223,13 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 			break;
 		}
 		
+		case kMsgViewDetails:
+		{
+			DetailsWindow* dWindow = new DetailsWindow(fPackageDetails);
+			dWindow->Show();
+			break;
+		}
+		
 		default:
 			BWindow::MessageReceived(message);
 	}
@@ -177,10 +237,9 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 
 
 bool
-SoftwareUpdaterWindow::ConfirmUpdates(const char* text)
+SoftwareUpdaterWindow::ConfirmUpdates(const char* text,
+	const char* packageDetails)
 {
-	uint32 priorState = _GetState();
-	_SetState(STATE_GET_CONFIRMATION);
 	Lock();
 	fUpdateButton->Show();
 		// TODO why isn't the button showing in _SetState?
@@ -188,8 +247,13 @@ SoftwareUpdaterWindow::ConfirmUpdates(const char* text)
 	fDetailView->SetText(text);
 	Unlock();
 	
+	fPackageDetails = packageDetails;
+	uint32 priorState = _GetState();
+	_SetState(STATE_GET_CONFIRMATION);
+	
 	_WaitForButtonClick();
 	_SetState(priorState);
+	fPackageDetails = NULL;
 	return fButtonResult == kMsgConfirm;
 }
 
@@ -268,14 +332,18 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	fCurrentState = state;
 	
 	Lock();
-	// Update confirmation button
+	// Update confirmation prompt buttons
 	if (state == STATE_GET_CONFIRMATION) {
 		// TODO this isn't working, button doesn't show
 		fUpdateButton->Show();
 		//fUpdateButton->Invalidate();
+		if (fPackageDetails != NULL)
+			fViewDetailsButton->Show();
 	}
-	else
+	else {
 		fUpdateButton->Hide();
+		fViewDetailsButton->Hide();
+	}
 	
 	// Cancel button
 	if (fCurrentState == STATE_FINAL_MSG)

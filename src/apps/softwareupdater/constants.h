@@ -30,6 +30,8 @@ enum {
 static const uint32 kMsgUpdate = 'iUPD';
 static const uint32 kMsgCancel = 'iCAN';
 static const uint32 kMsgConfirm = 'iCON';
+static const uint32 kMsgClose = 'iCLO';
+static const uint32 kMsgViewDetails = 'iVIE';
 
 // Message data keys
 #define kKeyHeader "key_header"

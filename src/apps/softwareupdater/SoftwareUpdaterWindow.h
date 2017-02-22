@@ -12,10 +12,24 @@
 
 #include <Button.h>
 #include <GroupView.h>
+#include <ScrollView.h>
 #include <StringView.h>
+#include <TextView.h>
 #include <Window.h>
 
 #include "StripeView.h"
+
+class DetailsWindow : public BWindow {
+public:
+							DetailsWindow(const char* details);
+			void			MessageReceived(BMessage* message);
+
+private:
+			BStringView*	fLabelView;
+			BTextView*		fTextView;
+			BScrollView*	fScrollView;
+			BButton*		fCloseButton;
+};
 
 
 class SoftwareUpdaterWindow : public BWindow {
@@ -25,7 +39,8 @@ public:
 			bool			QuitRequested();
 
 			void			MessageReceived(BMessage* message);
-			bool			ConfirmUpdates(const char* text);
+			bool			ConfirmUpdates(const char* text,
+								const char* packageDetails);
 			void			UpdatesApplying(const char* header,
 								const char* detail);
 			void			FinalUpdate(const char* header,
@@ -44,12 +59,14 @@ private:
 			BGroupView*		fInfoView;
 			BButton*		fUpdateButton;
 			BButton*		fCancelButton;
+			BButton*		fViewDetailsButton;
 			
 			uint32			fCurrentState;
 			sem_id			fWaitingSem;
 			bool			fWaitingForButton;
 			uint32			fButtonResult;
 			bool			fUserCancelRequested;
+			const char*		fPackageDetails;
 			
 };
 

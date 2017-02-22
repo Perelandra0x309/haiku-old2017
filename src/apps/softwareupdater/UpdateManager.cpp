@@ -206,14 +206,15 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 	int32 upgradeCount = 0;
 	int32 installCount = 0;
 	int32 uninstallCount = 0;
+	BString packageDetails;
 	if (fromMostSpecific) {
 		for (int32 i = count - 1; i >= 0; i--)
 			_PrintResult(*fInstalledRepositories.ItemAt(i), upgradeCount,
-				installCount, uninstallCount);
+				installCount, uninstallCount, packageDetails);
 	} else {
 		for (int32 i = 0; i < count; i++)
 			_PrintResult(*fInstalledRepositories.ItemAt(i), upgradeCount,
-				installCount, uninstallCount);
+				installCount, uninstallCount, packageDetails);
 	}
 	
 	printf("Upgrade count=%lu, Install count=%lu, Uninstall count=%lu\n",
@@ -244,10 +245,11 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 		dependancies.Append(") ");
 	}
 	text.ReplaceFirst("%dependancies%", dependancies);
-	fChangesConfirmed = fStatusWindow->ConfirmUpdates(text.String());
+	fChangesConfirmed = fStatusWindow->ConfirmUpdates(text.String(),
+		packageDetails.String());
 	if (!fChangesConfirmed)
 		throw BAbortedByUserException();
-	
+	/*
 	ResultWindow* window = new ResultWindow;
 	ObjectDeleter<ResultWindow> windowDeleter(window);
 	bool hasOtherChanges = false;
@@ -266,7 +268,7 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 		// show the window
 		if (windowDeleter.Detach()->Go() == 0)
 			throw BAbortedByUserException();
-	}
+	}*/
 	
 	_SetCurrentStep(ACTION_STEP_DOWNLOAD);
 	fPackageDownloadsTotal = upgradeCount + installCount;
@@ -477,12 +479,15 @@ UpdateManager::ProgressApplyingChangesDone(InstalledRepository& repository)
 
 void
 UpdateManager::_PrintResult(InstalledRepository& installationRepository,
-	int32& upgradeCount, int32& installCount, int32& uninstallCount)
+	int32& upgradeCount, int32& installCount, int32& uninstallCount,
+	BString& packageDetails)
 {
 	if (!installationRepository.HasChanges())
 		return;
 
 	printf("  in %s:\n", installationRepository.Name().String());
+	packageDetails.Append(BString().SetToFormat("In %s:\n",
+		installationRepository.Name().String()));
 
 	PackageList& packagesToActivate
 		= installationRepository.PackagesToActivate();
@@ -508,6 +513,7 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 	for (int32 i = 0; BSolverPackage* package = packagesToActivate.ItemAt(i);
 		i++) {
 		BString repository;
+		BString packageDetail;
 		if (dynamic_cast<MiscLocalRepository*>(package->Repository()) != NULL)
 			repository = "local file";
 		else
@@ -520,13 +526,24 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 				upgradedPackageVersions.StringAt(position).String(),
 				package->Info().Version().ToString().String(),
 				repository.String());
-				upgradeCount++;
+			packageDetail.SetToFormat("Upgrade %s-%s to %s from %s\n",
+				package->Info().Name().String(),
+				upgradedPackageVersions.StringAt(position).String(),
+				package->Info().Version().ToString().String(),
+				repository.String());
+			packageDetails.Append(packageDetail);
+			upgradeCount++;
 		} else {
 			printf("    install package %s-%s from %s\n",
 				package->Info().Name().String(),
 				package->Info().Version().ToString().String(),
 				repository.String());
-				installCount++;
+			packageDetail.SetToFormat("Install %s-%s from %s\n",
+				package->Info().Name().String(),
+			package->Info().Version().ToString().String(),
+			repository.String());
+			packageDetails.Append(packageDetail);
+			installCount++;
 		}
 	}
 
@@ -535,6 +552,10 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 		if (upgradedPackages.HasString(package->Info().Name()))
 			continue;
 		printf("    uninstall package %s\n", package->VersionedName().String());
+		BString packageDetail;
+		packageDetail.SetToFormat("Uninstall package %s\n",
+			package->VersionedName().String());
+		packageDetails.Append(packageDetail);
 		uninstallCount++;
 	}
 }

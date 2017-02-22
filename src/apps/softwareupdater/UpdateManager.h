@@ -98,7 +98,8 @@ private:
 									installationRepository,
 									int32& upgradeCount,
 									int32& installCount,
-									int32& uninstallCount);
+									int32& uninstallCount,
+									BString& packageDetails);
 			bool				_AddResults(InstalledRepository& repository,
 									ResultWindow* window);
 			void				_UpdateStatusWindow(const char* header,
