@@ -27,6 +27,9 @@
 #include <package/solver/SolverProblemSolution.h>
 
 #include "constants.h"
+#include "AutoDeleter.h"
+#include "ProblemWindow.h"
+#include "ResultWindow.h"
 
 using namespace BPackageKit;
 using namespace BPackageKit::BManager::BPrivate;
@@ -245,6 +248,26 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 	if (!fChangesConfirmed)
 		throw BAbortedByUserException();
 	
+	ResultWindow* window = new ResultWindow;
+	ObjectDeleter<ResultWindow> windowDeleter(window);
+	bool hasOtherChanges = false;
+	count = fInstalledRepositories.CountItems();
+	if (fromMostSpecific) {
+		for (int32 i = count - 1; i >= 0; i--)
+			hasOtherChanges
+				|= _AddResults(*fInstalledRepositories.ItemAt(i), window);
+	} else {
+		for (int32 i = 0; i < count; i++)
+			hasOtherChanges
+				|= _AddResults(*fInstalledRepositories.ItemAt(i), window);
+	}
+
+	if (hasOtherChanges) {
+		// show the window
+		if (windowDeleter.Detach()->Go() == 0)
+			throw BAbortedByUserException();
+	}
+	
 	_SetCurrentStep(ACTION_STEP_DOWNLOAD);
 	fPackageDownloadsTotal = upgradeCount + installCount;
 	fPackageDownloadsCount = 1;
@@ -402,7 +425,6 @@ UpdateManager::ProgressStartApplyingChanges(InstalledRepository& repository)
 {
 	_SetCurrentStep(ACTION_STEP_APPLY);
 	// TODO hide all status window buttons to prevent cancel request at this point?
-	// TODO message about rebooting
 	BString header(B_TRANSLATE("Applying changes"));
 	BString detail(B_TRANSLATE("Packages are being updated"));
 	_UpdateStatusWindow(header.String(), detail.String());
@@ -419,11 +441,12 @@ UpdateManager::ProgressTransactionCommitted(InstalledRepository& repository,
 	const BCommitTransactionResult& result)
 {
 	_SetCurrentStep(ACTION_STEP_COMPLETE);
+	// TODO message about rebooting
 	BString header(B_TRANSLATE("Updates completed"));
-	BString detail(B_TRANSLATE_COMMENT("Old activation state backed up in %s%",
+	BString detail(B_TRANSLATE_COMMENT("Old activation state backed up in %s%.",
 		"Do not translate %s%"));
 	detail.ReplaceFirst("%s%", result.OldStateDirectory());
-	fStatusWindow->FinalUpdate(header.String(), detail.String());
+	fStatusWindow->FinalUpdate(header.String(), detail.String(), true);
 
 	const char* repositoryName = repository.Name().String();
 
@@ -514,6 +537,49 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 		printf("    uninstall package %s\n", package->VersionedName().String());
 		uninstallCount++;
 	}
+}
+
+
+bool
+UpdateManager::_AddResults(InstalledRepository& installationRepository,
+	ResultWindow* window)
+{
+	if (!installationRepository.HasChanges())
+		return false;
+
+	ProblemWindow::SolverPackageSet installPackages;
+	ProblemWindow::SolverPackageSet uninstallPackages;
+/*	if (fCurrentInstallPackage != NULL)
+		installPackages.insert(fCurrentInstallPackage);
+
+	if (fCurrentUninstallPackage != NULL)
+		uninstallPackages.insert(fCurrentUninstallPackage);*/
+	PackageList& packagesToActivate
+		= installationRepository.PackagesToActivate();
+	PackageList& packagesToDeactivate
+		= installationRepository.PackagesToDeactivate();
+	for (int32 i = 0;
+		BSolverPackage* installPackage = packagesToActivate.ItemAt(i);
+		i++) {
+			for (int32 j = 0;
+			BSolverPackage* uninstallPackage = packagesToDeactivate.ItemAt(j);
+			j++) {
+				if (installPackage->Info().Name() == uninstallPackage->Info().Name()) {
+					installPackages.insert(installPackage);
+					break;
+				}
+			}
+		
+	}
+	for (int32 j = 0;
+		BSolverPackage* uninstallPackage = packagesToDeactivate.ItemAt(j);
+		j++) {
+		uninstallPackages.insert(uninstallPackage);
+	}
+	
+	return window->AddLocationChanges(installationRepository.Name(),
+		installationRepository.PackagesToActivate(), installPackages,
+		installationRepository.PackagesToDeactivate(), uninstallPackages);
 }
 
 

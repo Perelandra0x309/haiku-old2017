@@ -53,7 +53,7 @@ UpdateAction::Perform()
 		const char* const packages = "";
 
 		// perform the update
-		fUpdateManager->SetDebugLevel(1);
+//		fUpdateManager->SetDebugLevel(1);
 		fUpdateManager->Update(&packages, packageCount);
 	} catch (BFatalErrorException ex) {
 		BString errorString;

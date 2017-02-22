@@ -69,6 +69,12 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	font.SetSize(font.Size() * 1.5);
 	fHeaderView->SetFont(&font, B_FONT_FAMILY_AND_STYLE | B_FONT_SIZE
 		| B_FONT_FLAGS);
+	
+	fInfoView = new BGroupView();
+	BLayoutBuilder::Group<>(fInfoView, B_VERTICAL)
+		.Add(fHeaderView)
+		.Add(fDetailView)
+	.End();
 
 	BLayoutBuilder::Group<>(this, B_HORIZONTAL, 0)
 		.Add(fStripeView)
@@ -76,10 +82,11 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 			.SetInsets(0, B_USE_DEFAULT_SPACING,
 				B_USE_DEFAULT_SPACING, B_USE_DEFAULT_SPACING)
 			.AddGroup(B_HORIZONTAL, 0)
-				.AddGroup(B_VERTICAL, B_USE_DEFAULT_SPACING)
+			/*	.AddGroup(B_VERTICAL, B_USE_DEFAULT_SPACING)
 					.Add(fHeaderView)
 					.Add(fDetailView)
-				.End()
+				.End()*/
+				.Add(fInfoView)
 				.AddGlue()
 			.End()
 			.AddStrut(B_USE_DEFAULT_SPACING)
@@ -88,7 +95,8 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 				.Add(fCancelButton)
 				.Add(fUpdateButton)
 			.End()
-		.End();
+		.End()
+	.End();
 	
 	_SetState(STATE_DISPLAY_STATUS);
 	CenterOnScreen();
@@ -175,7 +183,7 @@ SoftwareUpdaterWindow::ConfirmUpdates(const char* text)
 	_SetState(STATE_GET_CONFIRMATION);
 	Lock();
 	fUpdateButton->Show();
-	 // TODO why isn't the button showing in _SetState?
+		// TODO why isn't the button showing in _SetState?
 	fHeaderView->SetText(B_TRANSLATE("Updates found"));
 	fDetailView->SetText(text);
 	Unlock();
@@ -187,11 +195,27 @@ SoftwareUpdaterWindow::ConfirmUpdates(const char* text)
 
 
 void
-SoftwareUpdaterWindow::FinalUpdate(const char* header, const char* detail)
+SoftwareUpdaterWindow::UpdatesApplying(const char* header, const char* detail)
 {
 	Lock();
 	fHeaderView->SetText(header);
 	fDetailView->SetText(detail);
+	Unlock();
+	_SetState(STATE_APPLY_UPDATES);
+}
+
+
+void
+SoftwareUpdaterWindow::FinalUpdate(const char* header, const char* detail, bool success)
+{
+	Lock();
+	fHeaderView->SetText(header);
+	fDetailView->SetText(detail);
+	if (success) {
+		BStringView *newView = new BStringView("secondDetail",
+			B_TRANSLATE("A reboot may be necessary to complete some updates."));
+		fInfoView->GetLayout()->AddView(newView);
+	}
 	Unlock();
 	_SetState(STATE_FINAL_MSG);
 }
@@ -258,6 +282,10 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 		fCancelButton->SetLabel(B_TRANSLATE("Quit"));
 	else
 		fCancelButton->SetLabel(B_TRANSLATE("Cancel"));
+	if (fCurrentState == STATE_APPLY_UPDATES)
+		fCancelButton->Hide();
+	else
+		fCancelButton->Show();
 	Unlock();
 }
 

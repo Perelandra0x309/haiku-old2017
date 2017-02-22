@@ -11,6 +11,7 @@
 
 
 #include <Button.h>
+#include <GroupView.h>
 #include <StringView.h>
 #include <Window.h>
 
@@ -25,8 +26,10 @@ public:
 
 			void			MessageReceived(BMessage* message);
 			bool			ConfirmUpdates(const char* text);
-			void			FinalUpdate(const char* header,
+			void			UpdatesApplying(const char* header,
 								const char* detail);
+			void			FinalUpdate(const char* header,
+								const char* detail, bool success = false);
 			bool			UserCancelRequested();
 
 private:
@@ -38,6 +41,7 @@ private:
 			StripeView*		fStripeView;
 			BStringView*	fHeaderView;
 			BStringView*	fDetailView;
+			BGroupView*		fInfoView;
 			BButton*		fUpdateButton;
 			BButton*		fCancelButton;
 			
