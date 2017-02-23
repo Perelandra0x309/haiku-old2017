@@ -350,10 +350,8 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 		fCancelButton->SetLabel(B_TRANSLATE("Quit"));
 	else
 		fCancelButton->SetLabel(B_TRANSLATE("Cancel"));
-	if (fCurrentState == STATE_APPLY_UPDATES)
-		fCancelButton->Hide();
-	else
-		fCancelButton->Show();
+	fCancelButton->SetEnabled(fCurrentState != STATE_APPLY_UPDATES);
+
 	Unlock();
 }
 

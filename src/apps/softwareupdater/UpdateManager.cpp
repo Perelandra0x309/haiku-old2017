@@ -93,7 +93,11 @@ UpdateManager::UpdateManager(BPackageInstallationLocation location)
 
 UpdateManager::~UpdateManager()
 {
-	delete fStatusWindow;
+//	delete fStatusWindow;
+	if (fStatusWindow != NULL)
+		fStatusWindow->PostMessage(B_QUIT_REQUESTED);
+	if (fProblemWindow != NULL)
+		fProblemWindow->PostMessage(B_QUIT_REQUESTED);
 }
 
 
@@ -141,7 +145,15 @@ UpdateManager::FinalError(const char* header, const char* text)
 void
 UpdateManager::HandleProblems()
 {
-	int32 problemCount = fSolver->CountProblems();
+	if (fProblemWindow == NULL)
+		fProblemWindow = new ProblemWindow;
+
+	ProblemWindow::SolverPackageSet installPackages;
+	ProblemWindow::SolverPackageSet uninstallPackages;
+	if (!fProblemWindow->Go(fSolver,installPackages, uninstallPackages))
+		throw BAbortedByUserException();
+
+/*	int32 problemCount = fSolver->CountProblems();
 	for (int32 i = 0; i < problemCount; i++) {
 		// print problem and possible solutions
 		BSolverProblem* problem = fSolver->ProblemAt(i);
@@ -177,7 +189,7 @@ UpdateManager::HandleProblems()
 			if (strcmp(buffer, "s\n") == 0)
 				break;
 
-			/*
+			
 			char* end;
 			long selected = strtol(buffer, &end, 0);
 			if (end == buffer || *end != '\n' || selected < 1
@@ -190,10 +202,10 @@ UpdateManager::HandleProblems()
 				problem->SolutionAt(selected - 1));
 			if (error != B_OK)
 				DIE(error, "failed to set solution");
-			*/
+			
 			break;
 		}
-	}
+	}*/
 }
 
 
@@ -429,7 +441,7 @@ UpdateManager::ProgressStartApplyingChanges(InstalledRepository& repository)
 	// TODO hide all status window buttons to prevent cancel request at this point?
 	BString header(B_TRANSLATE("Applying changes"));
 	BString detail(B_TRANSLATE("Packages are being updated"));
-	_UpdateStatusWindow(header.String(), detail.String());
+	fStatusWindow->UpdatesApplying(header.String(), detail.String());
 	
 	printf("[%s] Applying changes ...\n", repository.Name().String());
 	
@@ -510,14 +522,16 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 		}
 	}
 
+	BStringList upgradeList;
+	BStringList installList;
 	for (int32 i = 0; BSolverPackage* package = packagesToActivate.ItemAt(i);
 		i++) {
 		BString repository;
-		BString packageDetail;
 		if (dynamic_cast<MiscLocalRepository*>(package->Repository()) != NULL)
 			repository = "local file";
 		else
-			repository.SetToFormat("repository %s", package->Repository()->Name().String());
+			repository.SetToFormat("repository %s",
+				package->Repository()->Name().String());
 
 		int position = upgradedPackages.IndexOf(package->Info().Name());
 		if (position >= 0) {
@@ -526,41 +540,54 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 				upgradedPackageVersions.StringAt(position).String(),
 				package->Info().Version().ToString().String(),
 				repository.String());
-			packageDetail.SetToFormat("Upgrade %s-%s to %s from %s\n",
+			upgradeList.Add(BString().SetToFormat("	%s-%s to %s from %s",
 				package->Info().Name().String(),
 				upgradedPackageVersions.StringAt(position).String(),
 				package->Info().Version().ToString().String(),
-				repository.String());
-			packageDetails.Append(packageDetail);
+				repository.String()));
 			upgradeCount++;
 		} else {
 			printf("    install package %s-%s from %s\n",
 				package->Info().Name().String(),
 				package->Info().Version().ToString().String(),
 				repository.String());
-			packageDetail.SetToFormat("Install %s-%s from %s\n",
+			installList.Add(BString().SetToFormat("	%s-%s from %s",
 				package->Info().Name().String(),
-			package->Info().Version().ToString().String(),
-			repository.String());
-			packageDetails.Append(packageDetail);
+				package->Info().Version().ToString().String(),
+				repository.String()));
 			installCount++;
 		}
 	}
 
+	BStringList uninstallList;
 	for (int32 i = 0; BSolverPackage* package = packagesToDeactivate.ItemAt(i);
 		i++) {
 		if (upgradedPackages.HasString(package->Info().Name()))
 			continue;
 		printf("    uninstall package %s\n", package->VersionedName().String());
-		BString packageDetail;
-		packageDetail.SetToFormat("Uninstall package %s\n",
-			package->VersionedName().String());
-		packageDetails.Append(packageDetail);
+		uninstallList.Add(BString().SetToFormat("Uninstall package %s",
+			package->VersionedName().String()));
 		uninstallCount++;
+	}
+	
+	if (!upgradeList.IsEmpty()) {
+		packageDetails.Append(B_TRANSLATE("Packages to be updated:"))
+			.Append("\n");
+		packageDetails.Append(upgradeList.Join("\n")).Append("\n");
+	}
+	if (!installList.IsEmpty()) {
+		packageDetails.Append(B_TRANSLATE("New packages to be installed:"))
+			.Append("\n");
+		packageDetails.Append(installList.Join("\n")).Append("\n");
+	}
+	if (!uninstallList.IsEmpty()) {
+		packageDetails.Append(B_TRANSLATE("Packages to be uninstalled:"))
+			.Append("\n");
+		packageDetails.Append(uninstallList.Join("\n")).Append("\n");
 	}
 }
 
-
+/*
 bool
 UpdateManager::_AddResults(InstalledRepository& installationRepository,
 	ResultWindow* window)
@@ -570,11 +597,6 @@ UpdateManager::_AddResults(InstalledRepository& installationRepository,
 
 	ProblemWindow::SolverPackageSet installPackages;
 	ProblemWindow::SolverPackageSet uninstallPackages;
-/*	if (fCurrentInstallPackage != NULL)
-		installPackages.insert(fCurrentInstallPackage);
-
-	if (fCurrentUninstallPackage != NULL)
-		uninstallPackages.insert(fCurrentUninstallPackage);*/
 	PackageList& packagesToActivate
 		= installationRepository.PackagesToActivate();
 	PackageList& packagesToDeactivate
@@ -602,7 +624,7 @@ UpdateManager::_AddResults(InstalledRepository& installationRepository,
 		installationRepository.PackagesToActivate(), installPackages,
 		installationRepository.PackagesToDeactivate(), uninstallPackages);
 }
-
+*/
 
 void
 UpdateManager::_UpdateStatusWindow(const char* header, const char* detail)

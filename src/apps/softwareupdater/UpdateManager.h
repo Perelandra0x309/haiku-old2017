@@ -17,7 +17,7 @@
 #include "SoftwareUpdaterWindow.h"
 
 class ProblemWindow;
-class ResultWindow;
+//class ResultWindow;
 
 //using namespace BPackageKit;
 using BPackageKit::BPrivate::BDaemonClient;
@@ -100,8 +100,8 @@ private:
 									int32& installCount,
 									int32& uninstallCount,
 									BString& packageDetails);
-			bool				_AddResults(InstalledRepository& repository,
-									ResultWindow* window);
+//			bool				_AddResults(InstalledRepository& repository,
+//									ResultWindow* window);
 			void				_UpdateStatusWindow(const char* header,
 									const char* detail);
 			void				_SetCurrentStep(int32 step);
@@ -114,6 +114,7 @@ private:
 //								fUpdateProgressListeners;
 			
 			SoftwareUpdaterWindow*	fStatusWindow;
+			ProblemWindow*			fProblemWindow;
 			uint32					fCurrentStep;
 			bool					fChangesConfirmed;
 			int32					fPackageDownloadsTotal;
