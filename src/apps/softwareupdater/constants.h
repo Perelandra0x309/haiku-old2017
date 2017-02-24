@@ -20,6 +20,7 @@ enum {
 enum {
 	STATE_HEAD = 0,
 	STATE_DISPLAY_STATUS,
+	STATE_DISPLAY_PROGRESS,
 	STATE_GET_CONFIRMATION,
 	STATE_APPLY_UPDATES,
 	STATE_FINAL_MSG,
@@ -27,7 +28,8 @@ enum {
 };
 
 // Message what values
-static const uint32 kMsgUpdate = 'iUPD';
+static const uint32 kMsgTextUpdate = 'iUPD';
+static const uint32 kMsgProgressUpdate = 'iPRO';
 static const uint32 kMsgCancel = 'iCAN';
 static const uint32 kMsgConfirm = 'iCON';
 static const uint32 kMsgClose = 'iCLO';
@@ -36,6 +38,9 @@ static const uint32 kMsgViewDetails = 'iVIE';
 // Message data keys
 #define kKeyHeader "key_header"
 #define kKeyDetail "key_detail"
+#define kKeyPackageName "key_packagename"
+#define kKeyPackageCount "key_packagecount"
+#define kKeyPercentage "key_percentage"
 
 
 #endif // CONSTANTS_H

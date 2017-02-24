@@ -93,7 +93,6 @@ UpdateManager::UpdateManager(BPackageInstallationLocation location)
 
 UpdateManager::~UpdateManager()
 {
-//	delete fStatusWindow;
 	if (fStatusWindow != NULL)
 		fStatusWindow->PostMessage(B_QUIT_REQUESTED);
 	if (fProblemWindow != NULL)
@@ -312,12 +311,13 @@ UpdateManager::ProgressPackageDownloadStarted(const char* packageName)
 {
 	if (fCurrentStep == ACTION_STEP_DOWNLOAD) {
 		BString header(B_TRANSLATE("Downloading packages"));
-		BString detail("(");
-		detail << fPackageDownloadsCount;
-		detail.Append("/");
-		detail << fPackageDownloadsTotal;
-		detail.Append(") ").Append(packageName);
-		_UpdateStatusWindow(header.String(), detail.String());
+		BString packageCount;
+		packageCount.SetToFormat(
+			B_TRANSLATE_COMMENT("%i of %i", "Do not translate %i"),
+			fPackageDownloadsCount,
+			fPackageDownloadsTotal);
+		_UpdateDownloadProgress(header.String(), packageName, packageCount,
+			0.0);
 	}
 	
 	printf("Downloading %s...\n", packageName);
@@ -333,18 +333,13 @@ UpdateManager::ProgressPackageDownloadActive(const char* packageName,
 			packageName, completionPercentage);
 	}*/
 	if (fCurrentStep == ACTION_STEP_DOWNLOAD) {
-		BString header(B_TRANSLATE("Downloading packages"));
-		BString detail("(");
-		detail << fPackageDownloadsCount;
-		detail.Append("/");
-		detail << fPackageDownloadsTotal;
-		detail.Append(") ").Append(packageName);
-		detail.Append(" ").Append(B_TRANSLATE_COMMENT("[%percent%% complete]",
-			"Do not translate %percent%%"));
-		BString percentString;
-		percentString << int(100 * completionPercentage);
-		detail.ReplaceFirst("%percent%", percentString);
-		_UpdateStatusWindow(header.String(), detail.String());
+		BString packageCount;
+		packageCount.SetToFormat(
+			B_TRANSLATE_COMMENT("%i of %i", "Do not translate %i"),
+			fPackageDownloadsCount,
+			fPackageDownloadsTotal);
+		_UpdateDownloadProgress(NULL, packageName, packageCount,
+			completionPercentage);
 	}
 
 	static const char* progressChars[] = {
@@ -438,15 +433,11 @@ void
 UpdateManager::ProgressStartApplyingChanges(InstalledRepository& repository)
 {
 	_SetCurrentStep(ACTION_STEP_APPLY);
-	// TODO hide all status window buttons to prevent cancel request at this point?
 	BString header(B_TRANSLATE("Applying changes"));
 	BString detail(B_TRANSLATE("Packages are being updated"));
 	fStatusWindow->UpdatesApplying(header.String(), detail.String());
 	
 	printf("[%s] Applying changes ...\n", repository.Name().String());
-	
-	// TODO prevent completion for now during testing
-//	throw BAbortedByUserException();
 }
 
 
@@ -455,12 +446,10 @@ UpdateManager::ProgressTransactionCommitted(InstalledRepository& repository,
 	const BCommitTransactionResult& result)
 {
 	_SetCurrentStep(ACTION_STEP_COMPLETE);
-	// TODO message about rebooting
 	BString header(B_TRANSLATE("Updates completed"));
-	BString detail(B_TRANSLATE_COMMENT("Old activation state backed up in %s%.",
-		"Do not translate %s%"));
-	detail.ReplaceFirst("%s%", result.OldStateDirectory());
-	fStatusWindow->FinalUpdate(header.String(), detail.String(), true);
+	BString detail(B_TRANSLATE("A reboot may be necessary to complete some "
+		"updates."));
+	fStatusWindow->FinalUpdate(header.String(), detail.String());
 
 	const char* repositoryName = repository.Name().String();
 
@@ -635,11 +624,32 @@ UpdateManager::_UpdateStatusWindow(const char* header, const char* detail)
 	if (fStatusWindow->UserCancelRequested())
 		throw BAbortedByUserException();
 	
-	BMessage message(kMsgUpdate);
+	BMessage message(kMsgTextUpdate);
 	if (header != NULL)
 		message.AddString(kKeyHeader, header);
 	if (detail != NULL)
 		message.AddString(kKeyDetail, detail);
+	fStatusWindow->PostMessage(&message);
+}
+
+
+void
+UpdateManager::_UpdateDownloadProgress(const char* header,
+	const char* packageName, const char* packageCount,
+	float completionPercentage)
+{
+	if (packageName == NULL || packageCount == NULL)
+		return;
+	
+	if (fStatusWindow->UserCancelRequested())
+		throw BAbortedByUserException();
+	
+	BMessage message(kMsgProgressUpdate);
+	if (header != NULL)
+		message.AddString(kKeyHeader, header);
+	message.AddString(kKeyPackageName, packageName);
+	message.AddString(kKeyPackageCount, packageCount);
+	message.AddFloat(kKeyPercentage, completionPercentage);
 	fStatusWindow->PostMessage(&message);
 }
 

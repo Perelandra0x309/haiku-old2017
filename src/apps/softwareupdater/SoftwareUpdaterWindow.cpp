@@ -30,7 +30,7 @@
 DetailsWindow::DetailsWindow(const char* details)
 	:
 	BWindow(BRect(0, 0, 400, 400),
-		B_TRANSLATE_SYSTEM_NAME("Update Package Details"),
+		B_TRANSLATE_SYSTEM_NAME("Update package details"),
 		B_TITLED_WINDOW_LOOK, B_MODAL_APP_WINDOW_FEEL,
 		B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE)
 {
@@ -77,7 +77,7 @@ DetailsWindow::MessageReceived(BMessage* message)
 
 SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	:
-	BWindow(BRect(0, 0, 0, 300), B_TRANSLATE_SYSTEM_NAME("Software Update"),
+	BWindow(BRect(0, 0, 0, 300), B_TRANSLATE_SYSTEM_NAME("SoftwareUpdater"),
 		B_TITLED_WINDOW, B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE
 		| B_NOT_CLOSABLE | B_NOT_RESIZABLE),
 	fStripeView(NULL),
@@ -86,6 +86,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fUpdateButton(NULL),
 	fCancelButton(NULL),
 	fViewDetailsButton(NULL),
+	fStatusBar(NULL),
 	fWaitingSem(-1),
 	fWaitingForButton(false),
 	fUserCancelRequested(false),
@@ -105,8 +106,9 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fUpdateButton->MakeDefault(true);
 	fUpdateButton->Hide();
 	fCancelButton = new BButton("", new BMessage(kMsgCancel));
-	fViewDetailsButton = new BButton(B_TRANSLATE("View Details"),
+	fViewDetailsButton = new BButton(B_TRANSLATE("View details"),
 		new BMessage(kMsgViewDetails));
+	fViewDetailsButton->Hide();
 
 	fHeaderView = new BStringView("header",
 		B_TRANSLATE("Checking for updates"), B_WILL_DRAW);
@@ -114,6 +116,9 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fDetailView = new BStringView("detail", B_TRANSLATE("Contacting software "
 		"repositories to check for package updates."), B_WILL_DRAW);
 //	fDetailView->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT, B_ALIGN_MIDDLE));
+	fStatusBar = new BStatusBar("progress");
+	fStatusBar->SetMaxValue(1.0);
+	fStatusBar->Hide();
 
 	BFont font;
 	fHeaderView->GetFont(&font);
@@ -134,14 +139,11 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 			.SetInsets(0, B_USE_DEFAULT_SPACING,
 				B_USE_DEFAULT_SPACING, B_USE_DEFAULT_SPACING)
 			.AddGroup(B_HORIZONTAL, 0)
-			/*	.AddGroup(B_VERTICAL, B_USE_DEFAULT_SPACING)
-					.Add(fHeaderView)
-					.Add(fDetailView)
-				.End()*/
 				.Add(fInfoView)
 				.AddGlue()
 			.End()
-			.AddStrut(B_USE_DEFAULT_SPACING)
+			.Add(fStatusBar)
+	//		.AddStrut(B_USE_SMALL_SPACING)
 			.AddGroup(B_HORIZONTAL, B_USE_DEFAULT_SPACING)
 				.AddGlue()
 				.Add(fCancelButton)
@@ -175,9 +177,11 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 {
 	switch (message->what) {
 		
-		case kMsgUpdate:
+		case kMsgTextUpdate:
 		{
-			if (fCurrentState != STATE_DISPLAY_STATUS)
+			if (fCurrentState == STATE_DISPLAY_PROGRESS)
+				_SetState(STATE_DISPLAY_STATUS);
+			else if (fCurrentState != STATE_DISPLAY_STATUS)
 				break;
 			
 			BString header;
@@ -189,6 +193,37 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 			result = message->FindString(kKeyDetail, &detail);
 			if (result == B_OK)
 				fDetailView->SetText(detail.String());
+			Unlock();
+			break;
+		}
+		
+		case kMsgProgressUpdate:
+		{
+			if (fCurrentState == STATE_DISPLAY_STATUS)
+				_SetState(STATE_DISPLAY_PROGRESS);
+			else if (fCurrentState != STATE_DISPLAY_PROGRESS)
+				break;
+			
+			BString packageName;
+			status_t result = message->FindString(kKeyPackageName, &packageName);
+			if (result != B_OK)
+				break;
+			BString packageCount;
+			result = message->FindString(kKeyPackageCount, &packageCount);
+			if (result != B_OK)
+				break;
+			float percent;
+			result = message->FindFloat(kKeyPercentage, &percent);
+			if (result != B_OK)
+				break;
+			
+			BString header;
+			Lock();
+			result = message->FindString(kKeyHeader, &header);
+			if (result == B_OK && header != fHeaderView->Text())
+				fHeaderView->SetText(header.String());
+			fStatusBar->SetTo(percent, packageName.String(),
+				packageCount.String());
 			Unlock();
 			break;
 		}
@@ -241,8 +276,6 @@ SoftwareUpdaterWindow::ConfirmUpdates(const char* text,
 	const char* packageDetails)
 {
 	Lock();
-	fUpdateButton->Show();
-		// TODO why isn't the button showing in _SetState?
 	fHeaderView->SetText(B_TRANSLATE("Updates found"));
 	fDetailView->SetText(text);
 	Unlock();
@@ -270,16 +303,14 @@ SoftwareUpdaterWindow::UpdatesApplying(const char* header, const char* detail)
 
 
 void
-SoftwareUpdaterWindow::FinalUpdate(const char* header, const char* detail, bool success)
+SoftwareUpdaterWindow::FinalUpdate(const char* header, const char* detail)
 {
+	if (_GetState() == STATE_FINAL_MSG)
+		return;
+	
 	Lock();
 	fHeaderView->SetText(header);
 	fDetailView->SetText(detail);
-	if (success) {
-		BStringView *newView = new BStringView("secondDetail",
-			B_TRANSLATE("A reboot may be necessary to complete some updates."));
-		fInfoView->GetLayout()->AddView(newView);
-	}
 	Unlock();
 	_SetState(STATE_FINAL_MSG);
 }
@@ -288,7 +319,7 @@ SoftwareUpdaterWindow::FinalUpdate(const char* header, const char* detail, bool 
 bool
 SoftwareUpdaterWindow::UserCancelRequested()
 {
-	if (_GetState() > STATE_DISPLAY_STATUS)
+	if (_GetState() > STATE_DISPLAY_PROGRESS)
 		return false;
 	
 	if (fUserCancelRequested) {
@@ -300,16 +331,6 @@ SoftwareUpdaterWindow::UserCancelRequested()
 	return fUserCancelRequested;
 }
 
-/*
-void
-SoftwareUpdaterWindow::_Error(const char* error)
-{
-	Lock();
-	fHeaderView->SetText("Error encountered!");
-	fDetailView->SetText(error);
-	Unlock();
-}
-*/
 
 uint32
 SoftwareUpdaterWindow::_WaitForButtonClick()
@@ -332,26 +353,47 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	fCurrentState = state;
 	
 	Lock();
+	// All these IsHidden() calls are needed because Hide/Show are cumulative
+	
 	// Update confirmation prompt buttons
 	if (state == STATE_GET_CONFIRMATION) {
-		// TODO this isn't working, button doesn't show
-		fUpdateButton->Show();
-		//fUpdateButton->Invalidate();
-		if (fPackageDetails != NULL)
+		if (fUpdateButton->IsHidden())
+			fUpdateButton->Show();
+		if (fPackageDetails != NULL && fViewDetailsButton->IsHidden())
 			fViewDetailsButton->Show();
 	}
 	else {
-		fUpdateButton->Hide();
+		if (!fUpdateButton->IsHidden())
+			fUpdateButton->Hide();
+		if (!fViewDetailsButton->IsHidden())
 		fViewDetailsButton->Hide();
+	}
+	
+	// Progress bar and string view
+	if (fCurrentState == STATE_DISPLAY_PROGRESS) {
+		fDetailView->SetText("");
+		if (!fDetailView->IsHidden())
+			fDetailView->Hide();
+		if (fStatusBar->IsHidden())
+			fStatusBar->Show();
+	}
+	else {
+		if (fDetailView->IsHidden())
+			fDetailView->Show();
+		if (!fStatusBar->IsHidden())
+			fStatusBar->Hide();
 	}
 	
 	// Cancel button
 	if (fCurrentState == STATE_FINAL_MSG)
-		fCancelButton->SetLabel(B_TRANSLATE("Quit"));
+		fCancelButton->SetLabel(B_TRANSLATE("OK"));
 	else
 		fCancelButton->SetLabel(B_TRANSLATE("Cancel"));
 	fCancelButton->SetEnabled(fCurrentState != STATE_APPLY_UPDATES);
-
+	
+	InvalidateLayout(); // TODO resize window at final message to get rid of space at bottom
+	Layout(true);
+	UpdateSizeLimits();
 	Unlock();
 }
 

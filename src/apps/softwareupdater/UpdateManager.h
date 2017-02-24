@@ -104,6 +104,10 @@ private:
 //									ResultWindow* window);
 			void				_UpdateStatusWindow(const char* header,
 									const char* detail);
+			void				_UpdateDownloadProgress(const char* header,
+									const char* packageName,
+									const char* packageCount,
+									float completionPercentage);
 			void				_SetCurrentStep(int32 step);
 
 private:

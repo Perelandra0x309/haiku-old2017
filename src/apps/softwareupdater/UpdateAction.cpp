@@ -75,7 +75,7 @@ UpdateAction::Perform()
 		fprintf(stderr, "Updates aborted by user: %s\n",
 			ex.Message().String());
 		fUpdateManager->FinalError(B_TRANSLATE("Updates cancelled"),
-			B_TRANSLATE("Updates were cancelled by the user."));
+			B_TRANSLATE("No packages have been updated."));
 		return B_OK;
 	} catch (BNothingToDoException ex) {
 		fprintf(stderr, "Nothing to do while updating packages : %s\n",
