@@ -22,7 +22,7 @@ class WorkingLooper : public BLooper {
 public:
 							WorkingLooper();
 //							~WorkingLooper();
-			bool			QuitRequested();
+//			bool			QuitRequested();
 
 			void			MessageReceived(BMessage* message);
 

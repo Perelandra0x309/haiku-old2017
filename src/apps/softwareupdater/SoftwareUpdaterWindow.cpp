@@ -13,6 +13,7 @@
 #include <AppDefs.h>
 #include <Application.h>
 #include <Catalog.h>
+#include <ColumnTypes.h>
 #include <NodeInfo.h>
 #include <LayoutBuilder.h>
 #include <Message.h>
@@ -24,9 +25,26 @@
 #include "constants.h"
 
 #undef B_TRANSLATION_CONTEXT
-#define B_TRANSLATION_CONTEXT "SoftwareUpdater"
+#define B_TRANSLATION_CONTEXT "SoftwareUpdaterWindow"
 
 
+static const BString kTitlePackageName = B_TRANSLATE_COMMENT("Package Name",
+	"Column title");
+static const BString kTitleCurVer = B_TRANSLATE_COMMENT("Current version",
+	"Column title");
+static const BString kTitleNewVer = B_TRANSLATE_COMMENT("New version",
+	"Column title");
+static const BString kTitleRepo = B_TRANSLATE_COMMENT("Repository",
+	"Column title");
+
+enum {
+	kNameColumn,
+	kCurrentColumn,
+	kNewColumn,
+	kRepoColumn
+};
+
+/*
 DetailsWindow::DetailsWindow(const char* details)
 	:
 	BWindow(BRect(0, 0, 400, 400),
@@ -58,6 +76,98 @@ DetailsWindow::DetailsWindow(const char* details)
 	
 	CenterOnScreen();
 	// TODO add ESC shortcut to close window
+}*/
+
+PackageRow::PackageRow(const char* package_name, const char* cur_ver,
+	const char* new_ver, const char* repo_name)
+	:
+	BRow()
+{
+	SetField(new BStringField(package_name), kNameColumn);
+	SetField(new BStringField(cur_ver), kCurrentColumn);
+	SetField(new BStringField(new_ver), kNewColumn);
+	SetField(new BStringField(repo_name), kRepoColumn);
+}
+
+
+DetailsWindow::DetailsWindow(const BMessenger& target)
+	:
+	BWindow(BRect(0, 0, 400, 400),
+		B_TRANSLATE_SYSTEM_NAME("Update package details"),
+		B_TITLED_WINDOW_LOOK, B_MODAL_APP_WINDOW_FEEL,
+		B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE),
+	fCustomQuitFlag(false),
+	fStatusWindowMessenger(target)
+{
+	fLabelView = new BStringView("label", B_TRANSLATE("The following changes "
+		"will be made:"));
+	fListView = new BColumnListView("list", B_NAVIGABLE, B_PLAIN_BORDER);
+	fPackageNameWidth = be_plain_font->StringWidth(kTitlePackageName) + 15;
+	fCurVerWidth = be_plain_font->StringWidth(kTitleCurVer) + 15;
+	fNewVerWidth = be_plain_font->StringWidth(kTitleNewVer) + 15;
+	fRepoNameWidth = be_plain_font->StringWidth(kTitleRepo) + 15;
+	fListView->AddColumn(new BStringColumn(kTitlePackageName,
+		fPackageNameWidth, fPackageNameWidth, fPackageNameWidth,
+		B_TRUNCATE_END), kNameColumn);
+	fListView->AddColumn(new BStringColumn(kTitleCurVer, fCurVerWidth,
+		fCurVerWidth, fCurVerWidth, B_TRUNCATE_END), kCurrentColumn);
+	fListView->AddColumn(new BStringColumn(kTitleNewVer, fNewVerWidth,
+		fNewVerWidth, fNewVerWidth, B_TRUNCATE_END), kNewColumn);
+	fListView->AddColumn(new BStringColumn(kTitleRepo, fRepoNameWidth,
+		fRepoNameWidth, fRepoNameWidth, B_TRUNCATE_END), kRepoColumn);
+	
+	fUpdateButton = new BButton(B_TRANSLATE("Update now"),
+		new BMessage(kMsgConfirm));
+	fUpdateButton->MakeDefault(true);
+	fCloseButton = new BButton("Close", new BMessage(kMsgClose));
+	fCloseButton->MakeDefault(true);
+	
+	BLayoutBuilder::Group<>(this, B_VERTICAL)
+		.SetInsets(B_USE_WINDOW_SPACING)
+		.AddGroup(B_HORIZONTAL)
+			.Add(fLabelView)
+			.AddGlue()
+		.End()
+		.Add(fListView)
+		.AddGroup(B_HORIZONTAL)
+			.AddGlue()
+			.Add(fCloseButton)
+			.Add(fUpdateButton)
+		.End()
+	.End();
+	
+	CenterOnScreen();
+	Run();
+	// TODO add ESC shortcut to close window
+}
+
+
+DetailsWindow::~DetailsWindow()
+{
+	BRow* row = fListView->RowAt((int32)0, NULL);
+	while (row != NULL) {
+		fListView->RemoveRow(row);
+		delete row;
+		row = fListView->RowAt((int32)0, NULL);
+	}
+}
+
+
+bool
+DetailsWindow::QuitRequested()
+{
+	Hide();
+	if (fCustomQuitFlag)
+		return BWindow::QuitRequested();
+	return false;
+}
+
+
+void
+DetailsWindow::CustomQuit()
+{
+	fCustomQuitFlag = true;
+	QuitRequested();
 }
 
 
@@ -66,11 +176,64 @@ DetailsWindow::MessageReceived(BMessage* message)
 {
 	switch (message->what) {
 		case kMsgClose:
-			Quit();
+			Hide();
+			break;
+		
+		case kMsgConfirm:
+			Hide();
+			if (fStatusWindowMessenger.IsValid())
+				fStatusWindowMessenger.SendMessage(kMsgConfirm);
+			break;
+		
+		case kMsgShow:
+			Show();
 			break;
 		
 		default:
 			BWindow::MessageReceived(message);
+	}
+}
+
+
+void
+DetailsWindow::AddRow(const char* package_name, const char* cur_ver,
+	const char* new_ver, const char* repo_name)
+{
+	PackageRow* addedRow = new PackageRow(package_name, cur_ver, new_ver,
+		repo_name);
+	Lock();
+	fListView->AddRow(addedRow);
+	Unlock();
+	float packageNameWidth = be_plain_font->StringWidth(package_name) + 15;
+	float curVerWidth = be_plain_font->StringWidth(cur_ver) + 15;
+	float newVerWidth = be_plain_font->StringWidth(new_ver) + 15;
+	float repoNameWidth = be_plain_font->StringWidth(repo_name) + 15;
+	bool widthChanged = false;
+	if (packageNameWidth > fPackageNameWidth) {
+		fPackageNameWidth = packageNameWidth;
+		fListView->ColumnAt(kNameColumn)->SetWidth(fPackageNameWidth);
+		widthChanged = true;
+	}
+	if (curVerWidth > fCurVerWidth) {
+		fCurVerWidth = curVerWidth;
+		fListView->ColumnAt(kCurrentColumn)->SetWidth(fCurVerWidth);
+		widthChanged = true;
+	}
+	if (newVerWidth > fNewVerWidth) {
+		fNewVerWidth = newVerWidth;
+		fListView->ColumnAt(kNewColumn)->SetWidth(fNewVerWidth);
+		widthChanged = true;
+	}
+	if (repoNameWidth > fRepoNameWidth) {
+		fRepoNameWidth = repoNameWidth;
+		fListView->ColumnAt(kRepoColumn)->SetWidth(fRepoNameWidth);
+		widthChanged = true;
+	}
+	if (widthChanged) {
+		float width;
+		fListView->GetPreferredSize(&width, NULL);
+		ResizeTo(width + 90, Frame().Height());
+		CenterOnScreen();
 	}
 }
 
@@ -89,8 +252,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fStatusBar(NULL),
 	fWaitingSem(-1),
 	fWaitingForButton(false),
-	fUserCancelRequested(false),
-	fPackageDetails(NULL)
+	fUserCancelRequested(false)
 {
 	BBitmap* icon = new BBitmap(BRect(0, 0, 31, 31), 0, B_RGBA32);
 	team_info teamInfo;
@@ -158,19 +320,21 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	Show();
 }
 
-
+/*
 SoftwareUpdaterWindow::~SoftwareUpdaterWindow()
 {
-}
+//	if (fDetailsWindow != NULL)
+//		fDetailsWindow->Quit();
+}*/
 
-
+/*
 bool
 SoftwareUpdaterWindow::QuitRequested()
 {
 	be_app->PostMessage(B_QUIT_REQUESTED);
 	return true;
 }
-
+*/
 
 void
 SoftwareUpdaterWindow::MessageReceived(BMessage* message)
@@ -236,7 +400,7 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 				fWaitingSem = -1;
 			}
 			else if (fCurrentState == STATE_FINAL_MSG)
-				QuitRequested();
+				be_app->PostMessage(B_QUIT_REQUESTED);
 			else {
 				Lock();
 				fHeaderView->SetText(B_TRANSLATE("Cancelling updates"));
@@ -260,8 +424,8 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 		
 		case kMsgViewDetails:
 		{
-			DetailsWindow* dWindow = new DetailsWindow(fPackageDetails);
-			dWindow->Show();
+			if (fWindowTarget.IsValid())
+				fWindowTarget.SendMessage(kMsgShow);
 			break;
 		}
 		
@@ -273,20 +437,19 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 
 bool
 SoftwareUpdaterWindow::ConfirmUpdates(const char* text,
-	const char* packageDetails)
+	const BMessenger& target)
 {
 	Lock();
 	fHeaderView->SetText(B_TRANSLATE("Updates found"));
 	fDetailView->SetText(text);
 	Unlock();
 	
-	fPackageDetails = packageDetails;
+	fWindowTarget = target;
 	uint32 priorState = _GetState();
 	_SetState(STATE_GET_CONFIRMATION);
 	
 	_WaitForButtonClick();
 	_SetState(priorState);
-	fPackageDetails = NULL;
 	return fButtonResult == kMsgConfirm;
 }
 
@@ -359,7 +522,7 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	if (state == STATE_GET_CONFIRMATION) {
 		if (fUpdateButton->IsHidden())
 			fUpdateButton->Show();
-		if (fPackageDetails != NULL && fViewDetailsButton->IsHidden())
+		if (fViewDetailsButton->IsHidden())
 			fViewDetailsButton->Show();
 	}
 	else {

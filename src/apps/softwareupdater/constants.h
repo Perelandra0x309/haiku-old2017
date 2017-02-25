@@ -33,6 +33,7 @@ static const uint32 kMsgProgressUpdate = 'iPRO';
 static const uint32 kMsgCancel = 'iCAN';
 static const uint32 kMsgConfirm = 'iCON';
 static const uint32 kMsgClose = 'iCLO';
+static const uint32 kMsgShow = 'iSHO';
 static const uint32 kMsgViewDetails = 'iVIE';
 
 // Message data keys

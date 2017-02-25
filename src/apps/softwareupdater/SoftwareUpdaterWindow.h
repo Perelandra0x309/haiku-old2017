@@ -11,6 +11,7 @@
 
 
 #include <Button.h>
+#include <ColumnListView.h>
 #include <GroupView.h>
 #include <ScrollView.h>
 #include <StatusBar.h>
@@ -20,28 +21,54 @@
 
 #include "StripeView.h"
 
+
+
+class PackageRow : public BRow {
+public:
+								PackageRow(const char* package_name,
+									const char* cur_ver,
+									const char* new_ver,
+									const char* repo_name);
+};
+
+
 class DetailsWindow : public BWindow {
 public:
-							DetailsWindow(const char* details);
+							DetailsWindow(const BMessenger& target);
+							~DetailsWindow();
+			bool			QuitRequested();
+			void			CustomQuit();
 			void			MessageReceived(BMessage* message);
+			void			AddRow(const char* package_name,
+								const char* cur_ver,
+								const char* new_ver,
+								const char* repo_name);
 
 private:
 			BStringView*	fLabelView;
-			BTextView*		fTextView;
-			BScrollView*	fScrollView;
+//			BTextView*		fTextView;
+//			BScrollView*	fScrollView;
+			BColumnListView*	fListView;
+			BButton*		fUpdateButton;
 			BButton*		fCloseButton;
+			bool			fCustomQuitFlag;
+			float			fPackageNameWidth;
+			float			fCurVerWidth;
+			float			fNewVerWidth;
+			float			fRepoNameWidth;
+			BMessenger		fStatusWindowMessenger;
 };
 
 
 class SoftwareUpdaterWindow : public BWindow {
 public:
 							SoftwareUpdaterWindow();
-							~SoftwareUpdaterWindow();
-			bool			QuitRequested();
+//							~SoftwareUpdaterWindow();
+//			bool			QuitRequested();
 
 			void			MessageReceived(BMessage* message);
 			bool			ConfirmUpdates(const char* text,
-								const char* packageDetails);
+								const BMessenger& target);
 			void			UpdatesApplying(const char* header,
 								const char* detail);
 			void			FinalUpdate(const char* header,
@@ -67,7 +94,7 @@ private:
 			bool			fWaitingForButton;
 			uint32			fButtonResult;
 			bool			fUserCancelRequested;
-			const char*		fPackageDetails;
+			BMessenger		fWindowTarget;
 			
 };
 

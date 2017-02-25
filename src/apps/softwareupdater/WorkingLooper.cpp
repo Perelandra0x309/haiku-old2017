@@ -28,13 +28,13 @@ WorkingLooper::~WorkingLooper()
 {
 }*/
 
-
+/*
 bool
 WorkingLooper::QuitRequested()
 {
-	be_app->PostMessage(B_QUIT_REQUESTED);
+//	be_app->PostMessage(B_QUIT_REQUESTED);
 	return true;
-}
+}*/
 
 
 void

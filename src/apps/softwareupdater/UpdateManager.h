@@ -98,8 +98,7 @@ private:
 									installationRepository,
 									int32& upgradeCount,
 									int32& installCount,
-									int32& uninstallCount,
-									BString& packageDetails);
+									int32& uninstallCount);
 //			bool				_AddResults(InstalledRepository& repository,
 //									ResultWindow* window);
 			void				_UpdateStatusWindow(const char* header,
@@ -118,6 +117,7 @@ private:
 //								fUpdateProgressListeners;
 			
 			SoftwareUpdaterWindow*	fStatusWindow;
+			DetailsWindow*			fDetailsWindow;
 			ProblemWindow*			fProblemWindow;
 			uint32					fCurrentStep;
 			bool					fChangesConfirmed;

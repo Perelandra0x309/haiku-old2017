@@ -16,6 +16,6 @@ Application SoftwareUpdater :
 	ProblemWindow.cpp
 	ResultWindow.cpp
 	
-	: be localestub package translation [ TargetLibsupc++ ]
+	: be localestub package translation libcolumnlistview.a [ TargetLibsupc++ ]
 	: SoftwareUpdater.rdef
 ;
