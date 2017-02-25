@@ -38,45 +38,6 @@ using namespace BPackageKit::BManager::BPrivate;
 #define B_TRANSLATION_CONTEXT "UpdateManager"
 
 
-/*
-UpdateProgressListener::~UpdateProgressListener()
-{
-}
-
-
-void
-UpdateProgressListener::DownloadProgressChanged(const char* packageName,
-	float progress)
-{
-}
-
-
-void
-UpdateProgressListener::DownloadProgressComplete(const char* packageName)
-{
-}
-
-
-void
-UpdateProgressListener::StartApplyingChanges(
-	BPackageManager::InstalledRepository& repository)
-{
-}
-
-
-void
-UpdateProgressListener::ApplyingChangesDone(
-	BPackageManager::InstalledRepository& repository)
-{
-}
-
-
-void
-UpdateProgressListener::SetUpdateStep(int32 step)
-{
-}*/
-
-
 UpdateManager::UpdateManager(BPackageInstallationLocation location)
 	:
 	BPackageManager(location, &fClientInstallationInterface, this),
@@ -118,21 +79,6 @@ UpdateManager::JobAborted(BSupportKit::BJob* job)
 	//DIE(job->Result(), "aborted");
 	printf("Job aborted\n");
 }
-
-
-/*
-void
-UpdateManager::AddProgressListener(UpdateProgressListener* listener)
-{
-//	fUpdateProgressListeners.AddItem(listener);
-}
-
-
-void
-UpdateManager::RemoveProgressListener(UpdateProgressListener* listener)
-{
-//	fUpdateProgressListeners.RemoveItem(listener);
-}*/
 
 
 void
@@ -264,34 +210,10 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 	fDetailsWindow = NULL;
 	if (!fChangesConfirmed)
 		throw BAbortedByUserException();
-	/*
-	ResultWindow* window = new ResultWindow;
-	ObjectDeleter<ResultWindow> windowDeleter(window);
-	bool hasOtherChanges = false;
-	count = fInstalledRepositories.CountItems();
-	if (fromMostSpecific) {
-		for (int32 i = count - 1; i >= 0; i--)
-			hasOtherChanges
-				|= _AddResults(*fInstalledRepositories.ItemAt(i), window);
-	} else {
-		for (int32 i = 0; i < count; i++)
-			hasOtherChanges
-				|= _AddResults(*fInstalledRepositories.ItemAt(i), window);
-	}
-
-	if (hasOtherChanges) {
-		// show the window
-		if (windowDeleter.Detach()->Go() == 0)
-			throw BAbortedByUserException();
-	}*/
 	
 	_SetCurrentStep(ACTION_STEP_DOWNLOAD);
 	fPackageDownloadsTotal = upgradeCount + installCount;
 	fPackageDownloadsCount = 1;
-/*	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
-		fUpdateProgressListeners.ItemAt(i)->SetUpdateStep(ACTION_STEP_DOWNLOAD);
-	}*/
-	
 }
 
 
@@ -332,10 +254,6 @@ void
 UpdateManager::ProgressPackageDownloadActive(const char* packageName,
 	float completionPercentage, off_t bytes, off_t totalBytes)
 {
-/*	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
-		fUpdateProgressListeners.ItemAt(i)->DownloadProgressChanged(
-			packageName, completionPercentage);
-	}*/
 	if (fCurrentStep == ACTION_STEP_DOWNLOAD) {
 		BString packageCount;
 		packageCount.SetToFormat(
@@ -396,10 +314,6 @@ UpdateManager::ProgressPackageDownloadActive(const char* packageName,
 void
 UpdateManager::ProgressPackageDownloadComplete(const char* packageName)
 {
-/*	for (int32 i = 0; i < fUpdateProgressListeners.CountItems(); i++) {
-		fUpdateProgressListeners.ItemAt(i)->DownloadProgressComplete(
-			packageName);
-	}*/
 	if (fCurrentStep == ACTION_STEP_DOWNLOAD)
 		fPackageDownloadsCount++;
 	
@@ -490,8 +404,6 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 		return;
 
 	printf("  in %s:\n", installationRepository.Name().String());
-//	packageDetails.Append(BString().SetToFormat("In %s:\n",
-//		installationRepository.Name().String()));
 
 	PackageList& packagesToActivate
 		= installationRepository.PackagesToActivate();
@@ -514,8 +426,6 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 		}
 	}
 
-//	BStringList upgradeList;
-//	BStringList installList;
 	for (int32 i = 0; BSolverPackage* package = packagesToActivate.ItemAt(i);
 		i++) {
 		BString repository;
@@ -532,11 +442,6 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 				upgradedPackageVersions.StringAt(position).String(),
 				package->Info().Version().ToString().String(),
 				repository.String());
-		/*	upgradeList.Add(BString().SetToFormat("	%s-%s to %s from %s",
-				package->Info().Name().String(),
-				upgradedPackageVersions.StringAt(position).String(),
-				package->Info().Version().ToString().String(),
-				repository.String()));*/
 			fDetailsWindow->AddRow(package->Info().Name().String(),
 				upgradedPackageVersions.StringAt(position).String(),
 				package->Info().Version().ToString().String(),
@@ -547,10 +452,6 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 				package->Info().Name().String(),
 				package->Info().Version().ToString().String(),
 				repository.String());
-		/*	installList.Add(BString().SetToFormat("	%s-%s from %s",
-				package->Info().Name().String(),
-				package->Info().Version().ToString().String(),
-				repository.String()));*/
 			fDetailsWindow->AddRow(package->Info().Name().String(),
 				B_TRANSLATE("Not installed"),
 				package->Info().Version().ToString().String(),
@@ -565,70 +466,14 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 		if (upgradedPackages.HasString(package->Info().Name()))
 			continue;
 		printf("    uninstall package %s\n", package->VersionedName().String());
-	/*	uninstallList.Add(BString().SetToFormat("Uninstall package %s",
-			package->VersionedName().String()));*/
 		fDetailsWindow->AddRow(package->Info().Name().String(),
 				package->Info().Version().ToString(),
 				B_TRANSLATE("To be uninstalled"),
 				package->Repository()->Name().String());
 		uninstallCount++;
 	}
-	
-/*	if (!upgradeList.IsEmpty()) {
-		packageDetails.Append(B_TRANSLATE("Packages to be updated:"))
-			.Append("\n");
-		packageDetails.Append(upgradeList.Join("\n")).Append("\n");
-	}
-	if (!installList.IsEmpty()) {
-		packageDetails.Append(B_TRANSLATE("New packages to be installed:"))
-			.Append("\n");
-		packageDetails.Append(installList.Join("\n")).Append("\n");
-	}
-	if (!uninstallList.IsEmpty()) {
-		packageDetails.Append(B_TRANSLATE("Packages to be uninstalled:"))
-			.Append("\n");
-		packageDetails.Append(uninstallList.Join("\n")).Append("\n");
-	}*/
 }
 
-/*
-bool
-UpdateManager::_AddResults(InstalledRepository& installationRepository,
-	ResultWindow* window)
-{
-	if (!installationRepository.HasChanges())
-		return false;
-
-	ProblemWindow::SolverPackageSet installPackages;
-	ProblemWindow::SolverPackageSet uninstallPackages;
-	PackageList& packagesToActivate
-		= installationRepository.PackagesToActivate();
-	PackageList& packagesToDeactivate
-		= installationRepository.PackagesToDeactivate();
-	for (int32 i = 0;
-		BSolverPackage* installPackage = packagesToActivate.ItemAt(i);
-		i++) {
-			for (int32 j = 0;
-			BSolverPackage* uninstallPackage = packagesToDeactivate.ItemAt(j);
-			j++) {
-				if (installPackage->Info().Name() == uninstallPackage->Info().Name()) {
-					installPackages.insert(installPackage);
-					break;
-				}
-			}
-		
-	}
-	for (int32 j = 0;
-		BSolverPackage* uninstallPackage = packagesToDeactivate.ItemAt(j);
-		j++) {
-		uninstallPackages.insert(uninstallPackage);
-	}
-	
-	return window->AddLocationChanges(installationRepository.Name(),
-		installationRepository.PackagesToActivate(), installPackages,
-		installationRepository.PackagesToDeactivate(), uninstallPackages);
-}
-*/
 
 void
 UpdateManager::_UpdateStatusWindow(const char* header, const char* detail)

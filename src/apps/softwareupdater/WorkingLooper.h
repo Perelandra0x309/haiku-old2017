@@ -21,9 +21,6 @@ const uint32 kMsgStart = 'iSTA';
 class WorkingLooper : public BLooper {
 public:
 							WorkingLooper();
-//							~WorkingLooper();
-//			bool			QuitRequested();
-
 			void			MessageReceived(BMessage* message);
 
 private:

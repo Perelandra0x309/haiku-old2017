@@ -11,9 +11,6 @@
 
 #include "constants.h"
 
-//#undef B_TRANSLATION_CONTEXT
-//#define B_TRANSLATION_CONTEXT "SoftwareUpdater"
-
 
 SoftwareUpdaterApp::SoftwareUpdaterApp()
 	:
@@ -37,17 +34,6 @@ SoftwareUpdaterApp::ReadyToRun()
 {
 	fWorker = new WorkingLooper();
 }
-
-/*
-void
-SoftwareUpdaterApp::MessageReceived(BMessage* message)
-{
-	switch (message->what) {
-		
-		default:
-			BApplication::MessageReceived(message);
-	}
-}*/
 
 
 int

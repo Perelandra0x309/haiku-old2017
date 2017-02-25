@@ -9,23 +9,15 @@
 #define UPDATE_ACTION_H
 
 
-#include <SupportDefs.h>
-
 #include "UpdateManager.h"
 
 
-class UpdateAction /*: private UpdateProgressListener*/ {
+class UpdateAction {
 public:
 								UpdateAction();
 								~UpdateAction();
 		status_t				Perform();
 
-/*	virtual	void				DownloadProgressChanged(
-									const char* packageName,
-									float progress);
-	virtual	void				DownloadProgressComplete(
-									const char* packageName);
-*/
 private:
 		UpdateManager*			fUpdateManager;
 };

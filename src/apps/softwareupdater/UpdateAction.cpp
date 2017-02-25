@@ -45,7 +45,6 @@ UpdateAction::Perform()
 	fUpdateManager->Init(BPackageManager::B_ADD_INSTALLED_REPOSITORIES
 		| BPackageManager::B_ADD_REMOTE_REPOSITORIES
 		| BPackageManager::B_REFRESH_REPOSITORIES);
-//	fUpdateManager->AddProgressListener(this);
 	
 	try {
 		// These values indicate that all updates should be installed
@@ -92,31 +91,6 @@ UpdateAction::Perform()
 			text.String());
 		return B_ERROR;
 	}
-
-//	fUpdateManager->RemoveProgressListener(this);
 	
 	return B_OK;
 }
-
-/*
-void
-UpdateAction::DownloadProgressChanged(const char* packageName, float progress)
-{
-//	if (fCurrentStep != ACTION_STEP_DOWNLOAD)
-//		return;
-	
-	int32 percent = int(100 * progress);
-	BString header("Downloading packages");
-	BString detail(packageName);
-	detail.Append(" ");
-	detail << percent;
-	detail.Append("% complete.");
-	_SetStatus(header.String(), detail.String());
-}
-
-
-void
-UpdateAction::DownloadProgressComplete(const char* packageName)
-{
-	
-}*/

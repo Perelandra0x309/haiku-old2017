@@ -17,34 +17,10 @@
 #include "SoftwareUpdaterWindow.h"
 
 class ProblemWindow;
-//class ResultWindow;
 
 //using namespace BPackageKit;
 using BPackageKit::BPrivate::BDaemonClient;
 using BPackageKit::BManager::BPrivate::BPackageManager;
-
-/*
-class UpdateProgressListener {
-	public:
-	virtual	~UpdateProgressListener();
-
-	virtual	void				DownloadProgressChanged(
-									const char* packageName,
-									float progress);
-	virtual	void				DownloadProgressComplete(
-									const char* packageName);
-
-	virtual	void				StartApplyingChanges(
-									BPackageManager::InstalledRepository&
-										repository);
-	virtual	void				ApplyingChangesDone(
-									BPackageManager::InstalledRepository&
-										repository);
-	virtual	void				SetUpdateStep(int32 step);
-};
-*/
-
-//typedef BObjectList<UpdateProgressListener> UpdateProgressListenerList;
 
 
 class UpdateManager : public BPackageManager,
@@ -57,11 +33,6 @@ public:
 	virtual	void				JobFailed(BSupportKit::BJob* job);
 	virtual	void				JobAborted(BSupportKit::BJob* job);
 	
-/*			void				AddProgressListener(
-									UpdateProgressListener* listener);
-			void				RemoveProgressListener(
-									UpdateProgressListener* listener);
-*/
 			void				FinalError(const char* header,
 									const char* text);
 private:
@@ -99,8 +70,6 @@ private:
 									int32& upgradeCount,
 									int32& installCount,
 									int32& uninstallCount);
-//			bool				_AddResults(InstalledRepository& repository,
-//									ResultWindow* window);
 			void				_UpdateStatusWindow(const char* header,
 									const char* detail);
 			void				_UpdateDownloadProgress(const char* header,
@@ -112,9 +81,6 @@ private:
 private:
 			BPackageManager::ClientInstallationInterface
 									fClientInstallationInterface;
-
-//			UpdateProgressListenerList
-//								fUpdateProgressListeners;
 			
 			SoftwareUpdaterWindow*	fStatusWindow;
 			DetailsWindow*			fDetailsWindow;

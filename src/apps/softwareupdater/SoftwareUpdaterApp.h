@@ -21,7 +21,6 @@ public:
 							~SoftwareUpdaterApp();
 
 			void			ReadyToRun();
-//			void			MessageReceived(BMessage* message);
 
 private:
 			WorkingLooper*			fWorker;

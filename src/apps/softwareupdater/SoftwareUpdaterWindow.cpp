@@ -44,39 +44,6 @@ enum {
 	kRepoColumn
 };
 
-/*
-DetailsWindow::DetailsWindow(const char* details)
-	:
-	BWindow(BRect(0, 0, 400, 400),
-		B_TRANSLATE_SYSTEM_NAME("Update package details"),
-		B_TITLED_WINDOW_LOOK, B_MODAL_APP_WINDOW_FEEL,
-		B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE)
-{
-	fLabelView = new BStringView("label", B_TRANSLATE("The following changes "
-		"will be made:"));
-	fTextView = new BTextView("details");
-	fTextView->SetText(details);
-	fScrollView = new BScrollView("scrollview", fTextView, B_WILL_DRAW,
-		false, true);
-	fCloseButton = new BButton("Close", new BMessage(kMsgClose));
-	fCloseButton->MakeDefault(true);
-	
-	BLayoutBuilder::Group<>(this, B_VERTICAL)
-		.SetInsets(B_USE_WINDOW_SPACING)
-		.AddGroup(B_HORIZONTAL)
-			.Add(fLabelView)
-			.AddGlue()
-		.End()
-		.Add(fScrollView)
-		.AddGroup(B_HORIZONTAL)
-			.AddGlue()
-			.Add(fCloseButton)
-		.End()
-	.End();
-	
-	CenterOnScreen();
-	// TODO add ESC shortcut to close window
-}*/
 
 PackageRow::PackageRow(const char* package_name, const char* cur_ver,
 	const char* new_ver, const char* repo_name)
@@ -320,21 +287,6 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	Show();
 }
 
-/*
-SoftwareUpdaterWindow::~SoftwareUpdaterWindow()
-{
-//	if (fDetailsWindow != NULL)
-//		fDetailsWindow->Quit();
-}*/
-
-/*
-bool
-SoftwareUpdaterWindow::QuitRequested()
-{
-	be_app->PostMessage(B_QUIT_REQUESTED);
-	return true;
-}
-*/
 
 void
 SoftwareUpdaterWindow::MessageReceived(BMessage* message)

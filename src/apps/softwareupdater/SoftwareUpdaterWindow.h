@@ -13,7 +13,6 @@
 #include <Button.h>
 #include <ColumnListView.h>
 #include <GroupView.h>
-#include <ScrollView.h>
 #include <StatusBar.h>
 #include <StringView.h>
 #include <TextView.h>
@@ -46,8 +45,6 @@ public:
 
 private:
 			BStringView*	fLabelView;
-//			BTextView*		fTextView;
-//			BScrollView*	fScrollView;
 			BColumnListView*	fListView;
 			BButton*		fUpdateButton;
 			BButton*		fCloseButton;
@@ -63,8 +60,6 @@ private:
 class SoftwareUpdaterWindow : public BWindow {
 public:
 							SoftwareUpdaterWindow();
-//							~SoftwareUpdaterWindow();
-//			bool			QuitRequested();
 
 			void			MessageReceived(BMessage* message);
 			bool			ConfirmUpdates(const char* text,
@@ -99,4 +94,4 @@ private:
 };
 
 
-#endif
+#endif // _SOFTWARE_UPDATER_WINDOW_H
