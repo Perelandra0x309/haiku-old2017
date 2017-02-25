@@ -197,9 +197,11 @@ DetailsWindow::AddRow(const char* package_name, const char* cur_ver,
 		widthChanged = true;
 	}
 	if (widthChanged) {
-		float width;
-		fListView->GetPreferredSize(&width, NULL);
-		ResizeTo(width + 90, Frame().Height());
+		float width = fListView->ColumnAt(kNameColumn)->Width()
+			+ fListView->ColumnAt(kCurrentColumn)->Width()
+			+ fListView->ColumnAt(kNewColumn)->Width()
+			+ fListView->ColumnAt(kRepoColumn)->Width() + 70;
+		ResizeTo(width, Frame().Height());
 		CenterOnScreen();
 	}
 }
@@ -217,18 +219,19 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fCancelButton(NULL),
 	fViewDetailsButton(NULL),
 	fStatusBar(NULL),
+	fIcon(NULL),
 	fWaitingSem(-1),
 	fWaitingForButton(false),
 	fUserCancelRequested(false)
 {
-	BBitmap* icon = new BBitmap(BRect(0, 0, 31, 31), 0, B_RGBA32);
+	fIcon = new BBitmap(BRect(0, 0, 31, 31), 0, B_RGBA32);
 	team_info teamInfo;
 	get_team_info(B_CURRENT_TEAM, &teamInfo);
 	app_info appInfo;
 	be_roster->GetRunningAppInfo(teamInfo.team, &appInfo);
-	BNodeInfo::GetTrackerIcon(&appInfo.ref, icon, B_LARGE_ICON);
+	BNodeInfo::GetTrackerIcon(&appInfo.ref, fIcon, B_LARGE_ICON);
 
-	fStripeView = new StripeView(icon);
+	fStripeView = new StripeView(fIcon);
 
 	fUpdateButton = new BButton(B_TRANSLATE("Update now"),
 		new BMessage(kMsgConfirm));
@@ -285,6 +288,12 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	_SetState(STATE_DISPLAY_STATUS);
 	CenterOnScreen();
 	Show();
+}
+
+
+SoftwareUpdaterWindow::~SoftwareUpdaterWindow()
+{
+	delete fIcon;
 }
 
 

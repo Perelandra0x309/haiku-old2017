@@ -60,6 +60,7 @@ private:
 class SoftwareUpdaterWindow : public BWindow {
 public:
 							SoftwareUpdaterWindow();
+							~SoftwareUpdaterWindow();
 
 			void			MessageReceived(BMessage* message);
 			bool			ConfirmUpdates(const char* text,
@@ -69,6 +70,7 @@ public:
 			void			FinalUpdate(const char* header,
 								const char* detail);
 			bool			UserCancelRequested();
+			const BBitmap*	GetIcon() { return fIcon; };
 
 private:
 			uint32			_WaitForButtonClick();
@@ -83,6 +85,7 @@ private:
 			BButton*		fCancelButton;
 			BButton*		fViewDetailsButton;
 			BStatusBar*		fStatusBar;
+			BBitmap*		fIcon;
 			
 			uint32			fCurrentState;
 			sem_id			fWaitingSem;

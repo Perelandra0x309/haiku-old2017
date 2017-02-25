@@ -17,6 +17,7 @@
 
 #include <Alert.h>
 #include <Catalog.h>
+#include <Notification.h>
 
 #include <package/CommitTransactionResult.h>
 #include <package/DownloadFileRequest.h>
@@ -244,6 +245,7 @@ UpdateManager::ProgressPackageDownloadStarted(const char* packageName)
 			fPackageDownloadsTotal);
 		_UpdateDownloadProgress(header.String(), packageName, packageCount,
 			0.0);
+		fNewDownloadStarted = false;
 	}
 	
 	printf("Downloading %s...\n", packageName);
@@ -255,6 +257,14 @@ UpdateManager::ProgressPackageDownloadActive(const char* packageName,
 	float completionPercentage, off_t bytes, off_t totalBytes)
 {
 	if (fCurrentStep == ACTION_STEP_DOWNLOAD) {
+		// Fix a bug where a 100% completion percentage gets sent at the start
+		// of a package download
+		if (!fNewDownloadStarted) {
+			if (completionPercentage > 0 && completionPercentage < 1)
+				fNewDownloadStarted = true;
+			else
+				completionPercentage = 0.0;
+		}
 		BString packageCount;
 		packageCount.SetToFormat(
 			B_TRANSLATE_COMMENT("%i of %i", "Do not translate %i"),
@@ -368,6 +378,14 @@ UpdateManager::ProgressTransactionCommitted(InstalledRepository& repository,
 	BString detail(B_TRANSLATE("A reboot may be necessary to complete some "
 		"updates."));
 	fStatusWindow->FinalUpdate(header.String(), detail.String());
+	BNotification notification(B_INFORMATION_NOTIFICATION);
+	notification.SetGroup("SoftwareUpdater");
+	notification.SetTitle(header);
+	notification.SetContent(detail);
+	const BBitmap* icon = fStatusWindow->GetIcon();
+	if (icon != NULL)
+		notification.SetIcon(icon);
+	notification.Send();
 
 	const char* repositoryName = repository.Name().String();
 

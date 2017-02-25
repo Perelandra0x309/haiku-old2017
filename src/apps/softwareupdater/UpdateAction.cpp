@@ -91,6 +91,5 @@ UpdateAction::Perform()
 			text.String());
 		return B_ERROR;
 	}
-	
 	return B_OK;
 }

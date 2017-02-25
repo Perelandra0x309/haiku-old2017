@@ -87,6 +87,7 @@ private:
 			ProblemWindow*			fProblemWindow;
 			uint32					fCurrentStep;
 			bool					fChangesConfirmed;
+			bool					fNewDownloadStarted;
 			int32					fPackageDownloadsTotal;
 			int32					fPackageDownloadsCount;
 };
