@@ -17,7 +17,6 @@
 #include <LayoutBuilder.h>
 #include <Message.h>
 #include <Roster.h>
-//#include <SeparatorView.h>
 #include <String.h>
 
 #include "constants.h"
@@ -55,11 +54,10 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fUpdateButton = new BButton(B_TRANSLATE("Update now"),
 		new BMessage(kMsgConfirm));
 	fUpdateButton->MakeDefault(true);
-	fUpdateButton->Hide();
-	fCancelButton = new BButton("", new BMessage(kMsgCancel));
+	fCancelButton = new BButton(B_TRANSLATE("Cancel"),
+		new BMessage(kMsgCancel));
 	fViewDetailsButton = new BButton(B_TRANSLATE("View details"),
 		new BMessage(kMsgViewDetails));
-	fViewDetailsButton->Hide();
 
 	fHeaderView = new BStringView("header",
 		B_TRANSLATE("Checking for updates"), B_WILL_DRAW);
@@ -69,7 +67,6 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 //	fDetailView->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT, B_ALIGN_MIDDLE));
 	fStatusBar = new BStatusBar("progress");
 	fStatusBar->SetMaxValue(1.0);
-	fStatusBar->Hide();
 
 	BFont font;
 	fHeaderView->GetFont(&font);
@@ -104,9 +101,9 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 		.End()
 	.End();
 	
-	_SetState(STATE_DISPLAY_STATUS);
 	CenterOnScreen();
 	Show();
+	_SetState(STATE_DISPLAY_STATUS);
 }
 
 
@@ -209,6 +206,22 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 			break;
 		}
 		
+		case 'inva':
+		{
+			// TODO resize window at final message to get rid of space at bottom
+			
+			float minWidth;
+			float maxWidth;
+			InvalidateLayout();
+			GetSizeLimits(&minWidth, &maxWidth, NULL, NULL);
+			SetSizeLimits(minWidth, maxWidth, 0, 50);
+			ResizeTo(Frame().Width(), 50);
+			UpdateSizeLimits();
+			InvalidateLayout();
+			Layout(true);
+			break;
+		}
+		
 		default:
 			BWindow::MessageReceived(message);
 	}
@@ -251,11 +264,16 @@ SoftwareUpdaterWindow::FinalUpdate(const char* header, const char* detail)
 	if (_GetState() == STATE_FINAL_MSG)
 		return;
 	
+	
+	_SetState(STATE_FINAL_MSG);
 	Lock();
 	fHeaderView->SetText(header);
 	fDetailView->SetText(detail);
+	fStatusBar->RemoveSelf();
+	delete fStatusBar;
+	fStatusBar = NULL;
 	Unlock();
-	_SetState(STATE_FINAL_MSG);
+	PostMessage('inva');
 }
 
 
@@ -299,7 +317,7 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	// All these IsHidden() calls are needed because Hide/Show are cumulative
 	
 	// Update confirmation prompt buttons
-	if (state == STATE_GET_CONFIRMATION) {
+	if (fCurrentState == STATE_GET_CONFIRMATION) {
 		if (fUpdateButton->IsHidden())
 			fUpdateButton->Show();
 		if (fViewDetailsButton->IsHidden())
@@ -309,12 +327,12 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 		if (!fUpdateButton->IsHidden())
 			fUpdateButton->Hide();
 		if (!fViewDetailsButton->IsHidden())
-		fViewDetailsButton->Hide();
+			fViewDetailsButton->Hide();
 	}
 	
 	// Progress bar and string view
 	if (fCurrentState == STATE_DISPLAY_PROGRESS) {
-		fDetailView->SetText("");
+	//	fDetailView->SetText("");
 		if (!fDetailView->IsHidden())
 			fDetailView->Hide();
 		if (fStatusBar->IsHidden())
@@ -330,13 +348,12 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	// Cancel button
 	if (fCurrentState == STATE_FINAL_MSG)
 		fCancelButton->SetLabel(B_TRANSLATE("OK"));
-	else
-		fCancelButton->SetLabel(B_TRANSLATE("Cancel"));
 	fCancelButton->SetEnabled(fCurrentState != STATE_APPLY_UPDATES);
 	
-	InvalidateLayout(); // TODO resize window at final message to get rid of space at bottom
-	Layout(true);
-	UpdateSizeLimits();
+//	InvalidateLayout(); // TODO resize window at final message to get rid of space at bottom
+	
+//	Layout(true);
+//	UpdateSizeLimits();
 	Unlock();
 }
 
