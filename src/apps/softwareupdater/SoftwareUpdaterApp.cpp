@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Haiku, Inc. All rights reserved.
+ * Copyright 2016-2017 Haiku, Inc. All rights reserved.
  * Distributed under the terms of the MIT license
  *
  * Authors:
@@ -8,8 +8,6 @@
  */
 
 #include "SoftwareUpdaterApp.h"
-
-#include "constants.h"
 
 
 SoftwareUpdaterApp::SoftwareUpdaterApp()

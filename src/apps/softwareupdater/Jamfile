@@ -8,6 +8,7 @@ Application SoftwareUpdater :
 	SoftwareUpdaterApp.cpp
 	SoftwareUpdaterWindow.cpp
 	StripeView.cpp
+	DetailsWindow.cpp
 	UpdateAction.cpp
 	UpdateManager.cpp
 	WorkingLooper.cpp
