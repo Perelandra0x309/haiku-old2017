@@ -42,6 +42,7 @@ static const uint32 kMsgViewDetails = 'iVIE';
 #define kKeyPackageName "key_packagename"
 #define kKeyPackageCount "key_packagecount"
 #define kKeyPercentage "key_percentage"
+#define kKeyFrame "key_frame"
 
 
 #endif // CONSTANTS_H

@@ -28,8 +28,8 @@ class DetailsWindow : public BWindow {
 public:
 							DetailsWindow(/*const BMessenger& target*/);
 							~DetailsWindow();
-			bool			QuitRequested();
-			void			CustomQuit();
+//			bool			QuitRequested();
+//			void			CustomQuit();
 			void			MessageReceived(BMessage* message);
 			void			AddRow(const char* package_name,
 								const char* cur_ver,

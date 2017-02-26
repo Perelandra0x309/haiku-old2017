@@ -59,7 +59,7 @@ UpdateManager::~UpdateManager()
 	if (fStatusWindow != NULL)
 		fStatusWindow->PostMessage(B_QUIT_REQUESTED);
 	if (fDetailsWindow != NULL)
-		fDetailsWindow->CustomQuit();
+		fDetailsWindow->PostMessage(B_QUIT_REQUESTED);
 	if (fProblemWindow != NULL)
 		fProblemWindow->PostMessage(B_QUIT_REQUESTED);
 }
@@ -87,7 +87,7 @@ UpdateManager::JobAborted(BSupportKit::BJob* job)
 void
 UpdateManager::FinalError(const char* header, const char* text)
 {
-	fStatusWindow->FinalUpdate(header, text);
+	_FinalUpdate(header, text);
 }
 
 
@@ -379,7 +379,7 @@ UpdateManager::ProgressTransactionCommitted(InstalledRepository& repository,
 	BString header(B_TRANSLATE("Updates completed"));
 	BString detail(B_TRANSLATE("A reboot may be necessary to complete some "
 		"updates."));
-	fStatusWindow->FinalUpdate(header.String(), detail.String());
+	_FinalUpdate(header.String(), detail.String());
 	BNotification notification(B_INFORMATION_NOTIFICATION);
 	notification.SetGroup("SoftwareUpdater");
 	notification.SetTitle(header);
@@ -501,8 +501,11 @@ UpdateManager::_UpdateStatusWindow(const char* header, const char* detail)
 	if (header == NULL && detail == NULL)
 		return;
 	
-	if (fStatusWindow->UserCancelRequested())
+	if (fStatusWindow->UserCancelRequested()) {
+		_FinalUpdate(B_TRANSLATE("Updates cancelled"),
+			B_TRANSLATE("No packages have been updated."));
 		throw BAbortedByUserException();
+	}
 	
 	BMessage message(kMsgTextUpdate);
 	if (header != NULL)
@@ -521,8 +524,11 @@ UpdateManager::_UpdateDownloadProgress(const char* header,
 	if (packageName == NULL || packageCount == NULL)
 		return;
 	
-	if (fStatusWindow->UserCancelRequested())
+	if (fStatusWindow->UserCancelRequested()) {
+		_FinalUpdate(B_TRANSLATE("Updates cancelled"),
+			B_TRANSLATE("No packages have been updated."));
 		throw BAbortedByUserException();
+	}
 	
 	BMessage message(kMsgProgressUpdate);
 	if (header != NULL)
@@ -533,6 +539,14 @@ UpdateManager::_UpdateDownloadProgress(const char* header,
 	fStatusWindow->PostMessage(&message);
 }
 
+
+void
+UpdateManager::_FinalUpdate(const char* header, const char* text)
+{
+	if (fDetailsWindow != NULL)
+		fDetailsWindow->Hide();
+	fStatusWindow->FinalUpdate(header, text);
+}
 
 void
 UpdateManager::_SetCurrentStep(int32 step)

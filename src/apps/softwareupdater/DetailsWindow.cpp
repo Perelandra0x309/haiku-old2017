@@ -54,7 +54,7 @@ DetailsWindow::DetailsWindow(/*const BMessenger& target*/)
 	BWindow(BRect(0, 0, 400, 400),
 		B_TRANSLATE_SYSTEM_NAME("Update package details"),
 		B_TITLED_WINDOW,
-		B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE),
+		B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE | B_NOT_CLOSABLE),
 	fCustomQuitFlag(false)
 //	fStatusWindowMessenger(target)
 {
@@ -111,7 +111,7 @@ DetailsWindow::~DetailsWindow()
 	}
 }
 
-
+/*
 bool
 DetailsWindow::QuitRequested()
 {
@@ -127,7 +127,7 @@ DetailsWindow::CustomQuit()
 {
 	fCustomQuitFlag = true;
 	QuitRequested();
-}
+}*/
 
 
 void
@@ -145,8 +145,19 @@ DetailsWindow::MessageReceived(BMessage* message)
 			break;*/
 		
 		case kMsgShow:
-			Show();
+		{
+			if (IsHidden()) {
+				BRect rect;
+				status_t result = message->FindRect(kKeyFrame, &rect);
+				if (result == B_OK) {
+					float tabOffset = DecoratorFrame().Height() - Bounds().Height();
+					CenterIn(rect);
+					MoveTo(Frame().left, rect.bottom + tabOffset);
+				}
+				Show();
+			}
 			break;
+		}
 		
 		default:
 			BWindow::MessageReceived(message);

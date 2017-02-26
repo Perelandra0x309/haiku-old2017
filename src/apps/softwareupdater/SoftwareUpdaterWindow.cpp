@@ -176,9 +176,9 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 				fButtonResult = message->what;
 				delete_sem(fWaitingSem);
 				fWaitingSem = -1;
+				if (fCurrentState == STATE_FINAL_MSG)
+					be_app->PostMessage(B_QUIT_REQUESTED);
 			}
-			else if (fCurrentState == STATE_FINAL_MSG)
-				be_app->PostMessage(B_QUIT_REQUESTED);
 			else {
 				Lock();
 				fHeaderView->SetText(B_TRANSLATE("Cancelling updates"));
@@ -202,8 +202,11 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 		
 		case kMsgViewDetails:
 		{
-			if (fWindowTarget.IsValid())
-				fWindowTarget.SendMessage(kMsgShow);
+			if (fWindowTarget.IsValid()) {
+				BMessage showMessage(kMsgShow);
+				showMessage.AddRect(kKeyFrame, Frame());
+				fWindowTarget.SendMessage(&showMessage);
+			}
 			break;
 		}
 		
@@ -276,6 +279,7 @@ SoftwareUpdaterWindow::FinalUpdate(const char* header, const char* detail)
 	fStatusBar = NULL;
 	Unlock();
 	PostMessage('inva');
+	_WaitForButtonClick();
 }
 
 
@@ -285,11 +289,11 @@ SoftwareUpdaterWindow::UserCancelRequested()
 	if (_GetState() > STATE_DISPLAY_PROGRESS)
 		return false;
 	
-	if (fUserCancelRequested) {
+/*	if (fUserCancelRequested) {
 		FinalUpdate(B_TRANSLATE("Updates cancelled"),
 			B_TRANSLATE("No packages have been updated."));
 		_WaitForButtonClick();
-	}
+	}*/
 	
 	return fUserCancelRequested;
 }

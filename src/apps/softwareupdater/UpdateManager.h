@@ -77,6 +77,8 @@ private:
 									const char* packageName,
 									const char* packageCount,
 									float completionPercentage);
+			void				_FinalUpdate(const char* header,
+									const char* text);
 			void				_SetCurrentStep(int32 step);
 
 private:
