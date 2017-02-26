@@ -26,7 +26,7 @@ public:
 
 class DetailsWindow : public BWindow {
 public:
-							DetailsWindow(const BMessenger& target);
+							DetailsWindow(/*const BMessenger& target*/);
 							~DetailsWindow();
 			bool			QuitRequested();
 			void			CustomQuit();
@@ -39,14 +39,14 @@ public:
 private:
 			BStringView*	fLabelView;
 			BColumnListView*	fListView;
-			BButton*		fUpdateButton;
+//			BButton*		fUpdateButton;
 			BButton*		fCloseButton;
 			bool			fCustomQuitFlag;
 			float			fPackageNameWidth;
 			float			fCurVerWidth;
 			float			fNewVerWidth;
 			float			fRepoNameWidth;
-			BMessenger		fStatusWindowMessenger;
+//			BMessenger		fStatusWindowMessenger;
 };
 
 

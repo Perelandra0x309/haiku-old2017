@@ -20,7 +20,7 @@
 #define B_TRANSLATION_CONTEXT "DetailsWindow"
 
 
-static const BString kTitlePackageName = B_TRANSLATE_COMMENT("Package Name",
+static const BString kTitlePackageName = B_TRANSLATE_COMMENT("Package name",
 	"Column title");
 static const BString kTitleCurVer = B_TRANSLATE_COMMENT("Current version",
 	"Column title");
@@ -49,14 +49,14 @@ PackageRow::PackageRow(const char* package_name, const char* cur_ver,
 }
 
 
-DetailsWindow::DetailsWindow(const BMessenger& target)
+DetailsWindow::DetailsWindow(/*const BMessenger& target*/)
 	:
 	BWindow(BRect(0, 0, 400, 400),
 		B_TRANSLATE_SYSTEM_NAME("Update package details"),
-		B_TITLED_WINDOW_LOOK, B_MODAL_APP_WINDOW_FEEL,
+		B_TITLED_WINDOW,
 		B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE),
-	fCustomQuitFlag(false),
-	fStatusWindowMessenger(target)
+	fCustomQuitFlag(false)
+//	fStatusWindowMessenger(target)
 {
 	fLabelView = new BStringView("label", B_TRANSLATE("The following changes "
 		"will be made:"));
@@ -75,9 +75,9 @@ DetailsWindow::DetailsWindow(const BMessenger& target)
 	fListView->AddColumn(new BStringColumn(kTitleRepo, fRepoNameWidth,
 		fRepoNameWidth, fRepoNameWidth, B_TRUNCATE_END), kRepoColumn);
 	
-	fUpdateButton = new BButton(B_TRANSLATE("Update now"),
-		new BMessage(kMsgConfirm));
-	fUpdateButton->MakeDefault(true);
+//	fUpdateButton = new BButton(B_TRANSLATE("Update now"),
+//		new BMessage(kMsgConfirm));
+//	fUpdateButton->MakeDefault(true);
 	fCloseButton = new BButton("Close", new BMessage(kMsgClose));
 	fCloseButton->MakeDefault(true);
 	
@@ -91,7 +91,7 @@ DetailsWindow::DetailsWindow(const BMessenger& target)
 		.AddGroup(B_HORIZONTAL)
 			.AddGlue()
 			.Add(fCloseButton)
-			.Add(fUpdateButton)
+//			.Add(fUpdateButton)
 		.End()
 	.End();
 	
@@ -138,11 +138,11 @@ DetailsWindow::MessageReceived(BMessage* message)
 			Hide();
 			break;
 		
-		case kMsgConfirm:
+/*		case kMsgConfirm:
 			Hide();
 			if (fStatusWindowMessenger.IsValid())
 				fStatusWindowMessenger.SendMessage(kMsgConfirm);
-			break;
+			break;*/
 		
 		case kMsgShow:
 			Show();

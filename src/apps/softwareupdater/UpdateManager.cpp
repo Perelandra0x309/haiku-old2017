@@ -58,6 +58,8 @@ UpdateManager::~UpdateManager()
 {
 	if (fStatusWindow != NULL)
 		fStatusWindow->PostMessage(B_QUIT_REQUESTED);
+	if (fDetailsWindow != NULL)
+		fDetailsWindow->CustomQuit();
 	if (fProblemWindow != NULL)
 		fProblemWindow->PostMessage(B_QUIT_REQUESTED);
 }
@@ -165,8 +167,8 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 	int32 upgradeCount = 0;
 	int32 installCount = 0;
 	int32 uninstallCount = 0;
-	fDetailsWindow = new DetailsWindow(BMessenger(fStatusWindow));
-	ObjectDeleter<DetailsWindow> windowDeleter(fDetailsWindow);
+	fDetailsWindow = new DetailsWindow();
+//	ObjectDeleter<DetailsWindow> windowDeleter(fDetailsWindow);
 	
 	if (fromMostSpecific) {
 		for (int32 i = count - 1; i >= 0; i--)
@@ -207,8 +209,8 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 	text.ReplaceFirst("%dependancies%", dependancies);
 	fChangesConfirmed = fStatusWindow->ConfirmUpdates(text.String(),
 		BMessenger(fDetailsWindow));
-	windowDeleter.Detach()->CustomQuit();
-	fDetailsWindow = NULL;
+//	windowDeleter.Detach()->CustomQuit();
+//	fDetailsWindow = NULL;
 	if (!fChangesConfirmed)
 		throw BAbortedByUserException();
 	

@@ -38,6 +38,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fViewDetailsButton(NULL),
 	fStatusBar(NULL),
 	fIcon(NULL),
+	fCurrentState(STATE_HEAD),
 	fWaitingSem(-1),
 	fWaitingForButton(false),
 	fUserCancelRequested(false)
@@ -219,6 +220,7 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 			UpdateSizeLimits();
 			InvalidateLayout();
 			Layout(true);
+			ResizeBy(0, -20);
 			break;
 		}
 		
@@ -311,21 +313,32 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 {
 	if (state <= STATE_HEAD || state >= STATE_MAX)
 		return;
-	fCurrentState = state;
 	
 	Lock();
 	// All these IsHidden() calls are needed because Hide/Show are cumulative
 	
-	// Update confirmation prompt buttons
+	if (fCurrentState == STATE_HEAD) {
+		if (!fViewDetailsButton->IsHidden())
+			fViewDetailsButton->Hide();
+	}
+	fCurrentState = state;
+	
+	// Update confirmation button
 	if (fCurrentState == STATE_GET_CONFIRMATION) {
 		if (fUpdateButton->IsHidden())
 			fUpdateButton->Show();
-		if (fViewDetailsButton->IsHidden())
-			fViewDetailsButton->Show();
 	}
 	else {
 		if (!fUpdateButton->IsHidden())
 			fUpdateButton->Hide();
+	}
+	
+	// View details button
+	if (fCurrentState == STATE_GET_CONFIRMATION) {
+		if (fViewDetailsButton->IsHidden())
+			fViewDetailsButton->Show();
+	}
+	else if (fCurrentState == STATE_FINAL_MSG) {
 		if (!fViewDetailsButton->IsHidden())
 			fViewDetailsButton->Hide();
 	}
