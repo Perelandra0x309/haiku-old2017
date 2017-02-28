@@ -65,10 +65,8 @@ UpdateAction::Perform()
 			B_WIDTH_AS_USUAL, B_STOP_ALERT));
 		if (alert != NULL)
 			alert->Go();*/
-		BString text(B_TRANSLATE("Error message:"));
-		text.Append(" ").Append(ex.Message());
-		fUpdateManager->FinalError(B_TRANSLATE("Error detected"),
-			text.String());
+		fUpdateManager->FinalError(B_TRANSLATE("Updates did not complete"),
+			ex.Message());
 		return ex.Error();
 	} catch (BAbortedByUserException ex) {
 		fprintf(stderr, "Updates aborted by user: %s\n",
@@ -85,10 +83,8 @@ UpdateAction::Perform()
 	} catch (BException ex) {
 		fprintf(stderr, "Exception occurred while updating packages : %s\n",
 			ex.Message().String());
-		BString text(B_TRANSLATE("Error message:"));
-		text.Append(" ").Append(ex.Message());
-		fUpdateManager->FinalError(B_TRANSLATE("General error detected"),
-			text.String());
+		fUpdateManager->FinalError(B_TRANSLATE("Updates did not complete"),
+			ex.Message());
 		return B_ERROR;
 	}
 	return B_OK;

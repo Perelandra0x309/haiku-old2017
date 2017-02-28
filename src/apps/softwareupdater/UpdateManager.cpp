@@ -379,7 +379,6 @@ UpdateManager::ProgressTransactionCommitted(InstalledRepository& repository,
 	BString header(B_TRANSLATE("Updates completed"));
 	BString detail(B_TRANSLATE("A reboot may be necessary to complete some "
 		"updates."));
-	_FinalUpdate(header.String(), detail.String());
 	BNotification notification(B_INFORMATION_NOTIFICATION);
 	notification.SetGroup("SoftwareUpdater");
 	notification.SetTitle(header);
@@ -388,6 +387,7 @@ UpdateManager::ProgressTransactionCommitted(InstalledRepository& repository,
 	if (icon != NULL)
 		notification.SetIcon(icon);
 	notification.Send();
+	_FinalUpdate(header.String(), detail.String());
 
 	const char* repositoryName = repository.Name().String();
 
