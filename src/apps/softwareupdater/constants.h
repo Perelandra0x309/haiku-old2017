@@ -35,6 +35,7 @@ static const uint32 kMsgConfirm = 'iCON';
 static const uint32 kMsgClose = 'iCLO';
 static const uint32 kMsgShow = 'iSHO';
 static const uint32 kMsgViewDetails = 'iVIE';
+static const uint32 kMsgShowInfo = 'iSHI';
 
 // Message data keys
 #define kKeyHeader "key_header"

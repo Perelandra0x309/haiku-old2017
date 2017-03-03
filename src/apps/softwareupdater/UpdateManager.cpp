@@ -466,6 +466,10 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 				upgradedPackageVersions.StringAt(position).String(),
 				package->Info().Version().ToString().String(),
 				package->Repository()->Name().String());
+			fStatusWindow->AddPackageInfo(package->Info().Name().String(),
+				upgradedPackageVersions.StringAt(position).String(),
+				package->Info().Version().ToString().String(),
+				package->Repository()->Name().String());
 			upgradeCount++;
 		} else {
 			printf("    install package %s-%s from %s\n",
