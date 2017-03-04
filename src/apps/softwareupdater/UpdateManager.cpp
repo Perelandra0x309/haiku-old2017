@@ -469,7 +469,7 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 			fStatusWindow->AddPackageInfo(package->Info().Name().String(),
 				upgradedPackageVersions.StringAt(position).String(),
 				package->Info().Version().ToString().String(),
-				package->Repository()->Name().String());
+				package->Info().Summary().String());
 			upgradeCount++;
 		} else {
 			printf("    install package %s-%s from %s\n",
@@ -480,6 +480,10 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 				B_TRANSLATE("Not installed"),
 				package->Info().Version().ToString().String(),
 				package->Repository()->Name().String());
+			fStatusWindow->AddPackageInfo(package->Info().Name().String(),
+				NULL,
+				package->Info().Version().ToString().String(),
+				package->Info().Summary().String());
 			installCount++;
 		}
 	}
@@ -494,6 +498,10 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 				package->Info().Version().ToString(),
 				B_TRANSLATE("To be uninstalled"),
 				package->Repository()->Name().String());
+		fStatusWindow->AddPackageInfo(package->Info().Name().String(),
+				package->Info().Version().ToString(),
+				NULL,
+				package->Info().Summary().String());
 		uninstallCount++;
 	}
 }

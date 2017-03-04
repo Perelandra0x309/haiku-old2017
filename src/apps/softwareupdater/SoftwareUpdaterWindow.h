@@ -20,6 +20,7 @@
 
 #include "StripeView.h"
 
+#define USE_PANE_SWITCH 0
 
 namespace BPrivate {
 	class PaneSwitch;
@@ -41,7 +42,7 @@ public:
 private:
 			BString			fName;
 			BString			fVersion;
-			BString			fRepository;
+			BString			fSummary;
 			font_height		fFontHeight;
 			font_height		fSmallFontHeight;
 			float			fSmallTotalHeight;
@@ -53,8 +54,9 @@ class PackageListView : public BListView {
 public:
 							PackageListView();
 			virtual	void	FrameResized(float newWidth, float newHeight);
-			virtual	void	GetPreferredSize(float* _width, float* _height);
-			virtual	BSize	MaxSize();
+//			virtual BSize	PreferredSize();
+//			virtual	void	GetPreferredSize(float* _width, float* _height);
+//			virtual	BSize	MaxSize();
 };
 
 
@@ -74,7 +76,7 @@ public:
 			void			AddPackageInfo(const char* package_name,
 								const char* cur_ver,
 								const char* new_ver,
-								const char* repo_name);
+								const char* summary);
 			const BBitmap*	GetIcon() { return fIcon; };
 			BLayoutItem*	layout_item_for(BView* view);
 
@@ -83,6 +85,7 @@ private:
 			void			_SetState(uint32 state);
 			uint32			_GetState();
 			
+			BRect			fDefaultRect;
 			StripeView*		fStripeView;
 			BStringView*	fHeaderView;
 			BStringView*	fDetailView;
@@ -91,11 +94,15 @@ private:
 			BButton*		fCancelButton;
 			BButton*		fViewDetailsButton;
 			BStatusBar*		fStatusBar;
+#if USE_PANE_SWITCH
 			PaneSwitch*		fPackagesSwitch;
+			BLayoutItem*	fPkgSwitchLayoutItem;
+#endif
 			PackageListView*	fListView;
 			BScrollView*	fScrollView;
-			BLayoutItem*	fPkgSwitchLayoutItem;
+			BLayoutItem*	fDetailsLayoutItem;
 			BLayoutItem*	fPackagesLayoutItem;
+			BLayoutItem*	fProgressLayoutItem;
 			BBitmap*		fIcon;
 			
 			uint32			fCurrentState;

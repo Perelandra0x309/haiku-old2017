@@ -29,18 +29,9 @@
 #define B_TRANSLATION_CONTEXT "SoftwareUpdaterWindow"
 
 
-BLayoutItem*
-SoftwareUpdaterWindow::layout_item_for(BView* view)
-{
-	BLayout* layout = view->Parent()->GetLayout();
-	int32 index = layout->IndexOfView(view);
-	return layout->ItemAt(index);
-}
-
-
 SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	:
-	BWindow(BRect(-2000, -2000, -1800, -1800),
+	BWindow(BRect(0, 0, 500, 200),
 		B_TRANSLATE_SYSTEM_NAME("SoftwareUpdater"), B_TITLED_WINDOW,
 		B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE
 		| B_NOT_CLOSABLE /*| B_NOT_RESIZABLE*/),
@@ -69,10 +60,16 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fUpdateButton = new BButton(B_TRANSLATE("Update now"),
 		new BMessage(kMsgConfirm));
 	fUpdateButton->MakeDefault(true);
+//	fUpdateButton->SetExplicitAlignment(BAlignment(B_ALIGN_HORIZONTAL_UNSET,
+//		B_ALIGN_BOTTOM));
 	fCancelButton = new BButton(B_TRANSLATE("Cancel"),
 		new BMessage(kMsgCancel));
+//	fCancelButton->SetExplicitAlignment(BAlignment(B_ALIGN_HORIZONTAL_UNSET,
+//		B_ALIGN_BOTTOM));
 	fViewDetailsButton = new BButton(B_TRANSLATE("View details"),
 		new BMessage(kMsgViewDetails));
+//	fViewDetailsButton->SetExplicitAlignment(BAlignment(B_ALIGN_HORIZONTAL_UNSET,
+//		B_ALIGN_BOTTOM));
 
 	fHeaderView = new BStringView("header",
 		B_TRANSLATE("Checking for updates"), B_WILL_DRAW);
@@ -85,6 +82,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fStatusBar = new BStatusBar("progress");
 	fStatusBar->SetMaxValue(1.0);
 	
+#if USE_PANE_SWITCH
 	fPackagesSwitch = new PaneSwitch("options_button");
 	fPackagesSwitch->SetLabels(B_TRANSLATE("Hide update details"),
 		B_TRANSLATE("Show update details"));
@@ -93,6 +91,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 		B_SIZE_UNSET));
 	fPackagesSwitch->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT,
 		B_ALIGN_TOP));
+#endif
 	
 	fListView = new PackageListView();
 	fScrollView = new BScrollView("scrollview", fListView, B_WILL_DRAW,
@@ -105,28 +104,21 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fHeaderView->SetFont(&font, B_FONT_FAMILY_AND_STYLE | B_FONT_SIZE
 		| B_FONT_FLAGS);
 	
-/*	fInfoView = new BGroupView();
-	BLayoutBuilder::Group<>(fInfoView, B_VERTICAL)
-		.Add(fHeaderView)
-		.Add(fDetailView)
-	.End();*/
 	BLayoutBuilder::Group<>(this, B_HORIZONTAL, 0)
 		.Add(fStripeView)
-		.AddGroup(B_VERTICAL, B_USE_ITEM_SPACING)
+		.AddGroup(B_VERTICAL, 0)
 			.SetInsets(0, B_USE_WINDOW_SPACING,
 				B_USE_WINDOW_SPACING, B_USE_WINDOW_SPACING)
-	//		.AddGroup(B_HORIZONTAL, 0)
-	//			.Add(fInfoView)
+			.AddGroup(new BGroupView(B_VERTICAL, B_USE_ITEM_SPACING))
 				.Add(fHeaderView)
 				.Add(fDetailView)
-	//			.AddGlue()
-	//		.End()
-			.AddGroup(new BGroupView(B_VERTICAL, B_USE_ITEM_SPACING))
 				.Add(fStatusBar)
+#if USE_PANE_SWITCH
 				.Add(fPackagesSwitch)
+#endif
 				.Add(fScrollView)
 			.End()
-	//		.AddStrut(B_USE_SMALL_SPACING)
+			.AddStrut(B_USE_SMALL_SPACING)
 			.AddGroup(B_HORIZONTAL)
 				.AddGlue()
 				.Add(fCancelButton)
@@ -136,13 +128,16 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 		.End()
 	.End();
 	
+	fDetailsLayoutItem = layout_item_for(fDetailView);
+	fProgressLayoutItem = layout_item_for(fStatusBar);
 	fPackagesLayoutItem = layout_item_for(fScrollView);
+#if USE_PANE_SWITCH
 	fPkgSwitchLayoutItem = layout_item_for(fPackagesSwitch);
-	fPackagesLayoutItem->SetVisible(false);
-//	fPkgSwitchLayoutItem->SetVisible(false);
+#endif
 	
 	CenterOnScreen();
 	Show();
+	fDefaultRect = Bounds();
 	_SetState(STATE_DISPLAY_STATUS);
 }
 
@@ -248,18 +243,32 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 			}
 			break;
 		}
-		
+
+#if USE_PANE_SWITCH		
 		case kMsgShowInfo:
 		{
 			fPackagesLayoutItem->SetVisible(fPackagesSwitch->Value());
+			// TODO not sure this is working
+/*			UpdateSizeLimits();
+			InvalidateLayout();
+			if (!fPackagesSwitch->Value()) {
+				//ResizeTo(fDefaultRect.Width(), fDefaultRect.Height());
+				float minWidth;
+				float maxWidth;
+				GetSizeLimits(&minWidth, &maxWidth, NULL, NULL);
+				float height = fDefaultRect.Height();
+				SetSizeLimits(minWidth, maxWidth, height, height);
+				ResizeBy(0, -20);
+			}*/
 			break;
 		}
+#endif
 		
-		case 'inva':
+	/*	case 'inva':
 		{
 			// TODO resize window at final message to get rid of space at bottom
 			
-	/*		float minWidth;
+			float minWidth;
 			float maxWidth;
 			InvalidateLayout();
 			GetSizeLimits(&minWidth, &maxWidth, NULL, NULL);
@@ -268,9 +277,9 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 			UpdateSizeLimits();
 			InvalidateLayout();
 			Layout(true);
-			ResizeBy(0, -20);*/
+			ResizeBy(0, -20);
 			break;
-		}
+		}*/
 		
 		default:
 			BWindow::MessageReceived(message);
@@ -323,7 +332,7 @@ SoftwareUpdaterWindow::FinalUpdate(const char* header, const char* detail)
 	delete fStatusBar;
 	fStatusBar = NULL;
 	Unlock();
-	PostMessage('inva');
+//	PostMessage('inva');
 	_WaitForButtonClick();
 }
 
@@ -334,25 +343,33 @@ SoftwareUpdaterWindow::UserCancelRequested()
 	if (_GetState() > STATE_GET_CONFIRMATION)
 		return false;
 	
-/*	if (fUserCancelRequested) {
-		FinalUpdate(B_TRANSLATE("Updates cancelled"),
-			B_TRANSLATE("No packages have been updated."));
-		_WaitForButtonClick();
-	}*/
-	
 	return fUserCancelRequested;
 }
 
 
 void
 SoftwareUpdaterWindow::AddPackageInfo(const char* package_name,
-	const char* cur_ver, const char* new_ver, const char* repo_name)
+	const char* cur_ver, const char* new_ver, const char* summary)
 {
+	BString version;
+	if (new_ver == NULL)
+		version.SetTo(B_TRANSLATE("Will be uninstalled"));
+	else
+		version.SetTo(new_ver);
 	Lock();
-	fListView->AddItem(new PackageItem(package_name, new_ver, repo_name));
+	fListView->AddItem(new PackageItem(package_name, version.String(), summary));
 	// TODO move this elsewhere so it isn't run every time something is added
 	fListView->SortItems(SortPackageItems);
 	Unlock();
+}
+
+
+BLayoutItem*
+SoftwareUpdaterWindow::layout_item_for(BView* view)
+{
+	BLayout* layout = view->Parent()->GetLayout();
+	int32 index = layout->IndexOfView(view);
+	return layout->ItemAt(index);
 }
 
 
@@ -378,15 +395,12 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	Lock();
 	// All these IsHidden() calls are needed because Hide/Show are cumulative
 	
+	// Initial settings
 	if (fCurrentState == STATE_HEAD) {
 		if (!fViewDetailsButton->IsHidden())
 			fViewDetailsButton->Hide();
-	/*	if (!fPackagesSwitch->IsHidden())
-			fPackagesSwitch->Hide();
-		if (!fScrollView->IsHidden())
-			fScrollView->Hide();*/
-//		fPackagesLayoutItem->SetVisible(false);
-//		fPkgSwitchLayoutItem->SetVisible(false);
+		fProgressLayoutItem->SetVisible(false);
+		fPackagesLayoutItem->SetVisible(false);
 	}
 	fCurrentState = state;
 	
@@ -406,35 +420,28 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	if (fCurrentState == STATE_GET_CONFIRMATION) {
 		if (fViewDetailsButton->IsHidden())
 			fViewDetailsButton->Show();
-	//	if (fPackagesSwitch->IsHidden())
-	//		fPackagesSwitch->Show();
-		fPkgSwitchLayoutItem->SetVisible(true);
+#if !USE_PANE_SWITCH
+		fPackagesLayoutItem->SetVisible(true);
+#endif
 	}
 	else if (fCurrentState == STATE_FINAL_MSG) {
 		if (!fViewDetailsButton->IsHidden())
 			fViewDetailsButton->Hide();
-	/*	if (!fScrollView->IsHidden())
-			fScrollView->Hide();
-		if (!fPackagesSwitch->IsHidden())
-			fPackagesSwitch->Hide();*/
+#if USE_PANE_SWITCH
 		fPackagesLayoutItem->SetVisible(false);
 		fPkgSwitchLayoutItem->SetVisible(false);
+#endif
 	}
 	
 	// Progress bar and string view
 	// Hide detail text while showing status bar
 	if (fCurrentState == STATE_DISPLAY_PROGRESS) {
-	//	fDetailView->SetText("");
-		if (!fDetailView->IsHidden())
-			fDetailView->Hide();
-		if (fStatusBar->IsHidden())
-			fStatusBar->Show();
+		fDetailsLayoutItem->SetVisible(false);
+		fProgressLayoutItem->SetVisible(true);
 	}
 	else {
-		if (fDetailView->IsHidden())
-			fDetailView->Show();
-		if (!fStatusBar->IsHidden())
-			fStatusBar->Hide();
+		fProgressLayoutItem->SetVisible(false);
+		fDetailsLayoutItem->SetVisible(true);
 	}
 	
 	// Cancel button
@@ -459,15 +466,15 @@ SoftwareUpdaterWindow::_GetState()
 
 
 PackageItem::PackageItem(const char* name, const char* version,
-	const char* repository)
+	const char* summary)
 	:
 	BListItem()
 {
 	fName.SetTo(name);
-	fVersion.SetTo(B_TRANSLATE("Version:"));
-	fVersion.Append(" ").Append(version);
-	fRepository.SetTo(B_TRANSLATE("Repository:"));
-	fRepository.Append(" ").Append(repository);
+//	fVersion.SetTo(B_TRANSLATE("version"));
+//	fVersion.Append(" ").Append(version);
+	fVersion.SetTo(version);
+	fSummary.SetTo(summary);
 	fNameOffset = be_control_look->DefaultLabelSpacing();
 }
 
@@ -499,22 +506,28 @@ PackageItem::DrawItem(BView* owner, BRect item_rect, bool complete)
 	owner->SetFont(&detailsFont);
     BString name(fName);
     owner->TruncateString(&name, B_TRUNCATE_END, nameWidth);
-	owner->MovePenTo(BPoint(item_rect.left + fNameOffset, item_rect.bottom
-		- fFontHeight.descent));
-	owner->DrawString(name.String());
+	BPoint cursor(item_rect.left + fNameOffset,
+		item_rect.bottom - fSmallTotalHeight - fFontHeight.descent - 1);
+	owner->DrawString(name.String(), cursor);
+	cursor.x += owner->StringWidth(name.String()) + 6;
 	
-	// Repository and version
+	// Change font
 	detailsFont.SetSize(detailsFont.Size() - 2);
-	
 	owner->SetFont(&detailsFont);
-	BPoint cursor(item_rect.left + fNameOffset + nameWidth + 1,
-		item_rect.top + fFontHeight.ascent);
-	owner->MovePenTo(cursor);
 	owner->SetHighColor(tint_color(ui_color(B_LIST_ITEM_TEXT_COLOR), 0.7));
-	owner->DrawString(fRepository.String());
-	cursor.y += fSmallTotalHeight;
-	owner->MovePenTo(cursor);
-	owner->DrawString(fVersion.String());
+	
+	// Version
+	BString version(fVersion);
+	owner->TruncateString(&version, B_TRUNCATE_END, width - cursor.x);
+	owner->DrawString(version.String(), cursor);
+	
+	// Summary
+	BString summary(fSummary);
+	cursor.x = item_rect.left + fNameOffset;
+	cursor.y = item_rect.bottom - fFontHeight.descent;
+	owner->TruncateString(&summary, B_TRUNCATE_END, width - cursor.x);
+	owner->DrawString(summary.String(), cursor);
+	
 	
 	owner->SetHighColor(tint_color(ui_color(B_CONTROL_BACKGROUND_COLOR),
 		B_DARKEN_1_TINT));
@@ -567,6 +580,8 @@ PackageListView::PackageListView()
 	:
 	BListView("Package list")
 {
+	SetExplicitMinSize(BSize(B_SIZE_UNSET, 100));
+	SetExplicitPreferredSize(BSize(B_SIZE_UNSET, 200));
 }
 
 
@@ -583,7 +598,14 @@ PackageListView::FrameResized(float newWidth, float newHeight)
 	Invalidate();
 }
 
+/*
+BSize
+PackageListView::PreferredSize()
+{
+	return BSize(B_SIZE_UNSET, 200);
+}*/
 
+/*
 void
 PackageListView::GetPreferredSize(float* _width, float* _height)
 {
@@ -593,13 +615,14 @@ PackageListView::GetPreferredSize(float* _width, float* _height)
 		*_width = 400.0;
 
 	if (_height != NULL)
-		*_height = 80.0;
-}
+		*_height = 200.0;
+}*/
 
-
+/*
 BSize
 PackageListView::MaxSize()
 {
 	return BLayoutUtils::ComposeSize(ExplicitMaxSize(),
 		BSize(B_SIZE_UNLIMITED, B_SIZE_UNLIMITED));
 }
+*/
