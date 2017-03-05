@@ -45,7 +45,7 @@ UpdateManager::UpdateManager(BPackageInstallationLocation location)
 	BPackageManager::UserInteractionHandler(),
 	fClientInstallationInterface(),
 	fStatusWindow(NULL),
-	fDetailsWindow(NULL),
+//	fDetailsWindow(NULL),
 	fCurrentStep(ACTION_STEP_INIT),
 	fChangesConfirmed(false)
 {
@@ -58,8 +58,8 @@ UpdateManager::~UpdateManager()
 {
 	if (fStatusWindow != NULL)
 		fStatusWindow->PostMessage(B_QUIT_REQUESTED);
-	if (fDetailsWindow != NULL)
-		fDetailsWindow->PostMessage(B_QUIT_REQUESTED);
+//	if (fDetailsWindow != NULL)
+//		fDetailsWindow->PostMessage(B_QUIT_REQUESTED);
 	if (fProblemWindow != NULL)
 		fProblemWindow->PostMessage(B_QUIT_REQUESTED);
 }
@@ -167,8 +167,7 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 	int32 upgradeCount = 0;
 	int32 installCount = 0;
 	int32 uninstallCount = 0;
-	fDetailsWindow = new DetailsWindow();
-//	ObjectDeleter<DetailsWindow> windowDeleter(fDetailsWindow);
+//	fDetailsWindow = new DetailsWindow();
 	
 	if (fromMostSpecific) {
 		for (int32 i = count - 1; i >= 0; i--)
@@ -207,10 +206,8 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 		dependancies.Append(") ");
 	}
 	text.ReplaceFirst("%dependancies%", dependancies);
-	fChangesConfirmed = fStatusWindow->ConfirmUpdates(text.String(),
-		BMessenger(fDetailsWindow));
-//	windowDeleter.Detach()->CustomQuit();
-//	fDetailsWindow = NULL;
+	fChangesConfirmed = fStatusWindow->ConfirmUpdates(text.String() /*,
+		BMessenger(fDetailsWindow)*/);
 	if (!fChangesConfirmed)
 		throw BAbortedByUserException();
 	
@@ -462,10 +459,10 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 				upgradedPackageVersions.StringAt(position).String(),
 				package->Info().Version().ToString().String(),
 				repository.String());
-			fDetailsWindow->AddRow(package->Info().Name().String(),
+/*			fDetailsWindow->AddRow(package->Info().Name().String(),
 				upgradedPackageVersions.StringAt(position).String(),
 				package->Info().Version().ToString().String(),
-				package->Repository()->Name().String());
+				package->Repository()->Name().String());*/
 			fStatusWindow->AddPackageInfo(PACKAGE_UPDATE,
 				package->Info().Name().String(),
 				upgradedPackageVersions.StringAt(position).String(),
@@ -477,10 +474,10 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 				package->Info().Name().String(),
 				package->Info().Version().ToString().String(),
 				repository.String());
-			fDetailsWindow->AddRow(package->Info().Name().String(),
+/*			fDetailsWindow->AddRow(package->Info().Name().String(),
 				B_TRANSLATE("Not installed"),
 				package->Info().Version().ToString().String(),
-				package->Repository()->Name().String());
+				package->Repository()->Name().String());*/
 			fStatusWindow->AddPackageInfo(PACKAGE_INSTALL,
 				package->Info().Name().String(),
 				NULL,
@@ -496,10 +493,10 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 		if (upgradedPackages.HasString(package->Info().Name()))
 			continue;
 		printf("    uninstall package %s\n", package->VersionedName().String());
-		fDetailsWindow->AddRow(package->Info().Name().String(),
+/*		fDetailsWindow->AddRow(package->Info().Name().String(),
 			package->Info().Version().ToString(),
 			B_TRANSLATE("To be uninstalled"),
-			package->Repository()->Name().String());
+			package->Repository()->Name().String());*/
 		fStatusWindow->AddPackageInfo(PACKAGE_UNINSTALL,
 			package->Info().Name().String(),
 			package->Info().Version().ToString(),
@@ -558,8 +555,8 @@ UpdateManager::_UpdateDownloadProgress(const char* header,
 void
 UpdateManager::_FinalUpdate(const char* header, const char* text)
 {
-	if (fDetailsWindow != NULL)
-		fDetailsWindow->Hide();
+//	if (fDetailsWindow != NULL)
+//		fDetailsWindow->Hide();
 	fStatusWindow->FinalUpdate(header, text);
 }
 

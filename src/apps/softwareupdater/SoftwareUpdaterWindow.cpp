@@ -40,7 +40,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fDetailView(NULL),
 	fUpdateButton(NULL),
 	fCancelButton(NULL),
-	fViewDetailsButton(NULL),
+//	fViewDetailsButton(NULL),
 	fStatusBar(NULL),
 	fIcon(NULL),
 	fCurrentState(STATE_HEAD),
@@ -66,8 +66,8 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 		new BMessage(kMsgCancel));
 //	fCancelButton->SetExplicitAlignment(BAlignment(B_ALIGN_HORIZONTAL_UNSET,
 //		B_ALIGN_BOTTOM));
-	fViewDetailsButton = new BButton(B_TRANSLATE("View details"),
-		new BMessage(kMsgViewDetails));
+	//fViewDetailsButton = new BButton(B_TRANSLATE("View details"),
+	//	new BMessage(kMsgViewDetails));
 //	fViewDetailsButton->SetExplicitAlignment(BAlignment(B_ALIGN_HORIZONTAL_UNSET,
 //		B_ALIGN_BOTTOM));
 
@@ -122,7 +122,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 			.AddGroup(new BGroupView(B_HORIZONTAL))
 				.AddGlue()
 				.Add(fCancelButton)
-				.Add(fViewDetailsButton)
+//				.Add(fViewDetailsButton)
 				.Add(fUpdateButton)
 			.End()
 		.End()
@@ -135,7 +135,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fPkgSwitchLayoutItem = layout_item_for(fPackagesSwitch);
 #endif
 	fUpdateButtonLayoutItem = layout_item_for(fUpdateButton);
-	fDetailsButtonLayoutItem = layout_item_for(fViewDetailsButton);
+//	fDetailsButtonLayoutItem = layout_item_for(fViewDetailsButton);
 	
 	CenterOnScreen();
 	Show();
@@ -239,7 +239,7 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 			}
 			break;
 		}
-		
+/*		
 		case kMsgViewDetails:
 		{
 			if (fWindowTarget.IsValid()) {
@@ -248,7 +248,7 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 				fWindowTarget.SendMessage(&showMessage);
 			}
 			break;
-		}
+		}*/
 
 #if USE_PANE_SWITCH		
 		case kMsgShowInfo:
@@ -294,8 +294,8 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 
 
 bool
-SoftwareUpdaterWindow::ConfirmUpdates(const char* text,
-	const BMessenger& target)
+SoftwareUpdaterWindow::ConfirmUpdates(const char* text /*,
+	const BMessenger& target*/)
 {
 	Lock();
 	fHeaderView->SetText(B_TRANSLATE("Updates found"));
@@ -303,7 +303,7 @@ SoftwareUpdaterWindow::ConfirmUpdates(const char* text,
 	fListView->SortItems();
 	Unlock();
 	
-	fWindowTarget = target;
+//	fWindowTarget = target;
 	uint32 priorState = _GetState();
 	_SetState(STATE_GET_CONFIRMATION);
 	
@@ -404,7 +404,7 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	
 	// Initial settings
 	if (fCurrentState == STATE_HEAD) {
-		fDetailsButtonLayoutItem->SetVisible(false);
+//		fDetailsButtonLayoutItem->SetVisible(false);
 		fProgressLayoutItem->SetVisible(false);
 		fPackagesLayoutItem->SetVisible(false);
 	}
@@ -476,15 +476,15 @@ SoftwareUpdaterWindow::_GetState()
 SuperItem::SuperItem(const char* label)
 	:
 	BListItem(),
-	fLabel(label),
-	fPackageIcon(NULL)
+	fLabel(label)
+//	fPackageIcon(NULL)
 {
 }
 
 
 SuperItem::~SuperItem()
 {
-	delete fPackageIcon;
+//	delete fPackageIcon;
 }
 
 
@@ -524,10 +524,11 @@ SuperItem::Update(BView *owner, const BFont *font)
 	SetHeight(fFontHeight.ascent + fFontHeight.descent
 		+ fFontHeight.leading + 4);
 	
-	_GetPackageIcon();
+//	_GetPackageIcon();
 }
 
-
+/*
+// Save for later use!
 void
 SuperItem::_GetPackageIcon()
 {
@@ -551,7 +552,7 @@ SuperItem::_GetPackageIcon()
 		delete fPackageIcon;
 		fPackageIcon = NULL;
 	}
-}
+}*/
 
 
 PackageItem::PackageItem(const char* name, const char* version,

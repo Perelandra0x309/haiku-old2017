@@ -14,7 +14,7 @@
 #include <package/DaemonClient.h>
 #include <package/manager/PackageManager.h>
 
-#include "DetailsWindow.h"
+//#include "DetailsWindow.h"
 #include "SoftwareUpdaterWindow.h"
 
 class ProblemWindow;
@@ -86,7 +86,7 @@ private:
 									fClientInstallationInterface;
 			
 			SoftwareUpdaterWindow*	fStatusWindow;
-			DetailsWindow*			fDetailsWindow;
+//			DetailsWindow*			fDetailsWindow;
 			ProblemWindow*			fProblemWindow;
 			uint32					fCurrentStep;
 			bool					fChangesConfirmed;

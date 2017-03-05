@@ -10,7 +10,6 @@ Application SoftwareUpdater :
 	SoftwareUpdaterApp.cpp
 	SoftwareUpdaterWindow.cpp
 	StripeView.cpp
-	DetailsWindow.cpp
 	UpdateAction.cpp
 	UpdateManager.cpp
 	WorkingLooper.cpp
@@ -18,6 +17,6 @@ Application SoftwareUpdater :
 	# package_daemon
 	ProblemWindow.cpp
 	
-	: be tracker localestub package translation libcolumnlistview.a [ TargetLibsupc++ ]
+	: be tracker localestub package translation [ TargetLibsupc++ ]
 	: SoftwareUpdater.rdef
 ;

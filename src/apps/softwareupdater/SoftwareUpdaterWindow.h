@@ -43,19 +43,19 @@ public:
 	font_height				GetFontHeight() { return fFontHeight; };
 	float					GetPackageItemHeight()
 								{ return fPackageItemHeight; };
-	BBitmap*				GetIcon() { return fPackageIcon; };
-	float					GetIconSize() { return fIconSize; };
+//	BBitmap*				GetIcon() { return fPackageIcon; };
+//	float					GetIconSize() { return fIconSize; };
 
 private:
-			void			_GetPackageIcon();
+//			void			_GetPackageIcon();
 			
 			BString			fLabel;
 			BFont			fRegularFont;
 			BFont			fBoldFont;
 			font_height		fFontHeight;
 			float			fPackageItemHeight;
-			BBitmap*		fPackageIcon;
-			float			fIconSize;
+//			BBitmap*		fPackageIcon;
+//			float			fIconSize;
 };
 
 
@@ -110,8 +110,8 @@ public:
 							~SoftwareUpdaterWindow();
 
 			void			MessageReceived(BMessage* message);
-			bool			ConfirmUpdates(const char* text,
-								const BMessenger& target);
+			bool			ConfirmUpdates(const char* text /*,
+								const BMessenger& target*/);
 			void			UpdatesApplying(const char* header,
 								const char* detail);
 			void			FinalUpdate(const char* header,
@@ -137,7 +137,7 @@ private:
 //			BGroupView*		fInfoView;
 			BButton*		fUpdateButton;
 			BButton*		fCancelButton;
-			BButton*		fViewDetailsButton;
+//			BButton*		fViewDetailsButton;
 			BStatusBar*		fStatusBar;
 #if USE_PANE_SWITCH
 			PaneSwitch*		fPackagesSwitch;
@@ -149,7 +149,7 @@ private:
 			BLayoutItem*	fPackagesLayoutItem;
 			BLayoutItem*	fProgressLayoutItem;
 			BLayoutItem*	fUpdateButtonLayoutItem;
-			BLayoutItem*	fDetailsButtonLayoutItem;
+//			BLayoutItem*	fDetailsButtonLayoutItem;
 			BBitmap*		fIcon;
 			
 			uint32			fCurrentState;
@@ -157,7 +157,7 @@ private:
 			bool			fWaitingForButton;
 			uint32			fButtonResult;
 			bool			fUserCancelRequested;
-			BMessenger		fWindowTarget;
+//			BMessenger		fWindowTarget;
 			
 };
 
