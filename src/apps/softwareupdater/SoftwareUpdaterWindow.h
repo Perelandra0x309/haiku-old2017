@@ -12,7 +12,7 @@
 
 #include <Button.h>
 #include <GroupView.h>
-#include <ListView.h>
+#include <OutlineListView.h>
 #include <ScrollView.h>
 #include <StatusBar.h>
 #include <StringView.h>
@@ -27,12 +27,42 @@ namespace BPrivate {
 };
 using namespace BPrivate;
 
+enum {
+	PACKAGE_UPDATE,
+	PACKAGE_INSTALL,
+	PACKAGE_UNINSTALL
+};
+
+
+class SuperItem : public BListItem {
+public:
+							SuperItem(const char* label);
+							~SuperItem();
+	virtual void			DrawItem(BView*, BRect, bool);
+	virtual void			Update(BView *owner, const BFont *font);
+	font_height				GetFontHeight() { return fFontHeight; };
+	float					GetPackageItemHeight()
+								{ return fPackageItemHeight; };
+	BBitmap*				GetIcon() { return fPackageIcon; };
+	float					GetIconSize() { return fIconSize; };
+
+private:
+			void			_GetPackageIcon();
+			
+			BString			fLabel;
+			font_height		fFontHeight;
+			float			fPackageItemHeight;
+			BBitmap*		fPackageIcon;
+			float			fIconSize;
+};
+
 
 class PackageItem : public BListItem {
 public:
-							PackageItem(const char* text,
+							PackageItem(const char* name,
 								const char* version,
-								const char* repository);
+								const char* summary,
+								SuperItem* super);
 //							~PackageItem();
 	virtual void			DrawItem(BView*, BRect, bool);
 	virtual void			Update(BView *owner, const BFont *font);
@@ -43,20 +73,32 @@ private:
 			BString			fName;
 			BString			fVersion;
 			BString			fSummary;
-			font_height		fFontHeight;
+			BFont			fRegularFont;
+			BFont			fSmallFont;
 			font_height		fSmallFontHeight;
 			float			fSmallTotalHeight;
-			float			fNameOffset;
+			float			fLabelOffset;
+			SuperItem*		fSuperItem;
 };
 
 
-class PackageListView : public BListView {
+class PackageListView : public BOutlineListView {
 public:
 							PackageListView();
 			virtual	void	FrameResized(float newWidth, float newHeight);
 //			virtual BSize	PreferredSize();
 //			virtual	void	GetPreferredSize(float* _width, float* _height);
 //			virtual	BSize	MaxSize();
+			void			AddPackage(uint32 install_type,
+								const char* name,
+								const char* version,
+								const char* summary);
+			void			SortItems();
+
+private:
+			SuperItem*		fSuperUpdateItem;
+			SuperItem*		fSuperInstallItem;
+			SuperItem*		fSuperUninstallItem;
 };
 
 
@@ -73,7 +115,8 @@ public:
 			void			FinalUpdate(const char* header,
 								const char* detail);
 			bool			UserCancelRequested();
-			void			AddPackageInfo(const char* package_name,
+			void			AddPackageInfo(uint32 install_type,
+								const char* package_name,
 								const char* cur_ver,
 								const char* new_ver,
 								const char* summary);
@@ -103,6 +146,8 @@ private:
 			BLayoutItem*	fDetailsLayoutItem;
 			BLayoutItem*	fPackagesLayoutItem;
 			BLayoutItem*	fProgressLayoutItem;
+			BLayoutItem*	fUpdateButtonLayoutItem;
+			BLayoutItem*	fDetailsButtonLayoutItem;
 			BBitmap*		fIcon;
 			
 			uint32			fCurrentState;
@@ -115,7 +160,7 @@ private:
 };
 
 
-int SortPackageItems(const void* item1, const void* item2);
+int SortPackageItems(const BListItem* item1, const BListItem* item2);
 
 
 #endif // _SOFTWARE_UPDATER_WINDOW_H

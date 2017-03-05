@@ -14,10 +14,10 @@
 #include <Application.h>
 #include <Catalog.h>
 #include <ControlLook.h>
-#include <LayoutUtils.h>
-#include <NodeInfo.h>
 #include <LayoutBuilder.h>
+#include <LayoutUtils.h>
 #include <Message.h>
+#include <NodeInfo.h>
 #include <Roster.h>
 #include <String.h>
 
@@ -119,7 +119,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 				.Add(fScrollView)
 			.End()
 			.AddStrut(B_USE_SMALL_SPACING)
-			.AddGroup(B_HORIZONTAL)
+			.AddGroup(new BGroupView(B_HORIZONTAL))
 				.AddGlue()
 				.Add(fCancelButton)
 				.Add(fViewDetailsButton)
@@ -134,6 +134,8 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 #if USE_PANE_SWITCH
 	fPkgSwitchLayoutItem = layout_item_for(fPackagesSwitch);
 #endif
+	fUpdateButtonLayoutItem = layout_item_for(fUpdateButton);
+	fDetailsButtonLayoutItem = layout_item_for(fViewDetailsButton);
 	
 	CenterOnScreen();
 	Show();
@@ -294,6 +296,7 @@ SoftwareUpdaterWindow::ConfirmUpdates(const char* text,
 	Lock();
 	fHeaderView->SetText(B_TRANSLATE("Updates found"));
 	fDetailView->SetText(text);
+	fListView->SortItems();
 	Unlock();
 	
 	fWindowTarget = target;
@@ -348,18 +351,19 @@ SoftwareUpdaterWindow::UserCancelRequested()
 
 
 void
-SoftwareUpdaterWindow::AddPackageInfo(const char* package_name,
-	const char* cur_ver, const char* new_ver, const char* summary)
+SoftwareUpdaterWindow::AddPackageInfo(uint32 install_type,
+	const char* package_name, const char* cur_ver, const char* new_ver,
+	const char* summary)
 {
+	// TODO remove cur_ver?
 	BString version;
 	if (new_ver == NULL)
-		version.SetTo(B_TRANSLATE("Will be uninstalled"));
+		version.SetTo("");
 	else
 		version.SetTo(new_ver);
 	Lock();
-	fListView->AddItem(new PackageItem(package_name, version.String(), summary));
-	// TODO move this elsewhere so it isn't run every time something is added
-	fListView->SortItems(SortPackageItems);
+	fListView->AddPackage(install_type, package_name, version.String(),
+		summary);
 	Unlock();
 }
 
@@ -393,12 +397,10 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 		return;
 	
 	Lock();
-	// All these IsHidden() calls are needed because Hide/Show are cumulative
 	
 	// Initial settings
 	if (fCurrentState == STATE_HEAD) {
-		if (!fViewDetailsButton->IsHidden())
-			fViewDetailsButton->Hide();
+		fDetailsButtonLayoutItem->SetVisible(false);
 		fProgressLayoutItem->SetVisible(false);
 		fPackagesLayoutItem->SetVisible(false);
 	}
@@ -406,27 +408,21 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	
 	// Update confirmation button
 	// Show only when asking for confirmation to update
-	if (fCurrentState == STATE_GET_CONFIRMATION) {
-		if (fUpdateButton->IsHidden())
-			fUpdateButton->Show();
-	}
-	else {
-		if (!fUpdateButton->IsHidden())
-			fUpdateButton->Hide();
-	}
+	if (fCurrentState == STATE_GET_CONFIRMATION) 
+		fUpdateButtonLayoutItem->SetVisible(true);
+	else
+		fUpdateButtonLayoutItem->SetVisible(false);
 	
 	// View details button and package info view
 	// Show at confirmation prompt, hide at final update
 	if (fCurrentState == STATE_GET_CONFIRMATION) {
-		if (fViewDetailsButton->IsHidden())
-			fViewDetailsButton->Show();
+		fDetailsButtonLayoutItem->SetVisible(true);
 #if !USE_PANE_SWITCH
 		fPackagesLayoutItem->SetVisible(true);
 #endif
 	}
 	else if (fCurrentState == STATE_FINAL_MSG) {
-		if (!fViewDetailsButton->IsHidden())
-			fViewDetailsButton->Hide();
+		fDetailsButtonLayoutItem->SetVisible(false);
 #if USE_PANE_SWITCH
 		fPackagesLayoutItem->SetVisible(false);
 		fPkgSwitchLayoutItem->SetVisible(false);
@@ -465,17 +461,86 @@ SoftwareUpdaterWindow::_GetState()
 }
 
 
-PackageItem::PackageItem(const char* name, const char* version,
-	const char* summary)
+SuperItem::SuperItem(const char* label)
 	:
-	BListItem()
+	BListItem(),
+	fLabel(label),
+	fPackageIcon(NULL)
 {
-	fName.SetTo(name);
-//	fVersion.SetTo(B_TRANSLATE("version"));
-//	fVersion.Append(" ").Append(version);
-	fVersion.SetTo(version);
-	fSummary.SetTo(summary);
-	fNameOffset = be_control_look->DefaultLabelSpacing();
+}
+
+
+SuperItem::~SuperItem()
+{
+	delete fPackageIcon;
+}
+
+
+void
+SuperItem::DrawItem(BView* owner, BRect item_rect, bool complete)
+{
+	float width;
+    owner->GetPreferredSize(&width, NULL);
+    BString label(fLabel);
+    owner->TruncateString(&label, B_TRUNCATE_END, width);
+    owner->DrawString(label.String(), BPoint(item_rect.left,
+		item_rect.bottom - fFontHeight.descent - 1));
+	
+//	owner->SetHighColor(tint_color(ui_color(B_CONTROL_BACKGROUND_COLOR),
+//		B_DARKEN_1_TINT));
+//	owner->StrokeLine(BPoint(0, item_rect.bottom), item_rect.RightBottom());
+}
+
+
+void
+SuperItem::Update(BView *owner, const BFont *font)
+{
+	BListItem::Update(owner, font);
+	font->GetHeight(&fFontHeight);
+	float height = fFontHeight.ascent + fFontHeight.descent
+		+ fFontHeight.leading;
+	SetHeight(height + 4);
+	fPackageItemHeight = 2 * height;
+	_GetPackageIcon();
+}
+
+
+void
+SuperItem::_GetPackageIcon()
+{
+	delete fPackageIcon;
+	fIconSize = 4 * int(fPackageItemHeight / 4);
+	 // Create icon size in multiples of 4
+
+	status_t result = B_ERROR;
+	BRect iconRect(0, 0, fIconSize - 1, fIconSize - 1);
+	fPackageIcon = new BBitmap(iconRect, 0, B_RGBA32);
+	BMimeType nodeType;
+	nodeType.SetTo("application/x-vnd.haiku-package");
+	result = nodeType.GetIcon(fPackageIcon, icon_size(fIconSize));
+	// Get super type icon
+	if (result != B_OK) {
+		BMimeType superType;
+		if (nodeType.GetSupertype(&superType) == B_OK)
+			result = superType.GetIcon(fPackageIcon, icon_size(fIconSize));
+	}
+	if (result != B_OK) {
+		delete fPackageIcon;
+		fPackageIcon = NULL;
+	}
+}
+
+
+PackageItem::PackageItem(const char* name, const char* version,
+	const char* summary, SuperItem* super)
+	:
+	BListItem(),
+	fName(name),
+	fVersion(version),
+	fSummary(summary),
+	fSuperItem(super)
+{
+	fLabelOffset = be_control_look->DefaultLabelSpacing();
 }
 
 
@@ -485,35 +550,32 @@ PackageItem::DrawItem(BView* owner, BRect item_rect, bool complete)
 	float width, height;
     owner->GetPreferredSize(&width, &height);
     float nameWidth = width / 2.0;
-//	rgb_color color;
-//	bool selected = IsSelected();
-	// Background redraw
-/*	if(selected) {
-		color = ui_color(B_LIST_SELECTED_BACKGROUND_COLOR);
+    float offset_width = 0;
+	
+	BBitmap* icon = fSuperItem->GetIcon();
+	if (icon != NULL && icon->IsValid()) {
+		float iconSize = fSuperItem->GetIconSize();
+		float offsetMarginHeight = floor((Height() - iconSize) / 2);
+
+		//owner->SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_OVERLAY);
+		owner->SetDrawingMode(B_OP_ALPHA);
+		owner->DrawBitmap(icon, BPoint(item_rect.left,
+			item_rect.top + offsetMarginHeight));
+		owner->SetDrawingMode(B_OP_COPY);
+		offset_width += iconSize + fLabelOffset;
 	}
-	else {
-		color = ui_color(B_LIST_BACKGROUND_COLOR);
-	}
-	owner->SetLowColor(color);
-	owner->SetDrawingMode(B_OP_COPY);
-	if(selected || complete)
-	{	owner->SetHighColor(color);
-		owner->FillRect(item_rect);
-	}*/
 	
 	// Package name
-	BFont detailsFont;
-	owner->SetFont(&detailsFont);
+	font_height fontHeight = fSuperItem->GetFontHeight();
     BString name(fName);
     owner->TruncateString(&name, B_TRUNCATE_END, nameWidth);
-	BPoint cursor(item_rect.left + fNameOffset,
-		item_rect.bottom - fSmallTotalHeight - fFontHeight.descent - 1);
+	BPoint cursor(item_rect.left + offset_width,
+		item_rect.bottom - fSmallTotalHeight - fontHeight.descent - 1);
 	owner->DrawString(name.String(), cursor);
-	cursor.x += owner->StringWidth(name.String()) + 6;
+	cursor.x += owner->StringWidth(name.String()) + fLabelOffset;
 	
-	// Change font
-	detailsFont.SetSize(detailsFont.Size() - 2);
-	owner->SetFont(&detailsFont);
+	// Change font and color
+	owner->SetFont(&fSmallFont);
 	owner->SetHighColor(tint_color(ui_color(B_LIST_ITEM_TEXT_COLOR), 0.7));
 	
 	// Version
@@ -523,15 +585,16 @@ PackageItem::DrawItem(BView* owner, BRect item_rect, bool complete)
 	
 	// Summary
 	BString summary(fSummary);
-	cursor.x = item_rect.left + fNameOffset;
-	cursor.y = item_rect.bottom - fFontHeight.descent;
+	cursor.x = item_rect.left + offset_width;
+	cursor.y = item_rect.bottom - fontHeight.descent;
 	owner->TruncateString(&summary, B_TRUNCATE_END, width - cursor.x);
 	owner->DrawString(summary.String(), cursor);
 	
-	
-	owner->SetHighColor(tint_color(ui_color(B_CONTROL_BACKGROUND_COLOR),
-		B_DARKEN_1_TINT));
-	owner->StrokeLine(item_rect.LeftBottom(), item_rect.RightBottom());
+//	owner->SetHighColor(tint_color(ui_color(B_CONTROL_BACKGROUND_COLOR),
+//		B_DARKEN_1_TINT));
+//	owner->StrokeLine(BPoint(0, item_rect.bottom), item_rect.RightBottom());
+
+	owner->SetFont(&fRegularFont);
 }
 
 
@@ -546,14 +609,12 @@ PackageItem::Update(BView *owner, const BFont *font)
 void
 PackageItem::SetItemHeight(const BFont* font)
 {
-	font->GetHeight(&fFontHeight);
-	float height = fFontHeight.ascent + fFontHeight.descent
-		+ fFontHeight.leading;
-	SetHeight(2 * height);
+	SetHeight(fSuperItem->GetPackageItemHeight());
 	
-	BFont smallFont(font);
-	smallFont.SetSize(font->Size() - 2);
-	smallFont.GetHeight(&fSmallFontHeight);
+	fRegularFont = *font;
+	fSmallFont = *font;
+	fSmallFont.SetSize(font->Size() - 2);
+	fSmallFont.GetHeight(&fSmallFontHeight);
 	fSmallTotalHeight = fSmallFontHeight.ascent + fSmallFontHeight.descent
 		+ fSmallFontHeight.leading;
 }
@@ -568,20 +629,23 @@ PackageItem::ICompare(PackageItem* item)
 
 
 int
-SortPackageItems(const void* item1, const void* item2)
+SortPackageItems(const BListItem* item1, const BListItem* item2)
 {
-	PackageItem* first = *(PackageItem**)item1;
-	PackageItem* second = *(PackageItem**)item2;
-	return (first->ICompare(second));
+	PackageItem* first = (PackageItem*)item1;
+	PackageItem* second = (PackageItem*)item2;
+	return first->ICompare(second);
 }
 
 
 PackageListView::PackageListView()
 	:
-	BListView("Package list")
+	BOutlineListView("Package list"),
+	fSuperUpdateItem(NULL),
+	fSuperInstallItem(NULL),
+	fSuperUninstallItem(NULL)
 {
-	SetExplicitMinSize(BSize(B_SIZE_UNSET, 100));
-	SetExplicitPreferredSize(BSize(B_SIZE_UNSET, 200));
+	SetExplicitMinSize(BSize(B_SIZE_UNSET, 80));
+//	SetExplicitPreferredSize(BSize(B_SIZE_UNSET, 200));
 }
 
 
@@ -596,6 +660,62 @@ PackageListView::FrameResized(float newWidth, float newHeight)
 		item->Update(this, be_plain_font);
 	}
 	Invalidate();
+}
+
+
+void
+PackageListView::AddPackage(uint32 install_type, const char* name,
+	const char* version, const char* summary)
+{
+	SuperItem* super;
+	switch (install_type) {
+		case PACKAGE_UPDATE:
+		{
+			if (fSuperUpdateItem == NULL) {
+				fSuperUpdateItem = new SuperItem(
+					B_TRANSLATE("Packages to be updated"));
+				AddItem(fSuperUpdateItem);
+			}
+			super = fSuperUpdateItem;
+			break;
+		}
+		
+		case PACKAGE_INSTALL:
+		{
+			if (fSuperInstallItem == NULL) {
+				fSuperInstallItem = new SuperItem(
+					B_TRANSLATE("New packages to be installed"));
+				AddItem(fSuperInstallItem);
+			}
+			super = fSuperInstallItem;
+			break;
+		}
+		
+		case PACKAGE_UNINSTALL:
+		{
+			if (fSuperUninstallItem == NULL) {
+				fSuperUninstallItem = new SuperItem(
+					B_TRANSLATE("Packages to be uninstalled"));
+				AddItem(fSuperUninstallItem);
+			}
+			super = fSuperUninstallItem;
+			break;
+		}
+		
+		default:
+			return;
+	
+	}
+	PackageItem* item = new PackageItem(name, version, summary, super);
+	AddUnder(item, super);
+}
+
+
+void
+PackageListView::SortItems()
+{
+	if (fSuperUpdateItem != NULL)
+		SortItemsUnder(fSuperUpdateItem, true, SortPackageItems);
 }
 
 /*
