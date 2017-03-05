@@ -169,7 +169,7 @@ void
 DetailsWindow::AddRow(const char* package_name, const char* cur_ver,
 	const char* new_ver, const char* repo_name)
 {
-	PackageRow* addedRow = new PackageRow(package_name, cur_ver, new_ver,
+/*	PackageRow* addedRow = new PackageRow(package_name, cur_ver, new_ver,
 		repo_name);
 	Lock();
 	fListView->AddRow(addedRow);
@@ -208,5 +208,5 @@ DetailsWindow::AddRow(const char* package_name, const char* cur_ver,
 			+ fListView->ColumnAt(kRepoColumn)->Width() + 70;
 		ResizeTo(width, Frame().Height());
 		CenterOnScreen();
-	}
+	}*/
 }

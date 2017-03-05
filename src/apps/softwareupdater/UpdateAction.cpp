@@ -9,7 +9,7 @@
 
 #include "UpdateAction.h"
 
-//#include <Alert.h>
+#include <Alert.h>
 #include <Application.h>
 #include <Catalog.h>
 #include <package/manager/Exceptions.h>
@@ -60,11 +60,11 @@ UpdateAction::Perform()
 			"Fatal error occurred while updating packages: "
 			"%s (%s)\n", ex.Message().String(),
 			ex.Details().String());
-	/*	BAlert* alert(new(std::nothrow) BAlert(B_TRANSLATE("Fatal error"),
+		BAlert* alert(new(std::nothrow) BAlert(B_TRANSLATE("Fatal error"),
 			errorString, B_TRANSLATE("Close"), NULL, NULL,
 			B_WIDTH_AS_USUAL, B_STOP_ALERT));
 		if (alert != NULL)
-			alert->Go();*/
+			alert->Go();
 		fUpdateManager->FinalError(B_TRANSLATE("Updates did not complete"),
 			ex.Message());
 		return ex.Error();

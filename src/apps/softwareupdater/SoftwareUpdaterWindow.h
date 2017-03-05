@@ -50,6 +50,8 @@ private:
 			void			_GetPackageIcon();
 			
 			BString			fLabel;
+			BFont			fRegularFont;
+			BFont			fBoldFont;
 			font_height		fFontHeight;
 			float			fPackageItemHeight;
 			BBitmap*		fPackageIcon;

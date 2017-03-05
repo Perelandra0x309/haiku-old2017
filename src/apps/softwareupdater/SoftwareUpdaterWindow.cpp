@@ -31,9 +31,9 @@
 
 SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	:
-	BWindow(BRect(0, 0, 500, 200),
+	BWindow(BRect(0, 0, 500, 100),
 		B_TRANSLATE_SYSTEM_NAME("SoftwareUpdater"), B_TITLED_WINDOW,
-		B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE
+		/*B_AUTO_UPDATE_SIZE_LIMITS |*/ B_NOT_ZOOMABLE
 		| B_NOT_CLOSABLE /*| B_NOT_RESIZABLE*/),
 	fStripeView(NULL),
 	fHeaderView(NULL),
@@ -139,7 +139,11 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	
 	CenterOnScreen();
 	Show();
+	
+	// TODO needs adjustment to consider larger fonts- do string width?
 	fDefaultRect = Bounds();
+	SetSizeLimits(fDefaultRect.Width(), fDefaultRect.Width(),
+		fDefaultRect.Height(), fDefaultRect.Height());
 	_SetState(STATE_DISPLAY_STATUS);
 }
 
@@ -416,17 +420,25 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	// View details button and package info view
 	// Show at confirmation prompt, hide at final update
 	if (fCurrentState == STATE_GET_CONFIRMATION) {
-		fDetailsButtonLayoutItem->SetVisible(true);
+//		fDetailsButtonLayoutItem->SetVisible(true);
 #if !USE_PANE_SWITCH
 		fPackagesLayoutItem->SetVisible(true);
 #endif
+		//fListView->ResizeToPreferred();
+		SetSizeLimits(fDefaultRect.Width(), 9999,
+		fDefaultRect.Height() + fListView->MinSize().Height() + 30, 9999);
+		ResizeTo(Bounds().Width(), 400);
 	}
 	else if (fCurrentState == STATE_FINAL_MSG) {
-		fDetailsButtonLayoutItem->SetVisible(false);
+//		fDetailsButtonLayoutItem->SetVisible(false);
 #if USE_PANE_SWITCH
 		fPackagesLayoutItem->SetVisible(false);
 		fPkgSwitchLayoutItem->SetVisible(false);
 #endif
+		//fListView->SetExplicitMinSize(BSize(B_SIZE_UNSET, 40));
+		fPackagesLayoutItem->SetVisible(false);
+//		SetSizeLimits(fDefaultRect.Width(), fDefaultRect.Width(),
+//		fDefaultRect.Height(), fDefaultRect.Height());
 	}
 	
 	// Progress bar and string view
@@ -483,8 +495,10 @@ SuperItem::DrawItem(BView* owner, BRect item_rect, bool complete)
     owner->GetPreferredSize(&width, NULL);
     BString label(fLabel);
     owner->TruncateString(&label, B_TRUNCATE_END, width);
+    owner->SetFont(&fBoldFont);
     owner->DrawString(label.String(), BPoint(item_rect.left,
 		item_rect.bottom - fFontHeight.descent - 1));
+	owner->SetFont(&fRegularFont);
 	
 //	owner->SetHighColor(tint_color(ui_color(B_CONTROL_BACKGROUND_COLOR),
 //		B_DARKEN_1_TINT));
@@ -495,12 +509,21 @@ SuperItem::DrawItem(BView* owner, BRect item_rect, bool complete)
 void
 SuperItem::Update(BView *owner, const BFont *font)
 {
-	BListItem::Update(owner, font);
-	font->GetHeight(&fFontHeight);
-	float height = fFontHeight.ascent + fFontHeight.descent
-		+ fFontHeight.leading;
-	SetHeight(height + 4);
-	fPackageItemHeight = 2 * height;
+	fRegularFont = *font;
+	fBoldFont = *font;
+	fBoldFont.SetFace(B_BOLD_FACE);
+	BListItem::Update(owner, &fBoldFont);
+	
+	// Calculate height for PackageItem
+	fRegularFont.GetHeight(&fFontHeight);
+	fPackageItemHeight = 2 * (fFontHeight.ascent + fFontHeight.descent
+		+ fFontHeight.leading);
+	
+	// Calculate height for this item
+	fBoldFont.GetHeight(&fFontHeight);
+	SetHeight(fFontHeight.ascent + fFontHeight.descent
+		+ fFontHeight.leading + 4);
+	
 	_GetPackageIcon();
 }
 
@@ -510,7 +533,7 @@ SuperItem::_GetPackageIcon()
 {
 	delete fPackageIcon;
 	fIconSize = 4 * int(fPackageItemHeight / 4);
-	 // Create icon size in multiples of 4
+		// Create icon size in multiples of 4
 
 	status_t result = B_ERROR;
 	BRect iconRect(0, 0, fIconSize - 1, fIconSize - 1);
@@ -547,12 +570,13 @@ PackageItem::PackageItem(const char* name, const char* version,
 void
 PackageItem::DrawItem(BView* owner, BRect item_rect, bool complete)
 {
-	float width, height;
-    owner->GetPreferredSize(&width, &height);
+	float width;
+    owner->GetPreferredSize(&width, NULL);
     float nameWidth = width / 2.0;
     float offset_width = 0;
 	
-	BBitmap* icon = fSuperItem->GetIcon();
+	// Save for use later!  Maybe we can get HaikuDepot icons?
+/*	BBitmap* icon = fSuperItem->GetIcon();
 	if (icon != NULL && icon->IsValid()) {
 		float iconSize = fSuperItem->GetIconSize();
 		float offsetMarginHeight = floor((Height() - iconSize) / 2);
@@ -563,7 +587,7 @@ PackageItem::DrawItem(BView* owner, BRect item_rect, bool complete)
 			item_rect.top + offsetMarginHeight));
 		owner->SetDrawingMode(B_OP_COPY);
 		offset_width += iconSize + fLabelOffset;
-	}
+	}*/
 	
 	// Package name
 	font_height fontHeight = fSuperItem->GetFontHeight();
@@ -577,6 +601,13 @@ PackageItem::DrawItem(BView* owner, BRect item_rect, bool complete)
 	// Change font and color
 	owner->SetFont(&fSmallFont);
 	owner->SetHighColor(tint_color(ui_color(B_LIST_ITEM_TEXT_COLOR), 0.7));
+	
+	// Bullet
+	float circleDiameter = 5.0;
+	float circleLeft = item_rect.left - 2 * circleDiameter;
+	float circleTop = cursor.y - circleDiameter - 1;
+	owner->FillEllipse(BRect(circleLeft, circleTop,
+		circleLeft + circleDiameter - 1, circleTop + circleDiameter - 1));
 	
 	// Version
 	BString version(fVersion);
@@ -644,8 +675,8 @@ PackageListView::PackageListView()
 	fSuperInstallItem(NULL),
 	fSuperUninstallItem(NULL)
 {
-	SetExplicitMinSize(BSize(B_SIZE_UNSET, 80));
-//	SetExplicitPreferredSize(BSize(B_SIZE_UNSET, 200));
+	SetExplicitMinSize(BSize(B_SIZE_UNSET, 40));
+	SetExplicitPreferredSize(BSize(B_SIZE_UNSET, 400));
 }
 
 
