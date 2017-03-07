@@ -1,8 +1,6 @@
 SubDir HAIKU_TOP src apps softwareupdater ;
 
-UsePrivateHeaders interface shared package tracker ;
-
-SubDirHdrs [ FDirName $(HAIKU_TOP) src kits tracker ] ;
+UsePrivateHeaders interface shared package ;
 
 SEARCH_SOURCE += [ FDirName $(HAIKU_TOP) src servers package ] ;
 
@@ -17,6 +15,6 @@ Application SoftwareUpdater :
 	# package_daemon
 	ProblemWindow.cpp
 	
-	: be tracker localestub package translation [ TargetLibsupc++ ]
+	: be localestub package translation [ TargetLibsupc++ ]
 	: SoftwareUpdater.rdef
 ;

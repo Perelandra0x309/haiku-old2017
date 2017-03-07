@@ -22,8 +22,6 @@
 #include <String.h>
 
 #include "constants.h"
-//#include "tracker_private.h"
-#include "DialogPane.h"
 
 #undef B_TRANSLATION_CONTEXT
 #define B_TRANSLATION_CONTEXT "SoftwareUpdaterWindow"
@@ -40,7 +38,6 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fDetailView(NULL),
 	fUpdateButton(NULL),
 	fCancelButton(NULL),
-//	fViewDetailsButton(NULL),
 	fStatusBar(NULL),
 	fIcon(NULL),
 	fCurrentState(STATE_HEAD),
@@ -66,10 +63,6 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 		new BMessage(kMsgCancel));
 //	fCancelButton->SetExplicitAlignment(BAlignment(B_ALIGN_HORIZONTAL_UNSET,
 //		B_ALIGN_BOTTOM));
-	//fViewDetailsButton = new BButton(B_TRANSLATE("View details"),
-	//	new BMessage(kMsgViewDetails));
-//	fViewDetailsButton->SetExplicitAlignment(BAlignment(B_ALIGN_HORIZONTAL_UNSET,
-//		B_ALIGN_BOTTOM));
 
 	fHeaderView = new BStringView("header",
 		B_TRANSLATE("Checking for updates"), B_WILL_DRAW);
@@ -81,17 +74,6 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fDetailView->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT, B_ALIGN_TOP));
 	fStatusBar = new BStatusBar("progress");
 	fStatusBar->SetMaxValue(1.0);
-	
-#if USE_PANE_SWITCH
-	fPackagesSwitch = new PaneSwitch("options_button");
-	fPackagesSwitch->SetLabels(B_TRANSLATE("Hide update details"),
-		B_TRANSLATE("Show update details"));
-	fPackagesSwitch->SetMessage(new BMessage(kMsgShowInfo));
-	fPackagesSwitch->SetExplicitMaxSize(BSize(B_SIZE_UNLIMITED,
-		B_SIZE_UNSET));
-	fPackagesSwitch->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT,
-		B_ALIGN_TOP));
-#endif
 	
 	fListView = new PackageListView();
 	fScrollView = new BScrollView("scrollview", fListView, B_WILL_DRAW,
@@ -113,16 +95,12 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 				.Add(fHeaderView)
 				.Add(fDetailView)
 				.Add(fStatusBar)
-#if USE_PANE_SWITCH
-				.Add(fPackagesSwitch)
-#endif
 				.Add(fScrollView)
 			.End()
 			.AddStrut(B_USE_SMALL_SPACING)
 			.AddGroup(new BGroupView(B_HORIZONTAL))
 				.AddGlue()
 				.Add(fCancelButton)
-//				.Add(fViewDetailsButton)
 				.Add(fUpdateButton)
 			.End()
 		.End()
@@ -131,11 +109,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fDetailsLayoutItem = layout_item_for(fDetailView);
 	fProgressLayoutItem = layout_item_for(fStatusBar);
 	fPackagesLayoutItem = layout_item_for(fScrollView);
-#if USE_PANE_SWITCH
-	fPkgSwitchLayoutItem = layout_item_for(fPackagesSwitch);
-#endif
 	fUpdateButtonLayoutItem = layout_item_for(fUpdateButton);
-//	fDetailsButtonLayoutItem = layout_item_for(fViewDetailsButton);
 	
 	CenterOnScreen();
 	Show();
@@ -230,8 +204,6 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 				if (fCurrentState == STATE_FINAL_MSG)
 					be_app->PostMessage(B_QUIT_REQUESTED);
 			}
-		//	else {
-		//	}
 			break;
 		}
 		
@@ -244,54 +216,7 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 			}
 			break;
 		}
-/*		
-		case kMsgViewDetails:
-		{
-			if (fWindowTarget.IsValid()) {
-				BMessage showMessage(kMsgShow);
-				showMessage.AddRect(kKeyFrame, Frame());
-				fWindowTarget.SendMessage(&showMessage);
-			}
-			break;
-		}*/
 
-#if USE_PANE_SWITCH		
-		case kMsgShowInfo:
-		{
-			fPackagesLayoutItem->SetVisible(fPackagesSwitch->Value());
-			// TODO not sure this is working
-/*			UpdateSizeLimits();
-			InvalidateLayout();
-			if (!fPackagesSwitch->Value()) {
-				//ResizeTo(fDefaultRect.Width(), fDefaultRect.Height());
-				float minWidth;
-				float maxWidth;
-				GetSizeLimits(&minWidth, &maxWidth, NULL, NULL);
-				float height = fDefaultRect.Height();
-				SetSizeLimits(minWidth, maxWidth, height, height);
-				ResizeBy(0, -20);
-			}*/
-			break;
-		}
-#endif
-		
-	/*	case 'inva':
-		{
-			// TODO resize window at final message to get rid of space at bottom
-			
-			float minWidth;
-			float maxWidth;
-			InvalidateLayout();
-			GetSizeLimits(&minWidth, &maxWidth, NULL, NULL);
-			SetSizeLimits(minWidth, maxWidth, 0, 50);
-			ResizeTo(Frame().Width(), 50);
-			UpdateSizeLimits();
-			InvalidateLayout();
-			Layout(true);
-			ResizeBy(0, -20);
-			break;
-		}*/
-		
 		default:
 			BWindow::MessageReceived(message);
 	}
@@ -299,8 +224,7 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 
 
 bool
-SoftwareUpdaterWindow::ConfirmUpdates(const char* text /*,
-	const BMessenger& target*/)
+SoftwareUpdaterWindow::ConfirmUpdates(const char* text)
 {
 	Lock();
 	fHeaderView->SetText(B_TRANSLATE("Updates found"));
@@ -308,7 +232,6 @@ SoftwareUpdaterWindow::ConfirmUpdates(const char* text /*,
 	fListView->SortItems();
 	Unlock();
 	
-//	fWindowTarget = target;
 	uint32 priorState = _GetState();
 	_SetState(STATE_GET_CONFIRMATION);
 	
@@ -327,26 +250,6 @@ SoftwareUpdaterWindow::UpdatesApplying(const char* header, const char* detail)
 	Unlock();
 	_SetState(STATE_APPLY_UPDATES);
 }
-
-/*
-void
-SoftwareUpdaterWindow::FinalUpdate(const char* header, const char* detail)
-{
-	if (_GetState() == STATE_FINAL_MSG)
-		return;
-	
-	
-	_SetState(STATE_FINAL_MSG);
-	Lock();
-	fHeaderView->SetText(header);
-	fDetailView->SetText(detail);
-	fStatusBar->RemoveSelf();
-	delete fStatusBar;
-	fStatusBar = NULL;
-	Unlock();
-//	PostMessage('inva');
-	_WaitForButtonClick();
-}*/
 
 
 bool
@@ -409,7 +312,6 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	
 	// Initial settings
 	if (fCurrentState == STATE_HEAD) {
-//		fDetailsButtonLayoutItem->SetVisible(false);
 		fProgressLayoutItem->SetVisible(false);
 		fPackagesLayoutItem->SetVisible(false);
 	}
@@ -422,24 +324,16 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	else
 		fUpdateButtonLayoutItem->SetVisible(false);
 	
-	// View details button and package info view
+	// View package info view
 	// Show at confirmation prompt, hide at final update
 	if (fCurrentState == STATE_GET_CONFIRMATION) {
-//		fDetailsButtonLayoutItem->SetVisible(true);
-#if !USE_PANE_SWITCH
 		fPackagesLayoutItem->SetVisible(true);
-#endif
 		//fListView->ResizeToPreferred();
 		SetSizeLimits(fDefaultRect.Width(), 9999,
 		fDefaultRect.Height() + fListView->MinSize().Height() + 30, 9999);
 		ResizeTo(Bounds().Width(), 400);
 	}
 	else if (fCurrentState == STATE_FINAL_MSG) {
-//		fDetailsButtonLayoutItem->SetVisible(false);
-#if USE_PANE_SWITCH
-		fPackagesLayoutItem->SetVisible(false);
-		fPkgSwitchLayoutItem->SetVisible(false);
-#endif
 		//fListView->SetExplicitMinSize(BSize(B_SIZE_UNSET, 40));
 		fPackagesLayoutItem->SetVisible(false);
 //		SetSizeLimits(fDefaultRect.Width(), fDefaultRect.Width(),
@@ -506,10 +400,6 @@ SuperItem::DrawItem(BView* owner, BRect item_rect, bool complete)
     owner->DrawString(label.String(), BPoint(item_rect.left,
 		item_rect.bottom - fFontHeight.descent - 1));
 	owner->SetFont(&fRegularFont);
-	
-//	owner->SetHighColor(tint_color(ui_color(B_CONTROL_BACKGROUND_COLOR),
-//		B_DARKEN_1_TINT));
-//	owner->StrokeLine(BPoint(0, item_rect.bottom), item_rect.RightBottom());
 }
 
 
@@ -607,13 +497,6 @@ PackageItem::DrawItem(BView* owner, BRect item_rect, bool complete)
 	owner->SetFont(&fSmallFont);
 	owner->SetHighColor(tint_color(ui_color(B_LIST_ITEM_TEXT_COLOR), 0.7));
 	
-	// Bullet
-/*	float circleDiameter = 5.0;
-	float circleLeft = item_rect.left - 2 * circleDiameter;
-	float circleTop = cursor.y - circleDiameter - 1;
-	owner->FillEllipse(BRect(circleLeft, circleTop,
-		circleLeft + circleDiameter - 1, circleTop + circleDiameter - 1));*/
-	
 	// Version
 	BString version(fVersion);
 	owner->TruncateString(&version, B_TRUNCATE_END, width - cursor.x);
@@ -626,10 +509,6 @@ PackageItem::DrawItem(BView* owner, BRect item_rect, bool complete)
 	owner->TruncateString(&summary, B_TRUNCATE_END, width - cursor.x);
 	owner->DrawString(summary.String(), cursor);
 	
-//	owner->SetHighColor(tint_color(ui_color(B_CONTROL_BACKGROUND_COLOR),
-//		B_DARKEN_1_TINT));
-//	owner->StrokeLine(BPoint(0, item_rect.bottom), item_rect.RightBottom());
-
 	owner->SetFont(&fRegularFont);
 }
 

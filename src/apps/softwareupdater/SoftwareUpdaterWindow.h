@@ -21,11 +21,6 @@
 
 #include "StripeView.h"
 
-#define USE_PANE_SWITCH 0
-
-namespace BPrivate {
-	class PaneSwitch;
-};
 using namespace BPrivate;
 
 enum {
@@ -111,12 +106,9 @@ public:
 							~SoftwareUpdaterWindow();
 
 			void			MessageReceived(BMessage* message);
-			bool			ConfirmUpdates(const char* text /*,
-								const BMessenger& target*/);
+			bool			ConfirmUpdates(const char* text);
 			void			UpdatesApplying(const char* header,
 								const char* detail);
-//			void			FinalUpdate(const char* header,
-//								const char* detail);
 			bool			UserCancelRequested();
 			void			AddPackageInfo(uint32 install_type,
 								const char* package_name,
@@ -137,10 +129,8 @@ private:
 			StripeView*		fStripeView;
 			BStringView*	fHeaderView;
 			BStringView*	fDetailView;
-//			BGroupView*		fInfoView;
 			BButton*		fUpdateButton;
 			BButton*		fCancelButton;
-//			BButton*		fViewDetailsButton;
 			BStatusBar*		fStatusBar;
 #if USE_PANE_SWITCH
 			PaneSwitch*		fPackagesSwitch;
@@ -152,7 +142,6 @@ private:
 			BLayoutItem*	fPackagesLayoutItem;
 			BLayoutItem*	fProgressLayoutItem;
 			BLayoutItem*	fUpdateButtonLayoutItem;
-//			BLayoutItem*	fDetailsButtonLayoutItem;
 			BBitmap*		fIcon;
 			
 			uint32			fCurrentState;
@@ -160,7 +149,6 @@ private:
 			bool			fWaitingForButton;
 			uint32			fButtonResult;
 			bool			fUserCancelRequested;
-//			BMessenger		fWindowTarget;
 			
 };
 

@@ -46,7 +46,6 @@ UpdateManager::UpdateManager(BPackageInstallationLocation location)
 	fClientInstallationInterface(),
 	fStatusWindow(NULL),
 	fFinalWindow(NULL),
-//	fDetailsWindow(NULL),
 	fCurrentStep(ACTION_STEP_INIT),
 	fChangesConfirmed(false)
 {
@@ -168,7 +167,6 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 	int32 upgradeCount = 0;
 	int32 installCount = 0;
 	int32 uninstallCount = 0;
-//	fDetailsWindow = new DetailsWindow();
 	
 	if (fromMostSpecific) {
 		for (int32 i = count - 1; i >= 0; i--)
@@ -207,8 +205,7 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 		dependancies.Append(") ");
 	}
 	text.ReplaceFirst("%dependancies%", dependancies);
-	fChangesConfirmed = fStatusWindow->ConfirmUpdates(text.String() /*,
-		BMessenger(fDetailsWindow)*/);
+	fChangesConfirmed = fStatusWindow->ConfirmUpdates(text.String());
 	if (!fChangesConfirmed)
 		throw BAbortedByUserException();
 	
@@ -452,10 +449,6 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 				upgradedPackageVersions.StringAt(position).String(),
 				package->Info().Version().ToString().String(),
 				repository.String());
-/*			fDetailsWindow->AddRow(package->Info().Name().String(),
-				upgradedPackageVersions.StringAt(position).String(),
-				package->Info().Version().ToString().String(),
-				package->Repository()->Name().String());*/
 			fStatusWindow->AddPackageInfo(PACKAGE_UPDATE,
 				package->Info().Name().String(),
 				upgradedPackageVersions.StringAt(position).String(),
@@ -467,10 +460,6 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 				package->Info().Name().String(),
 				package->Info().Version().ToString().String(),
 				repository.String());
-/*			fDetailsWindow->AddRow(package->Info().Name().String(),
-				B_TRANSLATE("Not installed"),
-				package->Info().Version().ToString().String(),
-				package->Repository()->Name().String());*/
 			fStatusWindow->AddPackageInfo(PACKAGE_INSTALL,
 				package->Info().Name().String(),
 				NULL,
@@ -486,10 +475,6 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 		if (upgradedPackages.HasString(package->Info().Name()))
 			continue;
 		printf("    uninstall package %s\n", package->VersionedName().String());
-/*		fDetailsWindow->AddRow(package->Info().Name().String(),
-			package->Info().Version().ToString(),
-			B_TRANSLATE("To be uninstalled"),
-			package->Repository()->Name().String());*/
 		fStatusWindow->AddPackageInfo(PACKAGE_UNINSTALL,
 			package->Info().Name().String(),
 			package->Info().Version().ToString(),
