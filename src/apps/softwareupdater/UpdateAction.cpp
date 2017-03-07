@@ -65,27 +65,32 @@ UpdateAction::Perform()
 			B_WIDTH_AS_USUAL, B_STOP_ALERT));
 		if (alert != NULL)
 			alert->Go();
-		fUpdateManager->FinalError(B_TRANSLATE("Updates did not complete"),
+		fUpdateManager->FinalUpdate(B_TRANSLATE("Updates did not complete"),
 			ex.Message());
 		return ex.Error();
 	} catch (BAbortedByUserException ex) {
 		fprintf(stderr, "Updates aborted by user: %s\n",
 			ex.Message().String());
-		fUpdateManager->FinalError(B_TRANSLATE("Updates cancelled"),
+		// No need for a final message since user initiated cancel request
+		// TODO FinalUpdate() activated for testing
+		fUpdateManager->FinalUpdate(B_TRANSLATE("Updates cancelled"),
 			B_TRANSLATE("No packages have been updated."));
+		// TODO uncomment:
+		//be_app->PostMessage(kMsgFinalQuit);
 		return B_OK;
 	} catch (BNothingToDoException ex) {
 		fprintf(stderr, "Nothing to do while updating packages : %s\n",
 			ex.Message().String());
-		fUpdateManager->FinalError(B_TRANSLATE("No updates available"),
+		fUpdateManager->FinalUpdate(B_TRANSLATE("No updates available"),
 			B_TRANSLATE("There were no updates found."));
 		return B_OK;
 	} catch (BException ex) {
 		fprintf(stderr, "Exception occurred while updating packages : %s\n",
 			ex.Message().String());
-		fUpdateManager->FinalError(B_TRANSLATE("Updates did not complete"),
+		fUpdateManager->FinalUpdate(B_TRANSLATE("Updates did not complete"),
 			ex.Message());
 		return B_ERROR;
 	}
+	
 	return B_OK;
 }

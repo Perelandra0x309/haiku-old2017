@@ -17,13 +17,16 @@
 
 class SoftwareUpdaterApp : public BApplication {
 public:
-							SoftwareUpdaterApp();
-							~SoftwareUpdaterApp();
-
-			void			ReadyToRun();
+								SoftwareUpdaterApp();
+								~SoftwareUpdaterApp();
+			virtual bool		QuitRequested();
+			void				ReadyToRun();
+			void				MessageReceived(BMessage* message);
 
 private:
-			WorkingLooper*			fWorker;
+			WorkingLooper*		fWorker;
+			BMessenger			fWindowMessenger;
+			bool				fFinalQuitFlag;
 };
 
 

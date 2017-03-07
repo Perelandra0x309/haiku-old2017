@@ -9,11 +9,14 @@
 
 #include "SoftwareUpdaterApp.h"
 
+#include "constants.h"
+
 
 SoftwareUpdaterApp::SoftwareUpdaterApp()
 	:
 	BApplication("application/x-vnd.haiku-softwareupdater"),
-	fWorker(NULL)
+	fWorker(NULL),
+	fFinalQuitFlag(false)
 {
 }
 
@@ -27,10 +30,46 @@ SoftwareUpdaterApp::~SoftwareUpdaterApp()
 }
 
 
+bool
+SoftwareUpdaterApp::QuitRequested()
+{
+	if (fFinalQuitFlag)
+		return true;
+	
+	// Simulate a cancel request from window- this gives the updater a chance
+	// to quit cleanly
+	if (fWindowMessenger.IsValid()) {
+		fWindowMessenger.SendMessage(kMsgCancel);
+		return false;
+	}
+	
+	return true;
+}
+
+
 void
 SoftwareUpdaterApp::ReadyToRun()
 {
 	fWorker = new WorkingLooper();
+}
+
+
+void
+SoftwareUpdaterApp::MessageReceived(BMessage* message)
+{
+	switch (message->what) {
+		case kMsgRegister:
+			message->FindMessenger(kKeyMessenger, &fWindowMessenger);
+			break;
+		
+		case kMsgFinalQuit:
+			fFinalQuitFlag = true;
+			PostMessage(B_QUIT_REQUESTED);
+			break;
+		
+		default:
+			BApplication::MessageReceived(message);
+	}
 }
 
 

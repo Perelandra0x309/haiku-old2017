@@ -145,6 +145,10 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	SetSizeLimits(fDefaultRect.Width(), fDefaultRect.Width(),
 		fDefaultRect.Height(), fDefaultRect.Height());
 	_SetState(STATE_DISPLAY_STATUS);
+	
+	BMessage registerMessage(kMsgRegister);
+	registerMessage.AddMessenger(kKeyMessenger, BMessenger(this));
+	be_app->PostMessage(&registerMessage);
 }
 
 
@@ -212,6 +216,13 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 		
 		case kMsgCancel:
 		{
+			Lock();
+			fHeaderView->SetText(B_TRANSLATE("Cancelling updates"));
+			fDetailView->SetText(
+				B_TRANSLATE("Attempting to cancel the updates..."));
+			Unlock();
+			fUserCancelRequested = true;
+			
 			if (fWaitingForButton) {
 				fButtonResult = message->what;
 				delete_sem(fWaitingSem);
@@ -219,14 +230,8 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 				if (fCurrentState == STATE_FINAL_MSG)
 					be_app->PostMessage(B_QUIT_REQUESTED);
 			}
-			else {
-				Lock();
-				fHeaderView->SetText(B_TRANSLATE("Cancelling updates"));
-				fDetailView->SetText(
-					B_TRANSLATE("Attempting to cancel the updates..."));
-				Unlock();
-				fUserCancelRequested = true;
-			}
+		//	else {
+		//	}
 			break;
 		}
 		
@@ -323,7 +328,7 @@ SoftwareUpdaterWindow::UpdatesApplying(const char* header, const char* detail)
 	_SetState(STATE_APPLY_UPDATES);
 }
 
-
+/*
 void
 SoftwareUpdaterWindow::FinalUpdate(const char* header, const char* detail)
 {
@@ -341,7 +346,7 @@ SoftwareUpdaterWindow::FinalUpdate(const char* header, const char* detail)
 	Unlock();
 //	PostMessage('inva');
 	_WaitForButtonClick();
-}
+}*/
 
 
 bool
@@ -439,6 +444,8 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 		fPackagesLayoutItem->SetVisible(false);
 //		SetSizeLimits(fDefaultRect.Width(), fDefaultRect.Width(),
 //		fDefaultRect.Height(), fDefaultRect.Height());
+//		ResizeTo(fDefaultRect.Width(), fDefaultRect.Height());
+		
 	}
 	
 	// Progress bar and string view
@@ -476,15 +483,15 @@ SoftwareUpdaterWindow::_GetState()
 SuperItem::SuperItem(const char* label)
 	:
 	BListItem(),
-	fLabel(label)
-//	fPackageIcon(NULL)
+	fLabel(label),
+	fPackageIcon(NULL)
 {
 }
 
 
 SuperItem::~SuperItem()
 {
-//	delete fPackageIcon;
+	delete fPackageIcon;
 }
 
 
@@ -524,17 +531,15 @@ SuperItem::Update(BView *owner, const BFont *font)
 	SetHeight(fFontHeight.ascent + fFontHeight.descent
 		+ fFontHeight.leading + 4);
 	
-//	_GetPackageIcon();
+	_GetPackageIcon();
 }
 
-/*
-// Save for later use!
+
 void
 SuperItem::_GetPackageIcon()
 {
 	delete fPackageIcon;
-	fIconSize = 4 * int(fPackageItemHeight / 4);
-		// Create icon size in multiples of 4
+	fIconSize = int(fPackageItemHeight * .7);
 
 	status_t result = B_ERROR;
 	BRect iconRect(0, 0, fIconSize - 1, fIconSize - 1);
@@ -552,7 +557,7 @@ SuperItem::_GetPackageIcon()
 		delete fPackageIcon;
 		fPackageIcon = NULL;
 	}
-}*/
+}
 
 
 PackageItem::PackageItem(const char* name, const char* version,
@@ -576,8 +581,7 @@ PackageItem::DrawItem(BView* owner, BRect item_rect, bool complete)
     float nameWidth = width / 2.0;
     float offset_width = 0;
 	
-	// Save for use later!  Maybe we can get HaikuDepot icons?
-/*	BBitmap* icon = fSuperItem->GetIcon();
+	BBitmap* icon = fSuperItem->GetIcon();
 	if (icon != NULL && icon->IsValid()) {
 		float iconSize = fSuperItem->GetIconSize();
 		float offsetMarginHeight = floor((Height() - iconSize) / 2);
@@ -588,7 +592,7 @@ PackageItem::DrawItem(BView* owner, BRect item_rect, bool complete)
 			item_rect.top + offsetMarginHeight));
 		owner->SetDrawingMode(B_OP_COPY);
 		offset_width += iconSize + fLabelOffset;
-	}*/
+	}
 	
 	// Package name
 	font_height fontHeight = fSuperItem->GetFontHeight();
@@ -604,11 +608,11 @@ PackageItem::DrawItem(BView* owner, BRect item_rect, bool complete)
 	owner->SetHighColor(tint_color(ui_color(B_LIST_ITEM_TEXT_COLOR), 0.7));
 	
 	// Bullet
-	float circleDiameter = 5.0;
+/*	float circleDiameter = 5.0;
 	float circleLeft = item_rect.left - 2 * circleDiameter;
 	float circleTop = cursor.y - circleDiameter - 1;
 	owner->FillEllipse(BRect(circleLeft, circleTop,
-		circleLeft + circleDiameter - 1, circleTop + circleDiameter - 1));
+		circleLeft + circleDiameter - 1, circleTop + circleDiameter - 1));*/
 	
 	// Version
 	BString version(fVersion);
@@ -778,3 +782,83 @@ PackageListView::MaxSize()
 		BSize(B_SIZE_UNLIMITED, B_SIZE_UNLIMITED));
 }
 */
+
+
+FinalWindow::FinalWindow(BRect rect, BPoint location, const char* header,
+	const char* detail)
+	:
+	BWindow(rect,
+		B_TRANSLATE_SYSTEM_NAME("SoftwareUpdater"), B_TITLED_WINDOW,
+		B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE
+		| B_NOT_CLOSABLE | B_NOT_RESIZABLE),
+	fHeaderView(NULL),
+	fDetailView(NULL),
+	fCancelButton(NULL)
+{
+	fIcon = new BBitmap(BRect(0, 0, 31, 31), 0, B_RGBA32);
+	team_info teamInfo;
+	get_team_info(B_CURRENT_TEAM, &teamInfo);
+	app_info appInfo;
+	be_roster->GetRunningAppInfo(teamInfo.team, &appInfo);
+	BNodeInfo::GetTrackerIcon(&appInfo.ref, fIcon, B_LARGE_ICON);
+
+	SetSizeLimits(rect.Width(), B_SIZE_UNLIMITED, 0, B_SIZE_UNLIMITED);
+	fStripeView = new StripeView(fIcon);
+	fHeaderView = new BStringView("header", header, B_WILL_DRAW);
+	fHeaderView->SetExplicitMaxSize(BSize(B_SIZE_UNLIMITED, B_SIZE_UNSET));
+	fHeaderView->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT, B_ALIGN_TOP));
+	fDetailView = new BStringView("detail", detail, B_WILL_DRAW);
+	fDetailView->SetExplicitMaxSize(BSize(B_SIZE_UNLIMITED, B_SIZE_UNSET));
+	fDetailView->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT, B_ALIGN_TOP));
+	fCancelButton = new BButton(B_TRANSLATE("Quit"),
+		new BMessage(kMsgCancel));
+	fCancelButton->MakeDefault(true);
+	
+	BFont font;
+	fHeaderView->GetFont(&font);
+	font.SetFace(B_BOLD_FACE);
+	font.SetSize(font.Size() * 1.5);
+	fHeaderView->SetFont(&font, B_FONT_FAMILY_AND_STYLE | B_FONT_SIZE
+		| B_FONT_FLAGS);
+	
+	BLayoutBuilder::Group<>(this, B_HORIZONTAL, 0)
+		.Add(fStripeView)
+		.AddGroup(B_VERTICAL, 0)
+			.SetInsets(0, B_USE_WINDOW_SPACING,
+				B_USE_WINDOW_SPACING, B_USE_WINDOW_SPACING)
+			.AddGroup(B_VERTICAL, B_USE_ITEM_SPACING)
+				.Add(fHeaderView)
+				.Add(fDetailView)
+				.AddGroup(B_HORIZONTAL)
+					.AddGlue()
+					.Add(fCancelButton)
+				.End()
+			.End()
+		.End()
+	.End();
+	
+	MoveTo(location);
+	Show();
+}
+
+
+FinalWindow::~FinalWindow()
+{
+	delete fIcon;
+}
+
+
+void
+FinalWindow::MessageReceived(BMessage* message)
+{
+	switch (message->what) {
+		
+		case kMsgCancel:
+			PostMessage(B_QUIT_REQUESTED);
+			be_app->PostMessage(kMsgFinalQuit);
+			break;
+		
+		default:
+			BWindow::MessageReceived(message);
+	}
+}

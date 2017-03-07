@@ -34,7 +34,7 @@ public:
 	virtual	void				JobFailed(BSupportKit::BJob* job);
 	virtual	void				JobAborted(BSupportKit::BJob* job);
 	
-			void				FinalError(const char* header,
+			void				FinalUpdate(const char* header,
 									const char* text);
 private:
 	// UserInteractionHandler
@@ -86,6 +86,7 @@ private:
 									fClientInstallationInterface;
 			
 			SoftwareUpdaterWindow*	fStatusWindow;
+			FinalWindow*			fFinalWindow;
 //			DetailsWindow*			fDetailsWindow;
 			ProblemWindow*			fProblemWindow;
 			uint32					fCurrentStep;

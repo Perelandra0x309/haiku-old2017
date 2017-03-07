@@ -36,6 +36,8 @@ static const uint32 kMsgClose = 'iCLO';
 static const uint32 kMsgShow = 'iSHO';
 //static const uint32 kMsgViewDetails = 'iVIE';
 static const uint32 kMsgShowInfo = 'iSHI';
+static const uint32 kMsgRegister = 'iREG';
+static const uint32 kMsgFinalQuit = 'iFIN';
 
 // Message data keys
 #define kKeyHeader "key_header"
@@ -44,6 +46,7 @@ static const uint32 kMsgShowInfo = 'iSHI';
 #define kKeyPackageCount "key_packagecount"
 #define kKeyPercentage "key_percentage"
 #define kKeyFrame "key_frame"
+#define kKeyMessenger "key_messenger"
 
 
 #endif // CONSTANTS_H

@@ -45,6 +45,7 @@ UpdateManager::UpdateManager(BPackageInstallationLocation location)
 	BPackageManager::UserInteractionHandler(),
 	fClientInstallationInterface(),
 	fStatusWindow(NULL),
+	fFinalWindow(NULL),
 //	fDetailsWindow(NULL),
 	fCurrentStep(ACTION_STEP_INIT),
 	fChangesConfirmed(false)
@@ -58,8 +59,8 @@ UpdateManager::~UpdateManager()
 {
 	if (fStatusWindow != NULL)
 		fStatusWindow->PostMessage(B_QUIT_REQUESTED);
-//	if (fDetailsWindow != NULL)
-//		fDetailsWindow->PostMessage(B_QUIT_REQUESTED);
+	if (fFinalWindow != NULL)
+		fFinalWindow->PostMessage(B_QUIT_REQUESTED);
 	if (fProblemWindow != NULL)
 		fProblemWindow->PostMessage(B_QUIT_REQUESTED);
 }
@@ -85,7 +86,7 @@ UpdateManager::JobAborted(BSupportKit::BJob* job)
 
 
 void
-UpdateManager::FinalError(const char* header, const char* text)
+UpdateManager::FinalUpdate(const char* header, const char* text)
 {
 	_FinalUpdate(header, text);
 }
@@ -376,14 +377,6 @@ UpdateManager::ProgressTransactionCommitted(InstalledRepository& repository,
 	BString header(B_TRANSLATE("Updates completed"));
 	BString detail(B_TRANSLATE("A reboot may be necessary to complete some "
 		"updates."));
-	BNotification notification(B_INFORMATION_NOTIFICATION);
-	notification.SetGroup("SoftwareUpdater");
-	notification.SetTitle(header);
-	notification.SetContent(detail);
-	const BBitmap* icon = fStatusWindow->GetIcon();
-	if (icon != NULL)
-		notification.SetIcon(icon);
-	notification.Send();
 	_FinalUpdate(header.String(), detail.String());
 
 	const char* repositoryName = repository.Name().String();
@@ -514,8 +507,8 @@ UpdateManager::_UpdateStatusWindow(const char* header, const char* detail)
 		return;
 	
 	if (fStatusWindow->UserCancelRequested()) {
-		_FinalUpdate(B_TRANSLATE("Updates cancelled"),
-			B_TRANSLATE("No packages have been updated."));
+//		_FinalUpdate(B_TRANSLATE("Updates cancelled"),
+//			B_TRANSLATE("No packages have been updated."));
 		throw BAbortedByUserException();
 	}
 	
@@ -537,8 +530,8 @@ UpdateManager::_UpdateDownloadProgress(const char* header,
 		return;
 	
 	if (fStatusWindow->UserCancelRequested()) {
-		_FinalUpdate(B_TRANSLATE("Updates cancelled"),
-			B_TRANSLATE("No packages have been updated."));
+//		_FinalUpdate(B_TRANSLATE("Updates cancelled"),
+//			B_TRANSLATE("No packages have been updated."));
 		throw BAbortedByUserException();
 	}
 	
@@ -555,9 +548,21 @@ UpdateManager::_UpdateDownloadProgress(const char* header,
 void
 UpdateManager::_FinalUpdate(const char* header, const char* text)
 {
-//	if (fDetailsWindow != NULL)
-//		fDetailsWindow->Hide();
-	fStatusWindow->FinalUpdate(header, text);
+	BNotification notification(B_INFORMATION_NOTIFICATION);
+	notification.SetGroup("SoftwareUpdater");
+	notification.SetTitle(header);
+	notification.SetContent(text);
+	const BBitmap* icon = fStatusWindow->GetIcon();
+	if (icon != NULL)
+		notification.SetIcon(icon);
+	notification.Send();
+	
+	BPoint location(fStatusWindow->GetLocation());
+	BRect rect(fStatusWindow->GetDefaultRect());
+	fStatusWindow->PostMessage(B_QUIT_REQUESTED);
+	fStatusWindow = NULL;
+	
+	fFinalWindow = new FinalWindow(rect, location, header, text);
 }
 
 void

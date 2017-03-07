@@ -13,6 +13,7 @@
 #include <Button.h>
 #include <GroupView.h>
 #include <OutlineListView.h>
+#include <Point.h>
 #include <ScrollView.h>
 #include <StatusBar.h>
 #include <StringView.h>
@@ -43,19 +44,19 @@ public:
 	font_height				GetFontHeight() { return fFontHeight; };
 	float					GetPackageItemHeight()
 								{ return fPackageItemHeight; };
-//	BBitmap*				GetIcon() { return fPackageIcon; };
-//	float					GetIconSize() { return fIconSize; };
+	BBitmap*				GetIcon() { return fPackageIcon; };
+	float					GetIconSize() { return fIconSize; };
 
 private:
-//			void			_GetPackageIcon();
+			void			_GetPackageIcon();
 			
 			BString			fLabel;
 			BFont			fRegularFont;
 			BFont			fBoldFont;
 			font_height		fFontHeight;
 			float			fPackageItemHeight;
-//			BBitmap*		fPackageIcon;
-//			float			fIconSize;
+			BBitmap*		fPackageIcon;
+			int16			fIconSize;
 };
 
 
@@ -114,8 +115,8 @@ public:
 								const BMessenger& target*/);
 			void			UpdatesApplying(const char* header,
 								const char* detail);
-			void			FinalUpdate(const char* header,
-								const char* detail);
+//			void			FinalUpdate(const char* header,
+//								const char* detail);
 			bool			UserCancelRequested();
 			void			AddPackageInfo(uint32 install_type,
 								const char* package_name,
@@ -123,6 +124,8 @@ public:
 								const char* new_ver,
 								const char* summary);
 			const BBitmap*	GetIcon() { return fIcon; };
+			BRect			GetDefaultRect() { return fDefaultRect; };
+			BPoint			GetLocation() { return Frame().LeftTop(); };
 			BLayoutItem*	layout_item_for(BView* view);
 
 private:
@@ -163,6 +166,23 @@ private:
 
 
 int SortPackageItems(const BListItem* item1, const BListItem* item2);
+
+
+class FinalWindow : public BWindow {
+public:
+							FinalWindow(BRect rect, BPoint location,
+								const char* header, const char* detail);
+							~FinalWindow();
+
+			void			MessageReceived(BMessage* message);
+private:
+			
+			StripeView*		fStripeView;
+			BStringView*	fHeaderView;
+			BStringView*	fDetailView;
+			BButton*		fCancelButton;
+			BBitmap*		fIcon;
+};
 
 
 #endif // _SOFTWARE_UPDATER_WINDOW_H
