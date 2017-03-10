@@ -10,6 +10,7 @@
 
 #include "SoftwareUpdaterWindow.h"
 
+#include <Alert.h>
 #include <AppDefs.h>
 #include <Application.h>
 #include <Catalog.h>
@@ -55,7 +56,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fStripeView = new StripeView(fIcon);
 
 	fUpdateButton = new BButton(B_TRANSLATE("Update now"),
-		new BMessage(kMsgConfirm));
+		new BMessage(kMsgUpdateConfirmed));
 	fUpdateButton->MakeDefault(true);
 //	fUpdateButton->SetExplicitAlignment(BAlignment(B_ALIGN_HORIZONTAL_UNSET,
 //		B_ALIGN_BOTTOM));
@@ -123,6 +124,9 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	BMessage registerMessage(kMsgRegister);
 	registerMessage.AddMessenger(kKeyMessenger, BMessenger(this));
 	be_app->PostMessage(&registerMessage);
+	
+	fCancelAlertResponse.SetMessage(new BMessage(kMsgCancelResponse));
+	fCancelAlertResponse.SetTarget(this);
 }
 
 
@@ -190,6 +194,23 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 		
 		case kMsgCancel:
 		{
+			BAlert* alert = new BAlert("cancel request", B_TRANSLATE("Updates"
+				" have not been completed, are you sure you want to quit?"),
+				B_TRANSLATE("Quit"), B_TRANSLATE("Don't quit"), NULL,
+				B_WIDTH_AS_USUAL, B_WARNING_ALERT);
+			alert->SetFlags(alert->Flags() | B_CLOSE_ON_ESCAPE);
+			alert->Go(&fCancelAlertResponse);
+			break;
+		}
+		
+		case kMsgCancelResponse:
+		{
+			// Verify whether the cancel request was confirmed
+			int32 selection = -1;
+			message->FindInt32("which", &selection);
+			if (selection != 0)
+				break;
+				
 			Lock();
 			fHeaderView->SetText(B_TRANSLATE("Cancelling updates"));
 			fDetailView->SetText(
@@ -207,7 +228,7 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 			break;
 		}
 		
-		case kMsgConfirm:
+		case kMsgUpdateConfirmed:
 		{
 			if (fWaitingForButton) {
 				fButtonResult = message->what;
@@ -237,7 +258,7 @@ SoftwareUpdaterWindow::ConfirmUpdates(const char* text)
 	
 	_WaitForButtonClick();
 	_SetState(priorState);
-	return fButtonResult == kMsgConfirm;
+	return fButtonResult == kMsgUpdateConfirmed;
 }
 
 
@@ -265,17 +286,11 @@ SoftwareUpdaterWindow::UserCancelRequested()
 void
 SoftwareUpdaterWindow::AddPackageInfo(uint32 install_type,
 	const char* package_name, const char* cur_ver, const char* new_ver,
-	const char* summary)
+	const char* summary, const char* repository)
 {
-	// TODO remove cur_ver?
-	BString version;
-	if (new_ver == NULL)
-		version.SetTo("");
-	else
-		version.SetTo(new_ver);
 	Lock();
-	fListView->AddPackage(install_type, package_name, version.String(),
-		summary);
+	fListView->AddPackage(install_type, package_name, cur_ver, new_ver,
+		summary, repository);
 	Unlock();
 }
 
@@ -451,15 +466,17 @@ SuperItem::_GetPackageIcon()
 
 
 PackageItem::PackageItem(const char* name, const char* version,
-	const char* summary, SuperItem* super)
+	const char* summary, const char* tooltip, SuperItem* super)
 	:
 	BListItem(),
 	fName(name),
 	fVersion(version),
 	fSummary(summary),
+	fTooltip(tooltip),
 	fSuperItem(super)
 {
 	fLabelOffset = be_control_look->DefaultLabelSpacing();
+//	SetToolTip(fTooltip);
 }
 
 
@@ -473,7 +490,7 @@ PackageItem::DrawItem(BView* owner, BRect item_rect, bool complete)
 	
 	BBitmap* icon = fSuperItem->GetIcon();
 	if (icon != NULL && icon->IsValid()) {
-		float iconSize = fSuperItem->GetIconSize();
+		int16 iconSize = fSuperItem->GetIconSize();
 		float offsetMarginHeight = floor((Height() - iconSize) / 2);
 
 		//owner->SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_OVERLAY);
@@ -580,9 +597,12 @@ PackageListView::FrameResized(float newWidth, float newHeight)
 
 void
 PackageListView::AddPackage(uint32 install_type, const char* name,
-	const char* version, const char* summary)
+	const char* cur_ver, const char* new_ver, const char* summary,
+	const char* repository)
 {
 	SuperItem* super;
+	BString version;
+	BString tooltip;
 	switch (install_type) {
 		case PACKAGE_UPDATE:
 		{
@@ -592,6 +612,14 @@ PackageListView::AddPackage(uint32 install_type, const char* name,
 				AddItem(fSuperUpdateItem);
 			}
 			super = fSuperUpdateItem;
+			
+			version.SetTo(new_ver);
+			tooltip.SetTo(B_TRANSLATE("Repository:"));
+			tooltip.Append(" ").Append(repository)
+				.Append("\n").Append(B_TRANSLATE("Update version"))
+				.Append(" ").Append(cur_ver)
+				.Append(" ").Append(B_TRANSLATE("to"))
+				.Append(" ").Append(new_ver);
 			break;
 		}
 		
@@ -603,6 +631,12 @@ PackageListView::AddPackage(uint32 install_type, const char* name,
 				AddItem(fSuperInstallItem);
 			}
 			super = fSuperInstallItem;
+			
+			version.SetTo(new_ver);
+			tooltip.SetTo(B_TRANSLATE("Repository:"));
+			tooltip.Append(" ").Append(repository)
+				.Append("\n").Append(B_TRANSLATE("Install version"))
+				.Append(" ").Append(new_ver);
 			break;
 		}
 		
@@ -614,6 +648,12 @@ PackageListView::AddPackage(uint32 install_type, const char* name,
 				AddItem(fSuperUninstallItem);
 			}
 			super = fSuperUninstallItem;
+			
+			version.SetTo("");
+			tooltip.SetTo(B_TRANSLATE("Repository:"));
+			tooltip.Append(" ").Append(repository)
+				.Append("\n").Append(B_TRANSLATE("Uninstall version"))
+				.Append(" ").Append(new_ver);
 			break;
 		}
 		
@@ -621,7 +661,8 @@ PackageListView::AddPackage(uint32 install_type, const char* name,
 			return;
 	
 	}
-	PackageItem* item = new PackageItem(name, version, summary, super);
+	PackageItem* item = new PackageItem(name, version.String(), summary,
+		tooltip.String(), super);
 	AddUnder(item, super);
 }
 

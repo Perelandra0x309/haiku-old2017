@@ -40,7 +40,7 @@ public:
 	float					GetPackageItemHeight()
 								{ return fPackageItemHeight; };
 	BBitmap*				GetIcon() { return fPackageIcon; };
-	float					GetIconSize() { return fIconSize; };
+	int16					GetIconSize() { return fIconSize; };
 
 private:
 			void			_GetPackageIcon();
@@ -60,6 +60,7 @@ public:
 							PackageItem(const char* name,
 								const char* version,
 								const char* summary,
+								const char* tooltip,
 								SuperItem* super);
 //							~PackageItem();
 	virtual void			DrawItem(BView*, BRect, bool);
@@ -71,6 +72,7 @@ private:
 			BString			fName;
 			BString			fVersion;
 			BString			fSummary;
+			BString			fTooltip;
 			BFont			fRegularFont;
 			BFont			fSmallFont;
 			font_height		fSmallFontHeight;
@@ -89,8 +91,10 @@ public:
 //			virtual	BSize	MaxSize();
 			void			AddPackage(uint32 install_type,
 								const char* name,
-								const char* version,
-								const char* summary);
+								const char* cur_ver,
+								const char* new_ver,
+								const char* summary,
+								const char* repository);
 			void			SortItems();
 
 private:
@@ -114,7 +118,8 @@ public:
 								const char* package_name,
 								const char* cur_ver,
 								const char* new_ver,
-								const char* summary);
+								const char* summary,
+								const char* repository);
 			const BBitmap*	GetIcon() { return fIcon; };
 			BRect			GetDefaultRect() { return fDefaultRect; };
 			BPoint			GetLocation() { return Frame().LeftTop(); };
@@ -149,6 +154,7 @@ private:
 			bool			fWaitingForButton;
 			uint32			fButtonResult;
 			bool			fUserCancelRequested;
+			BInvoker		fCancelAlertResponse;
 			
 };
 

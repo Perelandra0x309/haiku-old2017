@@ -178,7 +178,8 @@ UpdateManager::ConfirmChanges(bool fromMostSpecific)
 				installCount, uninstallCount);
 	}
 	
-	printf("Upgrade count=%lu, Install count=%lu, Uninstall count=%lu\n",
+	printf("Upgrade count=%" B_PRId32 ", Install count=%" B_PRId32
+		", Uninstall count=%" B_PRId32 "\n",
 		upgradeCount, installCount, uninstallCount);
 	BString text;
 	if (upgradeCount == 1)
@@ -453,7 +454,8 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 				package->Info().Name().String(),
 				upgradedPackageVersions.StringAt(position).String(),
 				package->Info().Version().ToString().String(),
-				package->Info().Summary().String());
+				package->Info().Summary().String(),
+				package->Repository()->Name().String());
 			upgradeCount++;
 		} else {
 			printf("    install package %s-%s from %s\n",
@@ -464,7 +466,8 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 				package->Info().Name().String(),
 				NULL,
 				package->Info().Version().ToString().String(),
-				package->Info().Summary().String());
+				package->Info().Summary().String(),
+				package->Repository()->Name().String());
 			installCount++;
 		}
 	}
@@ -479,7 +482,8 @@ UpdateManager::_PrintResult(InstalledRepository& installationRepository,
 			package->Info().Name().String(),
 			package->Info().Version().ToString(),
 			NULL,
-			package->Info().Summary().String());
+			package->Info().Summary().String(),
+			package->Repository()->Name().String());
 		uninstallCount++;
 	}
 }
