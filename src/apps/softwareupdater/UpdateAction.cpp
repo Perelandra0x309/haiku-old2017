@@ -73,10 +73,10 @@ UpdateAction::Perform()
 			ex.Message().String());
 		// No need for a final message since user initiated cancel request
 		// TODO FinalUpdate() activated for testing
-		fUpdateManager->FinalUpdate(B_TRANSLATE("Updates cancelled"),
-			B_TRANSLATE("No packages have been updated."));
-		// TODO uncomment:
-		//be_app->PostMessage(kMsgFinalQuit);
+	//	fUpdateManager->FinalUpdate(B_TRANSLATE("Updates cancelled"),
+	//		B_TRANSLATE("No packages have been updated."));
+		// TODO comment out when testing:
+		be_app->PostMessage(kMsgFinalQuit);
 		return B_OK;
 	} catch (BNothingToDoException ex) {
 		fprintf(stderr, "Nothing to do while updating packages : %s\n",

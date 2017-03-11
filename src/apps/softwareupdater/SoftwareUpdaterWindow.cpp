@@ -32,8 +32,7 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	:
 	BWindow(BRect(0, 0, 500, 100),
 		B_TRANSLATE_SYSTEM_NAME("SoftwareUpdater"), B_TITLED_WINDOW,
-		/*B_AUTO_UPDATE_SIZE_LIMITS |*/ B_NOT_ZOOMABLE
-		| B_NOT_CLOSABLE /*| B_NOT_RESIZABLE*/),
+		B_AUTO_UPDATE_SIZE_LIMITS | B_NOT_ZOOMABLE | B_NOT_CLOSABLE),
 	fStripeView(NULL),
 	fHeaderView(NULL),
 	fDetailView(NULL),
@@ -84,8 +83,8 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fHeaderView->GetFont(&font);
 	font.SetFace(B_BOLD_FACE);
 	font.SetSize(font.Size() * 1.5);
-	fHeaderView->SetFont(&font, B_FONT_FAMILY_AND_STYLE | B_FONT_SIZE
-		| B_FONT_FLAGS);
+	fHeaderView->SetFont(&font,
+		B_FONT_FAMILY_AND_STYLE | B_FONT_SIZE | B_FONT_FLAGS);
 	
 	BLayoutBuilder::Group<>(this, B_HORIZONTAL, 0)
 		.Add(fStripeView)
@@ -112,14 +111,21 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fPackagesLayoutItem = layout_item_for(fScrollView);
 	fUpdateButtonLayoutItem = layout_item_for(fUpdateButton);
 	
+	// If we don't use B_AUTO_UPDATE_SIZE_LIMITS need to set size
+/*	float width = fStripeView->PreferredSize().Width()
+		+ BControlLook::ComposeSpacing(B_USE_ITEM_SPACING)
+		+ fDetailView->PreferredSize().Width()
+		+ BControlLook::ComposeSpacing(B_USE_WINDOW_SPACING);
+	ResizeTo(width, Bounds().Height());*/
+	_SetState(STATE_DISPLAY_STATUS);
 	CenterOnScreen();
 	Show();
+	SetFlags(Flags() ^ B_AUTO_UPDATE_SIZE_LIMITS);
 	
-	// TODO needs adjustment to consider larger fonts- do string width?
+	// Prevent resizing for now
 	fDefaultRect = Bounds();
 	SetSizeLimits(fDefaultRect.Width(), fDefaultRect.Width(),
 		fDefaultRect.Height(), fDefaultRect.Height());
-	_SetState(STATE_DISPLAY_STATUS);
 	
 	BMessage registerMessage(kMsgRegister);
 	registerMessage.AddMessenger(kKeyMessenger, BMessenger(this));
@@ -342,14 +348,18 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	// View package info view
 	// Show at confirmation prompt, hide at final update
 	if (fCurrentState == STATE_GET_CONFIRMATION) {
+/*		fListView->SetExplicitMinSize(BSize(0, 40));
+		fListView->SetExplicitPreferredSize(BSize(0, 40));
+		fScrollView->SetExplicitMinSize(BSize(0, 40));
+		fScrollView->SetExplicitPreferredSize(BSize(0, 40));
+		fListView->ResizeToPreferred();*/
+		// Re-enable resizing
 		fPackagesLayoutItem->SetVisible(true);
-		//fListView->ResizeToPreferred();
 		SetSizeLimits(fDefaultRect.Width(), 9999,
 		fDefaultRect.Height() + fListView->MinSize().Height() + 30, 9999);
 		ResizeTo(Bounds().Width(), 400);
 	}
 	else if (fCurrentState == STATE_FINAL_MSG) {
-		//fListView->SetExplicitMinSize(BSize(B_SIZE_UNSET, 40));
 		fPackagesLayoutItem->SetVisible(false);
 //		SetSizeLimits(fDefaultRect.Width(), fDefaultRect.Width(),
 //		fDefaultRect.Height(), fDefaultRect.Height());
