@@ -23,7 +23,6 @@ enum {
 	STATE_DISPLAY_PROGRESS,
 	STATE_GET_CONFIRMATION,
 	STATE_APPLY_UPDATES,
-	STATE_FINAL_MSG,
 	STATE_MAX
 };
 
@@ -35,7 +34,6 @@ static const uint32 kMsgCancelResponse = 'iCRE';
 static const uint32 kMsgUpdateConfirmed = 'iCON';
 static const uint32 kMsgClose = 'iCLO';
 static const uint32 kMsgShow = 'iSHO';
-//static const uint32 kMsgViewDetails = 'iVIE';
 static const uint32 kMsgShowInfo = 'iSHI';
 static const uint32 kMsgRegister = 'iREG';
 static const uint32 kMsgFinalQuit = 'iFIN';

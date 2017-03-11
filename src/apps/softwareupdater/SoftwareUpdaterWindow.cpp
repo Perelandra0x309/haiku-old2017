@@ -111,12 +111,6 @@ SoftwareUpdaterWindow::SoftwareUpdaterWindow()
 	fPackagesLayoutItem = layout_item_for(fScrollView);
 	fUpdateButtonLayoutItem = layout_item_for(fUpdateButton);
 	
-	// If we don't use B_AUTO_UPDATE_SIZE_LIMITS need to set size
-/*	float width = fStripeView->PreferredSize().Width()
-		+ BControlLook::ComposeSpacing(B_USE_ITEM_SPACING)
-		+ fDetailView->PreferredSize().Width()
-		+ BControlLook::ComposeSpacing(B_USE_WINDOW_SPACING);
-	ResizeTo(width, Bounds().Height());*/
 	_SetState(STATE_DISPLAY_STATUS);
 	CenterOnScreen();
 	Show();
@@ -228,8 +222,6 @@ SoftwareUpdaterWindow::MessageReceived(BMessage* message)
 				fButtonResult = message->what;
 				delete_sem(fWaitingSem);
 				fWaitingSem = -1;
-				if (fCurrentState == STATE_FINAL_MSG)
-					be_app->PostMessage(B_QUIT_REQUESTED);
 			}
 			break;
 		}
@@ -348,23 +340,11 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	// View package info view
 	// Show at confirmation prompt, hide at final update
 	if (fCurrentState == STATE_GET_CONFIRMATION) {
-/*		fListView->SetExplicitMinSize(BSize(0, 40));
-		fListView->SetExplicitPreferredSize(BSize(0, 40));
-		fScrollView->SetExplicitMinSize(BSize(0, 40));
-		fScrollView->SetExplicitPreferredSize(BSize(0, 40));
-		fListView->ResizeToPreferred();*/
-		// Re-enable resizing
 		fPackagesLayoutItem->SetVisible(true);
+		// Re-enable resizing
 		SetSizeLimits(fDefaultRect.Width(), 9999,
 		fDefaultRect.Height() + fListView->MinSize().Height() + 30, 9999);
 		ResizeTo(Bounds().Width(), 400);
-	}
-	else if (fCurrentState == STATE_FINAL_MSG) {
-		fPackagesLayoutItem->SetVisible(false);
-//		SetSizeLimits(fDefaultRect.Width(), fDefaultRect.Width(),
-//		fDefaultRect.Height(), fDefaultRect.Height());
-//		ResizeTo(fDefaultRect.Width(), fDefaultRect.Height());
-		
 	}
 	
 	// Progress bar and string view
@@ -379,15 +359,8 @@ SoftwareUpdaterWindow::_SetState(uint32 state)
 	}
 	
 	// Cancel button
-	// Disable ability to cancel while updates are applying
-	if (fCurrentState == STATE_FINAL_MSG)
-		fCancelButton->SetLabel(B_TRANSLATE("OK"));
 	fCancelButton->SetEnabled(fCurrentState != STATE_APPLY_UPDATES);
 	
-//	InvalidateLayout(); // TODO resize window at final message to get rid of space at bottom
-	
-//	Layout(true);
-//	UpdateSizeLimits();
 	Unlock();
 }
 

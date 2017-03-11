@@ -62,7 +62,6 @@ public:
 								const char* summary,
 								const char* tooltip,
 								SuperItem* super);
-//							~PackageItem();
 	virtual void			DrawItem(BView*, BRect, bool);
 	virtual void			Update(BView *owner, const BFont *font);
 	void					SetItemHeight(const BFont* font);

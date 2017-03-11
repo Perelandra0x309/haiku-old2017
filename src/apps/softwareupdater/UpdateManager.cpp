@@ -495,11 +495,8 @@ UpdateManager::_UpdateStatusWindow(const char* header, const char* detail)
 	if (header == NULL && detail == NULL)
 		return;
 	
-	if (fStatusWindow->UserCancelRequested()) {
-//		_FinalUpdate(B_TRANSLATE("Updates cancelled"),
-//			B_TRANSLATE("No packages have been updated."));
+	if (fStatusWindow->UserCancelRequested())
 		throw BAbortedByUserException();
-	}
 	
 	BMessage message(kMsgTextUpdate);
 	if (header != NULL)
@@ -518,11 +515,8 @@ UpdateManager::_UpdateDownloadProgress(const char* header,
 	if (packageName == NULL || packageCount == NULL)
 		return;
 	
-	if (fStatusWindow->UserCancelRequested()) {
-//		_FinalUpdate(B_TRANSLATE("Updates cancelled"),
-//			B_TRANSLATE("No packages have been updated."));
+	if (fStatusWindow->UserCancelRequested())
 		throw BAbortedByUserException();
-	}
 	
 	BMessage message(kMsgProgressUpdate);
 	if (header != NULL)
