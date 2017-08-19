@@ -56,7 +56,6 @@ options:
   --host-only                 Configure for building tools for the build host
                               only. Haiku cannot be built when configured like
                               this.
-  --include-gpl-addons        Include GPL licensed add-ons.
   --include-patented-code     Enable code that is known to implemented patented
                               ideas and techniques. If this option is not
                               specified, the resulting distribution may still
@@ -74,7 +73,7 @@ options:
                               bootstrap and build Haiku from source only.
   --target=TARGET             Select build target platform.
                               [default=${TARGET_PLATFORM}]
-                              valid targets=r5,bone,dano,haiku,host
+                              valid targets=r5,bone,dano,haiku
   --target-arch <arch>        Haiku only: Specify the target architecture to
                               build for. Must be one of the architectures of the
                               host system. The installed build tools for that
@@ -83,9 +82,6 @@ options:
                               first occurrence specifies the primary
                               architecture of the Haiku to build, subsequent
                               ones the secondary architectures.
-  --target-board <board>      ARM only: Target board to build for.
-                              <board> is one of: "beagleboard","beaglebone",
-                              "rpi1","rpi2","cubieboard4","verdex","overo"
   --update                    re-runs last configure invocation [must be given
                               as first option!]
   --use-clang                 Build with host Clang instead of GCC cross
@@ -392,6 +388,11 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
 	usage; exit 0;
 fi
 
+# ensure umask is not too restrictive
+if [ $(umask) -gt 22 ]; then
+	echo "Your umask is too restrictive (should be: <= 0022; is actually:" $(umask)")"
+	exit 1
+fi
 
 # get cwd and the source directory
 currentDir=`pwd`
@@ -424,7 +425,6 @@ fi
 #
 HOST_GCC_RAW_VERSION=`$CC -dumpversion`
 HOST_GCC_MACHINE=`$CC -dumpmachine`
-HAIKU_INCLUDE_GPL_ADDONS=0
 HAIKU_INCLUDE_PATENTED_CODE=0
 HAIKU_INCLUDE_SOURCES=0
 HAIKU_INCLUDE_3RDPARTY=0
@@ -462,7 +462,7 @@ else
 	exit 1
 fi
 
-haikuRequiredLegacyGCCVersion="2.95.3-haiku-2014_07_26"
+haikuRequiredLegacyGCCVersion="2.95.3-haiku-2017_07_20"
 export haikuRequiredLegacyGCCVersion
 	# version of legacy gcc required to build haiku
 supportedTargetArchs="
@@ -472,15 +472,6 @@ supportedTargetArchs="
 	x86
 	x86_64
 	x86_gcc2
-	"
-supportedTargetBoards="
-	beagleboard
-	beaglebone
-	rpi1
-	rpi2
-	cubieboard4
-	verdex
-	overo
 	"
 
 # determine output directory
@@ -588,7 +579,6 @@ while [ $# -gt 0 ] ; do
 			;;
 		--enable-multiuser)	HAIKU_ENABLE_MULTIUSER=1; shift 1;;
 		--host-only)	HAIKU_HOST_BUILD_ONLY=1; shift 1;;
-		--include-gpl-addons)	HAIKU_INCLUDE_GPL_ADDONS=1; shift 1;;
 		--include-patented-code)	HAIKU_INCLUDE_PATENTED_CODE=1; shift 1;;
 		--include-sources)	HAIKU_INCLUDE_SOURCES=1; shift 1;;
 		--include-3rdparty)	HAIKU_INCLUDE_3RDPARTY=1; shift 1;;
@@ -608,15 +598,6 @@ while [ $# -gt 0 ] ; do
 				exit 1
 			)
 			haikuTargetArchs="$haikuTargetArchs $targetArch"
-			;;
-		--target-board)
-			assertparam "$1" $#
-			HAIKU_BOOT_BOARD=$2
-			is_in_list "$HAIKU_BOOT_BOARD" "$supportedTargetBoards" || (
-				echo "Unsupported target board: \"$HAIKU_BOOT_BOARD\"" >&2
-				exit 1
-			)
-			shift 2
 			;;
 		--use-clang) useClang=1; shift 1;;
 		--use-gcc-pipe)	HAIKU_USE_GCC_PIPE=1; shift 1;;
@@ -823,7 +804,7 @@ else
 			get_build_tool_path STRIP_$targetArch ${crossToolsPrefix}strip
 
 			case `get_variable HAIKU_GCC_RAW_VERSION_$targetArch` in
-				4.*|5.*|6.*|7.*)
+				4.*|5.*|6.*|7.*|8.*)
 					get_build_tool_path ELFEDIT_$targetArch \
 						${crossToolsPrefix}elfedit
 				;;
@@ -857,7 +838,6 @@ cat << EOF > "$buildConfigFile"
 TARGET_PLATFORM 			?= "${TARGET_PLATFORM}" ;
 HOST_PLATFORM				?= "${HOST_PLATFORM}" ;
 
-HAIKU_INCLUDE_GPL_ADDONS			?= "${HAIKU_INCLUDE_GPL_ADDONS}" ;
 HAIKU_INCLUDE_PATENTED_CODE			?= "${HAIKU_INCLUDE_PATENTED_CODE}" ;
 HAIKU_INCLUDE_SOURCES				?= "${HAIKU_INCLUDE_SOURCES}" ;
 HAIKU_INCLUDE_3RDPARTY				?= "${HAIKU_INCLUDE_3RDPARTY}" ;

@@ -7,12 +7,7 @@
 
 
 #include "Inode.h"
-
-#include <string.h>
-#include <stdlib.h>
-#include <zlib.h>
-
-#include "BPlusTree.h"
+#include "BTree.h"
 #include "CachedBlock.h"
 #include "Utility.h"
 
@@ -79,19 +74,19 @@ Inode::InitCheck()
 status_t
 Inode::UpdateNodeFromDisk()
 {
-	struct btrfs_key search_key;
+	btrfs_key search_key;
 	search_key.SetType(BTRFS_KEY_TYPE_INODE_ITEM);
 	search_key.SetObjectID(fID);
 	search_key.SetOffset(0);
 
-	struct btrfs_inode *node;
+	btrfs_inode* node;
 	if (fVolume->FSTree()->FindExact(search_key, (void**)&node) != B_OK) {
 		ERROR("Inode::UpdateNodeFromDisk(): Couldn't find inode %"
 			B_PRIdINO "\n", fID);
 		return B_ENTRY_NOT_FOUND;
 	}
 
-	memcpy(&fNode, node, sizeof(struct btrfs_inode));
+	memcpy(&fNode, node, sizeof(btrfs_inode));
 	free(node);
 	return B_OK;
 }
@@ -110,14 +105,14 @@ Inode::CheckPermissions(int accessMode) const
 
 
 status_t
-Inode::FindBlock(off_t pos, off_t& physical, off_t *_length)
+Inode::FindBlock(off_t pos, off_t& physical, off_t* _length)
 {
-	struct btrfs_key search_key;
+	btrfs_key search_key;
 	search_key.SetType(BTRFS_KEY_TYPE_EXTENT_DATA);
 	search_key.SetObjectID(fID);
 	search_key.SetOffset(pos + 1);
 
-	btrfs_extent_data *extent_data;
+	btrfs_extent_data* extent_data;
 	status_t status = fVolume->FSTree()->FindPrevious(search_key,
 		(void**)&extent_data);
 	if (status != B_OK) {
@@ -167,13 +162,13 @@ Inode::ReadAt(off_t pos, uint8* buffer, size_t* _length)
 
 	// the file cache doesn't seem to like non block aligned file offset
 	// so we avoid the file cache for inline extents
-	struct btrfs_key search_key;
+	btrfs_key search_key;
 	search_key.SetType(BTRFS_KEY_TYPE_EXTENT_DATA);
 	search_key.SetObjectID(fID);
 	search_key.SetOffset(pos + 1);
 
 	size_t item_size;
-	btrfs_extent_data *extent_data;
+	btrfs_extent_data* extent_data;
 	status_t status = fVolume->FSTree()->FindPrevious(search_key,
 		(void**)&extent_data, &item_size);
 	if (status != B_OK) {
@@ -291,14 +286,14 @@ Inode::ReadAt(off_t pos, uint8* buffer, size_t* _length)
 
 
 status_t
-Inode::FindParent(ino_t *id)
+Inode::FindParent(ino_t* id)
 {
-	struct btrfs_key search_key;
+	btrfs_key search_key;
 	search_key.SetType(BTRFS_KEY_TYPE_INODE_REF);
 	search_key.SetObjectID(fID);
 	search_key.SetOffset(-1);
 
-	void *node_ref;
+	void* node_ref;
 	if (fVolume->FSTree()->FindPrevious(search_key, &node_ref) != B_OK) {
 		ERROR("Inode::FindParent(): Couldn't find inode for %" B_PRIdINO "\n",
 			fID);

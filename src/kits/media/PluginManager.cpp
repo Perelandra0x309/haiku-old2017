@@ -1,11 +1,12 @@
 /* 
  * Copyright 2004-2010, Marcus Overhagen. All rights reserved.
  * Copyright 2016, Dario Casalinuovo. All rights reserved.
- * Distributed under the terms of the OpenBeOS License.
+ * Distributed under the terms of the MIT License.
  */
 
 
 #include <AdapterIO.h>
+#include <AutoDeleter.h>
 #include <Autolock.h>
 #include <BufferIO.h>
 #include <DataIO.h>
@@ -136,6 +137,11 @@ public:
 			delete fDataIOAdapter;
 	}
 
+	status_t InitCheck() const
+	{
+		return fErr;
+	}
+
 	// BMediaIO interface
 
 	virtual void GetFlags(int32* flags) const
@@ -190,13 +196,6 @@ public:
 		return fPosition->GetSize(size);
 	}
 
-	// Utility methods
-
-	status_t InitCheck() const
-	{
-		return fErr;
-	}
-
 protected:
 
 	bool IsMedia() const
@@ -235,6 +234,8 @@ PluginManager::CreateReader(Reader** reader, int32* streamCount,
 	// way, we create an instance which is buffering our reads and
 	// writes.
 	BMediaIOWrapper* buffered_source = new BMediaIOWrapper(source);
+	ObjectDeleter<BMediaIOWrapper> ioDeleter(buffered_source);
+
 	status_t ret = buffered_source->InitCheck();
 	if (ret != B_OK)
 		return ret;
@@ -282,6 +283,7 @@ PluginManager::CreateReader(Reader** reader, int32* streamCount,
 			TRACE("PluginManager::CreateReader: Sniff success "
 				"(%" B_PRId32 " stream(s))\n", *streamCount);
 			(*reader)->GetFileFormatInfo(mff);
+			ioDeleter.Detach();
 			return B_OK;
 		}
 

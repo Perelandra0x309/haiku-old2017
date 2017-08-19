@@ -1136,16 +1136,8 @@ AboutView::_CreateCreditsView()
 	_AddPackageCredit(PackageCredit("AntiGrain Geometry")
 		.SetCopyright(B_TRANSLATE(COPYRIGHT_STRING "2002-2006 Maxim "
 			"Shemanarev (McSeem)."))
-		.SetLicenses("Anti-Grain Geometry", kBSDThreeClause, "GPC", NULL)
+		.SetLicenses("Anti-Grain Geometry", kBSDThreeClause, NULL)
 		.SetURL("http://www.antigrain.com"));
-
-	// PDFLib copyrights
-	_AddPackageCredit(PackageCredit("PDFLib")
-		.SetCopyright(B_TRANSLATE(COPYRIGHT_STRING "1997-2006 PDFlib GmbH and "
-			"Thomas Merz. All rights reserved.\n"
-			"PDFlib and PDFlib logo are registered trademarks of PDFlib GmbH."))
-		.SetLicense("PDFlib Lite")
-		.SetURL("http://www.pdflib.com"));
 
 	// FreeType copyrights
 	_AddPackageCredit(PackageCredit("FreeType2")
@@ -1191,18 +1183,23 @@ AboutView::_CreateCreditsView()
 		.SetLicenses("OpenGroup", "DEC", NULL));
 			// TODO: URL
 
-	// VL-Gothic font
-	_AddPackageCredit(PackageCredit("VL-Gothic font")
-		.SetCopyrights(B_TRANSLATE(COPYRIGHT_STRING "1990-2003 Wada Laboratory,"
-			" the University of Tokyo."), COPYRIGHT_STRING
-			"2003-2004 Electronic Font Open Laboratory (/efont/).",
-			COPYRIGHT_STRING "2003-2012 M+ FONTS PROJECT.",
-			COPYRIGHT_STRING "2006-2012 Daisuke SUZUKI.",
-			COPYRIGHT_STRING "2006-2012 Project Vine.",
-			B_TRANSLATE("MIT license. All rights reserved."),
+	// Bitstream Charter font
+	_AddPackageCredit(PackageCredit("Bitstream Charter font")
+		.SetCopyrights(COPYRIGHT_STRING "1989-1992 Bitstream Inc.,"
+			"Cambridge, MA.",
+			B_TRANSLATE("BITSTREAM CHARTER is a registered trademark of "
+				"Bitstream Inc."),
 			NULL)
-		.SetLicense(kBSDThreeClause)
-		.SetURL("http://vlgothic.dicey.org/"));
+		.SetLicense("Bitstream Charter")
+		.SetURL("http://www.bitstream.com/"));
+
+	// Noto fonts copyright
+	_AddPackageCredit(PackageCredit("Noto fonts")
+		.SetCopyrights(B_TRANSLATE(COPYRIGHT_STRING
+			"2012-2016 Google Internationalization team."),
+			NULL)
+		.SetLicense("SIL Open Font Licence v1.1")
+		.SetURL("http://www.google.com/get/noto/"));
 
 	// expat copyrights
 	_AddPackageCredit(PackageCredit("expat")

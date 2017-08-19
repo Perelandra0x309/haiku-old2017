@@ -66,7 +66,7 @@ union value {
 	uint32	Uint32;
 	float	Float;
 	double	Double;
-	char	String[INODE_FILE_NAME_LENGTH];
+	char	String[MAX_INDEX_KEY_LENGTH + 1];
 };
 
 
@@ -153,7 +153,6 @@ private:
 			status_t			_ConvertValue(type_code type);
 			bool				_CompareTo(const uint8* value, uint16 size);
 			uint8*				_Value() const { return (uint8*)&fValue; }
-			status_t			_MatchEmptyString();
 
 private:
 			char*				fAttribute;
@@ -379,12 +378,9 @@ Equation::Match(Inode* inode, const char* attributeName, int32 type,
 
 	// first, check if we are matching for a live query and use that value
 	if (attributeName != NULL && !strcmp(fAttribute, attributeName)) {
-		if (key == NULL) {
-			if (type == B_STRING_TYPE)
-				return _MatchEmptyString();
-
+		if (key == NULL)
 			return NO_MATCH;
-		}
+
 		buffer = const_cast<uint8*>(key);
 	} else if (!strcmp(fAttribute, "name")) {
 		// we need to lock before accessing Inode::Name()
@@ -445,8 +441,8 @@ Equation::Match(Inode* inode, const char* attributeName, int32 type,
 				type = attribute->Type();
 				size = attribute->Size();
 
-				if (size > INODE_FILE_NAME_LENGTH)
-					size = INODE_FILE_NAME_LENGTH;
+				if (size > MAX_INDEX_KEY_LENGTH)
+					size = MAX_INDEX_KEY_LENGTH;
 
 				if (attribute->ReadAt(0, buffer, &size) < B_OK) {
 					inode->ReleaseAttribute(attribute);
@@ -454,7 +450,7 @@ Equation::Match(Inode* inode, const char* attributeName, int32 type,
 				}
 				inode->ReleaseAttribute(attribute);
 			} else
-				return _MatchEmptyString();
+				return NO_MATCH;
 		}
 	}
 	// prepare own value for use, if it is possible to convert it
@@ -750,7 +746,7 @@ Equation::_CopyString(char* start, char* end)
 	int32 length = end + 2 - start;
 	// just to make sure; since that's the max. attribute name length and
 	// the max. string in an index, it make sense to have it that way
-	if (length > INODE_FILE_NAME_LENGTH || length <= 0)
+	if (length > MAX_INDEX_KEY_LENGTH + 1 || length <= 0)
 		return NULL;
 
 	char* copy = (char*)malloc(length);
@@ -801,10 +797,13 @@ Equation::_ConvertValue(type_code type)
 			type = B_STRING_TYPE;
 			// supposed to fall through
 		case B_STRING_TYPE:
-			strncpy(fValue.String, string, INODE_FILE_NAME_LENGTH);
-			fValue.String[INODE_FILE_NAME_LENGTH - 1] = '\0';
+			strncpy(fValue.String, string, MAX_INDEX_KEY_LENGTH + 1);
+			fValue.String[MAX_INDEX_KEY_LENGTH] = '\0';
 			fSize = strlen(fValue.String);
 			break;
+		case B_TIME_TYPE:
+			type = B_INT32_TYPE;
+			// supposed to fall through
 		case B_INT32_TYPE:
 			fValue.Int32 = strtol(string, &string, 0);
 			fSize = sizeof(int32);
@@ -885,26 +884,6 @@ Equation::_CompareTo(const uint8* value, uint16 size)
 	}
 	FATAL(("Unknown/Unsupported operation: %d\n", fOp));
 	return false;
-}
-
-
-status_t
-Equation::_MatchEmptyString()
-{
-	// There is no matching attribute, we will just bail out if we
-	// already know that our value is not of a string type.
-	// If not, it will be converted to a string - and then be compared with "".
-	// That's why we have to call ConvertValue() here - but it will be
-	// a cheap call for the next time
-	// TODO: Should we do this only for OP_UNEQUAL?
-	if (fType != 0 && fType != B_STRING_TYPE)
-		return NO_MATCH;
-
-	status_t status = _ConvertValue(B_STRING_TYPE);
-	if (status == B_OK)
-		status = _CompareTo((const uint8*)"", fSize) ? MATCH_OK : NO_MATCH;
-
-	return status;
 }
 
 

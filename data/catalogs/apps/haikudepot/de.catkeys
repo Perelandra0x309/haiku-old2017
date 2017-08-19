@@ -1,10 +1,12 @@
-1	german	x-vnd.Haiku-HaikuDepot	2365524674
+1	german	x-vnd.Haiku-HaikuDepot	1527149765
 Name	PackageListView		Name
 Available packages	MainWindow		Verfügbare Pakete
 Open %DeskbarLink%	PackageManager		%DeskbarLink% öffnen
+Repository	FilterView		Paketquelle
 Close	RatePackageWindow		Schließen
 The captcha puzzle needs to be solved.	UserLoginWindow		Die Captcha-Frage muss beantwortet werden.
 Changelog	PackageInfoView		Änderungsprotokoll
+Repository:	FilterView		Paketquelle:
 Your rating:	RatePackageWindow		Eigene Bewertung:
 The passwords do not match.	UserLoginWindow		Die Kennwörter stimmen nicht überein.
 Log in…	MainWindow		Anmelden…
@@ -15,7 +17,6 @@ Other users can see this rating	RatePackageWindow		Diese Bewertung ist für ande
 Stability	RatePackageWindow		Stabilität
 for %Version%	PackageInfoView		für %Version%
 No changelog available.	PackageInfoView		Änderungsprotokoll nicht vorhanden.
-Depot:	FilterView		Depot:
 Description	PackageListView		Beschreibung
 Install	PackageManager		Installieren
 Source packages	MainWindow		Quellcode-Pakete
@@ -32,6 +33,7 @@ Your rating was updated successfully.	RatePackageWindow		Die Bewertung wurde erf
 <no info>	PackageInfoView		<keine Info>
 Starting the package daemon failed:\n\n%Error%	App		Der Paket-Daemon konnte nicht gestartet werden:\n\n%Error%
 An error occurred while initializing the package manager: %message%	MainWindow		Bei der Initialisierung des Paketmanagers trat ein Fehler auf: %message%
+All repositories	FilterView		Alle Paketquellen
 Email address:	UserLoginWindow		E-Mail-Adresse:
 Your rating was uploaded successfully. You can update or remove it at any time by rating the package again.	RatePackageWindow		Die Bewertung wurde erfolgreich hochgeladen. Sie kann jederzeit durch eine erneute Bewertung aktualisiert oder gelöscht werden.
 Very unstable	RatePackageWindow		Sehr instabil
@@ -56,7 +58,6 @@ Ratings	PackageInfoView		Bewertungen
 But none could be listed here, sorry.	UserLoginWindow		Leider können sie hier nicht aufgeführt werden.
 System & Utilities	Model		Tools & System
 Inactive	PackageListView		Deaktiviert
-Refresh depots	MainWindow		Depots aktualisieren
 The package action could not be scheduled: %Error%	PackageInfoView		Die Aktion konnte nicht auf das Paket angewandt werden: %Error%
 Science & Mathematics	Model		Wissenschaft
 Main Menu	MainWindow		Hauptmenü
@@ -104,6 +105,7 @@ Close	MainWindow		Schließen
 Preferred language:	UserLoginWindow		Bevorzugte Sprache:
 Failed to rate package	RatePackageWindow		Paket konnte nicht bewertet werden
 Internet & Network	Model		Internet & Netzwerk
+Refresh repositories	MainWindow		Paketquellen aktualisieren
 Cancel	MainWindow		Abbrechen
 Quit HaikuDepot	App		HaikuDepot beenden
 Input validation	UserLoginWindow		Eingabeprüfung
@@ -115,14 +117,12 @@ An error occurred while refreshing the repository: %error%	MainWindow		Bei der A
 Try again	App		Nochmal versuchen
 Login or Create account	MainWindow		Anmelden oder Benutzerkonto anlegen
 Pending…	PackageListView		Ausstehend…
-Depot	FilterView		Depot
 {0, plural, one{# item} other{# items}}	PackageListView		{0, plural, one{# Objekt} other{# Objekte}}
 OK	PackageInfoView		OK
 Uninstalled	PackageListView		Deinstalliert
 Show	MainWindow		Anzeigen
 Stable	RatePackageWindow		Stabil
 Unknown	PackageListView		Unbekannt
-All depots	FilterView		Alle Depots
 Comment language:	RatePackageWindow		Kommentar-Sprache:
 Pass phrase:	UserLoginWindow		Kennwort:
 Screenshot	ScreenshotWindow		Bildschirmfoto
@@ -141,8 +141,9 @@ Send	RatePackageWindow		Senden
 Category:	FilterView		Kategorie:
 Failed to create account	UserLoginWindow		Benutzerkonto konnte nicht angelegt werden
 There are problems with the data you entered:\n\n	UserLoginWindow		Mit den eingegebenen Daten gab es Probleme:\n\n
-Featured packages	MainWindow		Empfohlene Pakete
+Featured packages	MainWindow		Empfohlene Software-Pakete
 Start package daemon	App		Paket-Daemon starten
+Manage repositories…	MainWindow		Paketquellen verwalten…
 Success	RatePackageWindow		Erfolg
 Business	Model		Geschäft
 Audio	Model		Audio

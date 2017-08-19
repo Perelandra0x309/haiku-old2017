@@ -4,7 +4,7 @@
 <head>
 <!-- 
  *
- * Copyright 2008-2014, Haiku. All rights reserved.
+ * Copyright 2008-2017, Haiku. All rights reserved.
  * Distributed under the terms of the MIT License.
  *
  * Authors:
@@ -30,23 +30,23 @@
 <div class="inner">
 <ul class="lang-menu">
 <li class="now"><img src="../images/flags/pt_BR.png" alt="" /> Português (Brazil)</li>
-<li><a href="../fr/tracker.html"><img src="../images/flags/fr.png" alt="" />Français</a></li>
-<li><a href="../de/tracker.html"><img src="../images/flags/de.png" alt="" />Deutsch</a></li>
-<li><a href="../it/tracker.html"><img src="../images/flags/it.png" alt="" />Italiano</a></li>
-<li><a href="../ru/tracker.html"><img src="../images/flags/ru.png" alt="" />Русский</a></li>
-<li><a href="../es/tracker.html"><img src="../images/flags/es.png" alt="" />Español</a></li>
-<li><a href="../sv_SE/tracker.html"><img src="../images/flags/sv_SE.png" alt="" />Svenska</a></li>
-<li><a href="../jp/tracker.html"><img src="../images/flags/jp.png" alt="" />日本語</a></li>
-<li><a href="../uk/tracker.html"><img src="../images/flags/uk.png" alt="" />Українська</a></li>
-<li><a href="../zh_CN/tracker.html"><img src="../images/flags/zh_CN.png" alt="" /> 中文 ［中文］</a></li>
-<li><a href="../pt_PT/tracker.html"><img src="../images/flags/pt_PT.png" alt="" />Português</a></li>
-<li><a href="../fi/tracker.html"><img src="../images/flags/fi.png" alt="" />Suomi</a></li>
-<li><a href="../sk/tracker.html"><img src="../images/flags/sk.png" alt="" />Slovenčina</a></li>
-<li><a href="../hu/tracker.html"><img src="../images/flags/hu.png" alt="" />Magyar</a></li>
 <li><a href="../ca/tracker.html"><img src="../images/flags/ca.png" alt="" />Català</a></li>
-<li><a href="../pl/tracker.html"><img src="../images/flags/pl.png" alt="" />Polski</a></li>
-<li><a href="../ro/tracker.html"><img src="../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../de/tracker.html"><img src="../images/flags/de.png" alt="" />Deutsch</a></li>
 <li><a href="../en/tracker.html"><img src="../images/flags/gb.png" alt="" />English</a></li>
+<li><a href="../es/tracker.html"><img src="../images/flags/es.png" alt="" />Español</a></li>
+<li><a href="../fr/tracker.html"><img src="../images/flags/fr.png" alt="" />Français</a></li>
+<li><a href="../it/tracker.html"><img src="../images/flags/it.png" alt="" />Italiano</a></li>
+<li><a href="../hu/tracker.html"><img src="../images/flags/hu.png" alt="" />Magyar</a></li>
+<li><a href="../pl/tracker.html"><img src="../images/flags/pl.png" alt="" />Polski</a></li>
+<li><a href="../pt_PT/tracker.html"><img src="../images/flags/pt_PT.png" alt="" />Português</a></li>
+<li><a href="../ro/tracker.html"><img src="../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../sk/tracker.html"><img src="../images/flags/sk.png" alt="" />Slovenčina</a></li>
+<li><a href="../fi/tracker.html"><img src="../images/flags/fi.png" alt="" />Suomi</a></li>
+<li><a href="../sv_SE/tracker.html"><img src="../images/flags/sv_SE.png" alt="" />Svenska</a></li>
+<li><a href="../zh_CN/tracker.html"><img src="../images/flags/zh_CN.png" alt="" /> 中文 ［中文］</a></li>
+<li><a href="../ru/tracker.html"><img src="../images/flags/ru.png" alt="" />Русский</a></li>
+<li><a href="../uk/tracker.html"><img src="../images/flags/uk.png" alt="" />Українська</a></li>
+<li><a href="../jp/tracker.html"><img src="../images/flags/jp.png" alt="" />日本語</a></li>
 </ul>
 <span>
  «  <a href="teammonitor.html">Monitor de Tarefas</a> 
@@ -84,7 +84,8 @@
 <img src="images/tracker-images/mount-settings.png" alt="drill-down.png" />
 <p>Existem também <span class="menu">Definições</span> pelo quais não é necessário montar tudo manualmente após cada incialização.<br />
 As definições acima irão montar automaticamente qualquer dispositivo de armazenamento conectado/inserido e também monta todos os discos na inicialização que foram montados previamente.</p>
-<div class="box-warning">Antes de desconectar, por exemplo, um disco rígido ou dispositivo USB, certifique-se de ter demontado o volume com sucesso. Isto garante que todos os dados transferidos foram concluídos. Do contrário poder-se-á perder dados ou corromper o disco!</div>
+<div class="box-warning">Before you disconnect e.g. a harddrive or USB stick, make sure you have successfully unmounted the volume and its icon has disappeared. This guarantees that all data transfer has finished. Otherwise you may lose data or corrupt the disk!</div>
+<div class="box-warning">Haiku is able to mount non-BFS formatted volumes. Be warned, however, that these non-BFS filesystems haven't been rigorously tested. Writing to those volumes may cause corruption in some cases. If you want to be on the safe side, always choose <span class="button">Mount read-only</span> when mounting!</div>
 
 <h2>
 <a href="#"><img src="../images/up.png" style="border:none;float:right" alt="index" /></a>

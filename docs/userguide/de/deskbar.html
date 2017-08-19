@@ -4,7 +4,7 @@
 <head>
 <!-- 
  *
- * Copyright 2008-2015, Haiku. All rights reserved.
+ * Copyright 2008-2017, Haiku. All rights reserved.
  * Distributed under the terms of the MIT License.
  *
  * Authors:
@@ -31,23 +31,23 @@
 <div class="inner">
 <ul class="lang-menu">
 <li class="now"><img src="../images/flags/de.png" alt="" /> Deutsch</li>
+<li><a href="../ca/deskbar.html"><img src="../images/flags/ca.png" alt="" />Català</a></li>
+<li><a href="../en/deskbar.html"><img src="../images/flags/gb.png" alt="" />English</a></li>
+<li><a href="../es/deskbar.html"><img src="../images/flags/es.png" alt="" />Español</a></li>
 <li><a href="../fr/deskbar.html"><img src="../images/flags/fr.png" alt="" />Français</a></li>
 <li><a href="../it/deskbar.html"><img src="../images/flags/it.png" alt="" />Italiano</a></li>
-<li><a href="../ru/deskbar.html"><img src="../images/flags/ru.png" alt="" />Русский</a></li>
-<li><a href="../es/deskbar.html"><img src="../images/flags/es.png" alt="" />Español</a></li>
-<li><a href="../sv_SE/deskbar.html"><img src="../images/flags/sv_SE.png" alt="" />Svenska</a></li>
-<li><a href="../jp/deskbar.html"><img src="../images/flags/jp.png" alt="" />日本語</a></li>
-<li><a href="../uk/deskbar.html"><img src="../images/flags/uk.png" alt="" />Українська</a></li>
-<li><a href="../zh_CN/deskbar.html"><img src="../images/flags/zh_CN.png" alt="" /> 中文 ［中文］</a></li>
-<li><a href="../pt_PT/deskbar.html"><img src="../images/flags/pt_PT.png" alt="" />Português</a></li>
-<li><a href="../fi/deskbar.html"><img src="../images/flags/fi.png" alt="" />Suomi</a></li>
-<li><a href="../sk/deskbar.html"><img src="../images/flags/sk.png" alt="" />Slovenčina</a></li>
 <li><a href="../hu/deskbar.html"><img src="../images/flags/hu.png" alt="" />Magyar</a></li>
-<li><a href="../pt_BR/deskbar.html"><img src="../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
-<li><a href="../ca/deskbar.html"><img src="../images/flags/ca.png" alt="" />Català</a></li>
 <li><a href="../pl/deskbar.html"><img src="../images/flags/pl.png" alt="" />Polski</a></li>
+<li><a href="../pt_PT/deskbar.html"><img src="../images/flags/pt_PT.png" alt="" />Português</a></li>
+<li><a href="../pt_BR/deskbar.html"><img src="../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
 <li><a href="../ro/deskbar.html"><img src="../images/flags/ro.png" alt="" />Română</a></li>
-<li><a href="../en/deskbar.html"><img src="../images/flags/gb.png" alt="" />English</a></li>
+<li><a href="../sk/deskbar.html"><img src="../images/flags/sk.png" alt="" />Slovenčina</a></li>
+<li><a href="../fi/deskbar.html"><img src="../images/flags/fi.png" alt="" />Suomi</a></li>
+<li><a href="../sv_SE/deskbar.html"><img src="../images/flags/sv_SE.png" alt="" />Svenska</a></li>
+<li><a href="../zh_CN/deskbar.html"><img src="../images/flags/zh_CN.png" alt="" /> 中文 ［中文］</a></li>
+<li><a href="../ru/deskbar.html"><img src="../images/flags/ru.png" alt="" />Русский</a></li>
+<li><a href="../uk/deskbar.html"><img src="../images/flags/uk.png" alt="" />Українська</a></li>
+<li><a href="../jp/deskbar.html"><img src="../images/flags/jp.png" alt="" />日本語</a></li>
 </ul>
 <span>
  «  <a href="tracker-add-ons.html">Tracker Add-Ons</a> 
@@ -111,7 +111,7 @@ Einträge wie Verküpfungen zu Anwendungen, Dokumenten oder sogar Query-Suchen k
 <h4>Menü</h4>
 <p>Während die ersten paar Menüpunkte der Deskbar unveränderlich sind, lassen sich diejenigen unter <span class="menu">Herunterfahren...</span> anpassen.<br />
 Hier lässt sich die Anzahl der kürzlich geöffneten Dokumente, Ordner und Anwendungen einstellen, die in den entsprechenden Menüs der Deskbar erscheinen.<br />
-<span class="button">Menü bearbeiten...</span> öffnet den Ordner <span class="path">~/config/settings/deskbar/menu/</span>. Hier befinden sich die Dateien und Ordner aus der Deskbar, standardmäßig <span class="menu"><acronym title="Applications">Anwendungen</acronym></span>, <span class="menu">Demos</span>, <span class="menu"><acronym title="Desktop applets">Desktop-Apps</acronym></span> und <span class="menu"><acronym title="Preferences">Einstellungen</acronym></span>.<br />
+<span class="button">Im Tracker  bearbeiten...</span> öffnet den Ordner <span class="path">~/config/settings/deskbar/menu/</span>. Hier befinden sich die Dateien und Ordner aus der Deskbar, standardmäßig <span class="menu"><acronym title="Applications">Anwendungen</acronym></span>, <span class="menu">Demos</span>, <span class="menu"><acronym title="Desktop applets">Desktop-Apps</acronym></span> und <span class="menu"><acronym title="Preferences">Einstellungen</acronym></span>.<br />
 Einträge wie Verküpfungen zu Anwendungen, Dokumenten oder sogar Query-Suchen können hinzugefügt und wieder gelöscht werden, indem man sie einfach in diesem Ordner ablegt bzw. entfernt.</p>
 <!-- <p _translation_id="432">It's even easier to simply drag a file, folder or saved query and drop it where you want it into the Deskbar.</p> -->
 <div class="box-info"><p>Programme die mittels Paketen installiert werden, erscheinen automatisch im Deskbar Menü. Hat man viele Pakete installiert, kann das schnell unübersichtlich werden. Will man volle Kontrolle und nur die Anwendung sehen, die man selbst dorthin verlinkt hat (womöglich in Kategorien in Unterordnern), geht das so:<br />
@@ -138,7 +138,9 @@ Immer im Vordergrund</span></td><td> </td><td>Die Deskbar bleibt immer im Vorder
 <a href="#"><img src="../images/up.png" style="border:none;float:right" alt="index" /></a>
 <a id="list-of-apps" name="list-of-apps">Die Liste der laufenden Programme</a></h2>
 <img src="images/deskbar-images/list-of-apps.png" alt="list-of-apps.png" />
-<p>Hier werden alle Programme angezeigt, die gerade aktiv sind. Durch einen Klick auf ein Programm kann man zu diesem, respektive zu einem seiner Fenster, wechseln. Mit einem Rechtsklick minimiert oder schließt man ein Programmfenster oder das gesamte Programm.</p>
+<p>Hier werden alle Programme angezeigt, die gerade aktiv sind. Durch einen Klick auf ein Programm kann man zu diesem, respektive zu einem seiner Fenster, wechseln. Mit einem Rechtsklick lassen sich alle Fenster einer Anwendung ein-/ausblenden oder oder schließen und damit das Programm beenden.</p>
+<p>Ein <span class="key">SHIFT</span> <span class="key">STRG</span> Klick auf eine Anwendung blendet all ihre Fenster aus, ein <span class="key">STRG</span> Klick blendet sie wieder ein.</p>
+<div class="box-info">Manchmal hängt eine Anwendung und obwohl all ihre Fenster geschlossen sind, bleibt ihr Eintrag in der Liste der laufenden Programm. In solchen Situationen benutzt man den 'Vulcan Death Grip', um sie los zu werden: Man hält <span class="key">SHIFT</span> <span class="key">STRG</span> <span class="key">ALT</span> gedrückt und klickt auf den untoten Eintrag in der Deskbar. Faszinierend!</div>
 <p>Bei aktivierter Einstellung "Expander anzeigen" in den Deskbar-Einstellungen, kann man über das kleine Dreieck die Liste der einzelnen Fenster eines Programmes direkt unterhalb des jeweiligen Eintrages in der Programmliste anzeigen lassen.</p>
 <p>Das Symbol vor den Einträgen der einzelnen Programmfenster zeigt Informationen zu diesem Fenster. Ein farbiges Icon repräsentiert ein sichtbares Fenster, ein ausgegrautes Icon ein minimiertes Fenster. Linien vor dem Icon deuten darauf hin, dass das Fenster auf einer anderen als der aktuellen Arbeitsfläche ist.</p>
 

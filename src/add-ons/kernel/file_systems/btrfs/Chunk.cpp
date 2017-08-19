@@ -9,9 +9,6 @@
 
 #include "Chunk.h"
 
-#include <stdlib.h>
-#include <string.h>
-
 
 //#define TRACE_BTRFS
 #ifdef TRACE_BTRFS
@@ -22,28 +19,28 @@
 #	define FATAL(x...) dprintf("\33[34mbtrfs:\33[0m " x)
 
 
-Chunk::Chunk(struct btrfs_chunk* chunk, fsblock_t offset)
+Chunk::Chunk(btrfs_chunk* chunk, fsblock_t offset)
 	:
 	fChunk(NULL),
 	fInitStatus(B_OK)
 {
 	fChunkOffset = offset;
-	fChunk = (struct btrfs_chunk*)malloc(sizeof(struct btrfs_chunk)
-		+ chunk->StripeCount() * sizeof(struct btrfs_stripe));
+	fChunk = (btrfs_chunk*)malloc(sizeof(btrfs_chunk)
+		+ chunk->StripeCount() * sizeof(btrfs_stripe));
 	if (fChunk == NULL) {
 		fInitStatus = B_NO_MEMORY;
 		return;
 	}
 
-	memcpy(fChunk, chunk, sizeof(struct btrfs_chunk)
-		+ chunk->StripeCount() * sizeof(struct btrfs_stripe));
+	memcpy(fChunk, chunk, sizeof(btrfs_chunk)
+		+ chunk->StripeCount() * sizeof(btrfs_stripe));
 
 	TRACE("chunk[0] length %" B_PRIu64 " owner %" B_PRIu64 " stripe_length %"
 		B_PRIu64 " type %" B_PRIu64 " stripe_count %u sub_stripes %u "
-		"sector_size %" B_PRIu32 "\n", chunk->Length(), chunk->Owner(), 
-		chunk->StripeLength(), chunk->Type(), chunk->StripeCount(), 
+		"sector_size %" B_PRIu32 "\n", chunk->Length(), chunk->Owner(),
+		chunk->StripeLength(), chunk->Type(), chunk->StripeCount(),
 		chunk->SubStripes(), chunk->SectorSize());
-	for(int32 i = 0; i < chunk->StripeCount(); i++) {
+	for (int32 i = 0; i < chunk->StripeCount(); i++) {
 		TRACE("chunk.stripe[%" B_PRId32 "].physical %" B_PRId64 " deviceid %"
 			B_PRId64 "\n", i, chunk->stripes[i].Offset(),
 			chunk->stripes[i].DeviceID());
@@ -60,21 +57,21 @@ Chunk::~Chunk()
 uint32
 Chunk::Size() const
 {
-	return sizeof(struct btrfs_chunk) 
-		+ fChunk->StripeCount() * sizeof(struct btrfs_stripe);
+	return sizeof(btrfs_chunk)
+		+ fChunk->StripeCount() * sizeof(btrfs_stripe);
 }
 
 
 status_t
-Chunk::FindBlock(off_t logical, off_t &physical)
+Chunk::FindBlock(off_t logical, off_t& physical)
 {
 	if (fChunk == NULL)
 		return B_NO_INIT;
 
 	if (logical < (off_t)fChunkOffset
 		|| logical > (off_t)(fChunkOffset + fChunk->Length()))
-			return B_BAD_VALUE;
-	
+		return B_BAD_VALUE;
+
 	// only one stripe
 	physical = logical + fChunk->stripes[0].Offset() - fChunkOffset;
 	return B_OK;

@@ -1,10 +1,12 @@
-1	polish	x-vnd.Haiku-HaikuDepot	2365524674
+1	polish	x-vnd.Haiku-HaikuDepot	1527149765
 Name	PackageListView		Nazwa
 Available packages	MainWindow		Pakiety dostępne
 Open %DeskbarLink%	PackageManager		Otwórz %DeskbarLink%
+Repository	FilterView		Repozytorium
 Close	RatePackageWindow		Zamknij
 The captcha puzzle needs to be solved.	UserLoginWindow		Musisz rozwiązać test CAPTCHA.
 Changelog	PackageInfoView		Dziennik zmian
+Repository:	FilterView		Repozytorium:
 Your rating:	RatePackageWindow		Twoja ocena:
 The passwords do not match.	UserLoginWindow		Hasła nie zgadzają się.
 Log in…	MainWindow		Zaloguj…
@@ -15,7 +17,6 @@ Other users can see this rating	RatePackageWindow		Inni użytkownicy będą mogl
 Stability	RatePackageWindow		Stabilność
 for %Version%	PackageInfoView		dla %Version%
 No changelog available.	PackageInfoView		Dziennik zmian nie jest dostępny.
-Depot:	FilterView		Repozytorium:
 Description	PackageListView		Opis
 Install	PackageManager		Zainstaluj
 Source packages	MainWindow		Pakiety źródłowe
@@ -32,6 +33,7 @@ Your rating was updated successfully.	RatePackageWindow		Twoja ocena została za
 <no info>	PackageInfoView		<brak informacji>
 Starting the package daemon failed:\n\n%Error%	App		Uruchamianie demona pakietów nie powiodło się:\n\n%Error%
 An error occurred while initializing the package manager: %message%	MainWindow		Wystąpił błąd podczas inicjalizacji menedżera pakietów: %message%
+All repositories	FilterView		Wszystkie repozytoria
 Email address:	UserLoginWindow		Adres e-mail:
 Your rating was uploaded successfully. You can update or remove it at any time by rating the package again.	RatePackageWindow		Twoja ocena została zapisana. Możesz ją zaktualizować lub usunąć w każdej chwili przez ponowną ocenę pakietu.
 Very unstable	RatePackageWindow		Bardzo niestabilny
@@ -56,7 +58,6 @@ Ratings	PackageInfoView		Oceny
 But none could be listed here, sorry.	UserLoginWindow		Ale żaden nie mógł zostać tutaj wyświetlony.
 System & Utilities	Model		System & narzędzia
 Inactive	PackageListView		Nieaktywny
-Refresh depots	MainWindow		Odśwież listy pakietów
 The package action could not be scheduled: %Error%	PackageInfoView		Akcja dla pakietu nie mogła zostać dodana do kolejki: %Error%
 Science & Mathematics	Model		Nauka & matematyka
 Main Menu	MainWindow		Menu główne
@@ -104,6 +105,7 @@ Close	MainWindow		Zamknij
 Preferred language:	UserLoginWindow		Preferowany język:
 Failed to rate package	RatePackageWindow		Nie udało się ocenić pakietu
 Internet & Network	Model		Internet i sieć
+Refresh repositories	MainWindow		Odśwież repozytoria
 Cancel	MainWindow		Anuluj
 Quit HaikuDepot	App		Zakończ HaikuDepot
 Input validation	UserLoginWindow		Walidacja wejścia
@@ -115,14 +117,12 @@ An error occurred while refreshing the repository: %error%	MainWindow		Wystąpi�
 Try again	App		Spróbuj ponownie
 Login or Create account	MainWindow		Zaloguj lub utwórz konto
 Pending…	PackageListView		Oczekiwanie…
-Depot	FilterView		Repozytorium
 {0, plural, one{# item} other{# items}}	PackageListView		{0, plural, one{# element} few{# elementy} many{# elementów} other{# elementu}}
 OK	PackageInfoView		OK
 Uninstalled	PackageListView		Niezainstalowany
 Show	MainWindow		Pokaż
 Stable	RatePackageWindow		Stabilny
 Unknown	PackageListView		Nieznany
-All depots	FilterView		Wszystkie repozytoria
 Comment language:	RatePackageWindow		Język komentarza:
 Pass phrase:	UserLoginWindow		Hasło:
 Screenshot	ScreenshotWindow		Zrzut ekranu
@@ -143,6 +143,7 @@ Failed to create account	UserLoginWindow		Nie udało się utworzyć konta
 There are problems with the data you entered:\n\n	UserLoginWindow		We wprowadzonych danych występują problemy:\n\n
 Featured packages	MainWindow		Polecane pakiety
 Start package daemon	App		Uruchom demona pakietów
+Manage repositories…	MainWindow		Zarządzaj repozytoriami…
 Success	RatePackageWindow		Sukces
 Business	Model		Firma
 Audio	Model		Dźwięk

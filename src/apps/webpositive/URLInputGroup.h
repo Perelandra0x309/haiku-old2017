@@ -29,6 +29,9 @@ public:
 
 			void				SetPageIcon(const BBitmap* icon);
 
+			bool				IsURLInputLocked() const;
+	virtual	void				LockURLInput(bool lock = true);
+
 private:
 			class PageIconView;
 			class URLTextView;
@@ -37,6 +40,7 @@ private:
 			URLTextView*		fTextView;
 			BButton*			fGoButton;
 			bool				fWindowActive;
+			bool				fURLLocked;
 };
 
 #endif // URL_INPUT_GROUP_H

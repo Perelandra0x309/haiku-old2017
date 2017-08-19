@@ -56,27 +56,9 @@ MediaExtractor::MediaExtractor(BDataIO* source, int32 flags)
 	:
 	fExtractorThread(-1),
 	fReader(NULL),
-	fStreamer(NULL),
 	fStreamInfo(NULL),
 	fStreamCount(0)
 {
-	_Init(source, flags);
-}
-
-
-MediaExtractor::MediaExtractor(const BUrl& url, int32 flags)
-	:
-	fExtractorThread(-1),
-	fReader(NULL),
-	fStreamer(NULL),
-	fStreamInfo(NULL),
-	fStreamCount(0)
-{
-	BDataIO* source = NULL;
-	fInitStatus = gPluginManager.CreateStreamer(&fStreamer, url, &source);
-	if (fInitStatus != B_OK)
-		return;
-
 	_Init(source, flags);
 }
 
@@ -165,13 +147,8 @@ MediaExtractor::~MediaExtractor()
 {
 	CALLED();
 
-#if !DISABLE_CHUNK_CACHE
-	// terminate extractor thread
-	delete_sem(fExtractorWaitSem);
-
-	status_t status;
-	wait_for_thread(fExtractorThread, &status);
-#endif
+	// stop the extractor thread, if still running
+	StopProcessing();
 
 	// free all stream cookies
 	// and chunk caches
@@ -183,9 +160,6 @@ MediaExtractor::~MediaExtractor()
 	}
 
 	gPluginManager.DestroyReader(fReader);
-
-	if (fStreamer != NULL)
-		gPluginManager.DestroyStreamer(fStreamer);
 
 	delete[] fStreamInfo;
 	// fSource is owned by the BMediaFile
@@ -430,6 +404,22 @@ MediaExtractor::GetStreamMetaData(int32 stream, BMessage* _data) const
 		return info.status;
 
 	return fReader->GetStreamMetaData(fStreamInfo[stream].cookie, _data);
+}
+
+
+void
+MediaExtractor::StopProcessing()
+{
+#if !DISABLE_CHUNK_CACHE
+	if (fExtractorWaitSem > -1) {
+		// terminate extractor thread
+		delete_sem(fExtractorWaitSem);
+		fExtractorWaitSem = -1;
+
+		status_t status;
+		wait_for_thread(fExtractorThread, &status);
+	}
+#endif
 }
 
 

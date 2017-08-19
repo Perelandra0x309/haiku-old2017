@@ -469,13 +469,15 @@ AcpiOsMapMemory(ACPI_PHYSICAL_ADDRESS where, ACPI_SIZE length)
 {
 #ifdef _KERNEL_MODE
 	void *there;
-	area_id area = map_physical_memory("acpi_physical_mem_area", where, length,
-		B_ANY_KERNEL_ADDRESS, B_KERNEL_READ_AREA | B_KERNEL_WRITE_AREA, &there);
+	area_id area = map_physical_memory("acpi_physical_mem_area",
+		(phys_addr_t)where, length, B_ANY_KERNEL_ADDRESS,
+		B_KERNEL_READ_AREA | B_KERNEL_WRITE_AREA, &there);
 
 	DEBUG_FUNCTION_F("addr: 0x%08lx; length: %lu; mapped: %p; area: %ld",
 		(addr_t)where, (size_t)length, there, area);
 	if (area < 0) {
-		dprintf("ACPI: cannot map memory at 0x%08x, length %d\n", where, length);
+		dprintf("ACPI: cannot map memory at 0x%" B_PRIu64 ", length %"
+			B_PRIu64 "\n", (uint64)where, (uint64)length);
 		return NULL;
 	}
 	return there;
@@ -1049,7 +1051,7 @@ ACPI_STATUS
 AcpiOsReadMemory(ACPI_PHYSICAL_ADDRESS address, UINT64 *value, UINT32 width)
 {
 #ifdef _KERNEL_MODE
-	if (vm_memcpy_from_physical(value, (addr_t)address, width / 8, false)
+	if (vm_memcpy_from_physical(value, (phys_addr_t)address, width / 8, false)
 		!= B_OK) {
 		return AE_ERROR;
 	}
@@ -1077,7 +1079,7 @@ ACPI_STATUS
 AcpiOsWriteMemory(ACPI_PHYSICAL_ADDRESS address, UINT64 value, UINT32 width)
 {
 #ifdef _KERNEL_MODE
-	if (vm_memcpy_to_physical((addr_t)address, &value, width / 8, false)
+	if (vm_memcpy_to_physical((phys_addr_t)address, &value, width / 8, false)
 			!= B_OK) {
 		return AE_ERROR;
 	}
@@ -1345,6 +1347,32 @@ AcpiOsReleaseMutex(ACPI_MUTEX handle)
 void
 AcpiOsWaitEventsComplete()
 {
-    //TODO: FreeBSD See description.
-    return;
+	//TODO: FreeBSD See description.
+	return;
+}
+
+
+/******************************************************************************
+ *
+ * FUNCTION:    AcpiOsEnterSleep
+ *
+ * PARAMETERS:  SleepState          - Which sleep state to enter
+ *              RegaValue           - Register A value
+ *              RegbValue           - Register B value
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: A hook before writing sleep registers to enter the sleep
+ *              state. Return AE_CTRL_TERMINATE to skip further sleep register
+ *              writes.
+ *
+ *****************************************************************************/
+
+ACPI_STATUS
+AcpiOsEnterSleep (
+	UINT8                   SleepState,
+	UINT32                  RegaValue,
+	UINT32                  RegbValue)
+{
+	return (AE_OK);
 }

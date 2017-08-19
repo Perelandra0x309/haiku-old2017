@@ -34,19 +34,6 @@ local sources =
 	TimeUnitFormat.cpp
 	Format.cpp # Used by some of the above.
 	UnicodeChar.cpp # Already used in FirstBootPrompt.
-
-	# old, needs investigation
-	# Currency.cpp
-	# FloatFormat.cpp
-	# FloatFormatImpl.cpp
-	# FloatFormatParameters.cpp
-	# FormatImpl.cpp
-	# FormatParameters.cpp
-	# GenericNumberFormat.cpp
-	# IntegerFormat.cpp
-	# IntegerFormatImpl.cpp
-	# IntegerFormatParameters.cpp
-	# NumberFormatParameters.cpp
 	;
 
 local architectureObject ;

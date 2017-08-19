@@ -30,23 +30,23 @@
 <div class="inner">
 <ul class="lang-menu">
 <li class="now"><img src="../images/flags/jp.png" alt="" /> 日本語</li>
-<li><a href="../fr/workshop-wlan.html"><img src="../images/flags/fr.png" alt="" />Français</a></li>
-<li><a href="../de/workshop-wlan.html"><img src="../images/flags/de.png" alt="" />Deutsch</a></li>
-<li><a href="../it/workshop-wlan.html"><img src="../images/flags/it.png" alt="" />Italiano</a></li>
-<li><a href="../ru/workshop-wlan.html"><img src="../images/flags/ru.png" alt="" />Русский</a></li>
-<li><a href="../es/workshop-wlan.html"><img src="../images/flags/es.png" alt="" />Español</a></li>
-<li><a href="../sv_SE/workshop-wlan.html"><img src="../images/flags/sv_SE.png" alt="" />Svenska</a></li>
-<li><a href="../uk/workshop-wlan.html"><img src="../images/flags/uk.png" alt="" />Українська</a></li>
-<li><a href="../zh_CN/workshop-wlan.html"><img src="../images/flags/zh_CN.png" alt="" /> 中文 ［中文］</a></li>
-<li><a href="../pt_PT/workshop-wlan.html"><img src="../images/flags/pt_PT.png" alt="" />Português</a></li>
-<li><a href="../fi/workshop-wlan.html"><img src="../images/flags/fi.png" alt="" />Suomi</a></li>
-<li><a href="../sk/workshop-wlan.html"><img src="../images/flags/sk.png" alt="" />Slovenčina</a></li>
-<li><a href="../hu/workshop-wlan.html"><img src="../images/flags/hu.png" alt="" />Magyar</a></li>
-<li><a href="../pt_BR/workshop-wlan.html"><img src="../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
 <li><a href="../ca/workshop-wlan.html"><img src="../images/flags/ca.png" alt="" />Català</a></li>
-<li><a href="../pl/workshop-wlan.html"><img src="../images/flags/pl.png" alt="" />Polski</a></li>
-<li><a href="../ro/workshop-wlan.html"><img src="../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../de/workshop-wlan.html"><img src="../images/flags/de.png" alt="" />Deutsch</a></li>
 <li><a href="../en/workshop-wlan.html"><img src="../images/flags/gb.png" alt="" />English</a></li>
+<li><a href="../es/workshop-wlan.html"><img src="../images/flags/es.png" alt="" />Español</a></li>
+<li><a href="../fr/workshop-wlan.html"><img src="../images/flags/fr.png" alt="" />Français</a></li>
+<li><a href="../it/workshop-wlan.html"><img src="../images/flags/it.png" alt="" />Italiano</a></li>
+<li><a href="../hu/workshop-wlan.html"><img src="../images/flags/hu.png" alt="" />Magyar</a></li>
+<li><a href="../pl/workshop-wlan.html"><img src="../images/flags/pl.png" alt="" />Polski</a></li>
+<li><a href="../pt_PT/workshop-wlan.html"><img src="../images/flags/pt_PT.png" alt="" />Português</a></li>
+<li><a href="../pt_BR/workshop-wlan.html"><img src="../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
+<li><a href="../ro/workshop-wlan.html"><img src="../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../sk/workshop-wlan.html"><img src="../images/flags/sk.png" alt="" />Slovenčina</a></li>
+<li><a href="../fi/workshop-wlan.html"><img src="../images/flags/fi.png" alt="" />Suomi</a></li>
+<li><a href="../sv_SE/workshop-wlan.html"><img src="../images/flags/sv_SE.png" alt="" />Svenska</a></li>
+<li><a href="../zh_CN/workshop-wlan.html"><img src="../images/flags/zh_CN.png" alt="" /> 中文 ［中文］</a></li>
+<li><a href="../ru/workshop-wlan.html"><img src="../images/flags/ru.png" alt="" />Русский</a></li>
+<li><a href="../uk/workshop-wlan.html"><img src="../images/flags/uk.png" alt="" />Українська</a></li>
 </ul>
 
 <span>
@@ -116,8 +116,9 @@ ArcorInternet123                 00:20:12:a4:29:e1        15  WPA</pre>
 <a href="#"><img src="../images/up.png" style="border:none;float:right" alt="index" /></a>
 <a id="tips" name="tips">ヒント</a></h2>
 <h3>ファームウェアファイルをオフラインでダウンロードする</h3>
-<p>バイナリファームウェアファイルを <tt>install-wifi-firmwares.sh</tt> スクリプトで入手できない場合 (たとえば、Haiku でインターネット接続ができないため)、<a href="http://www.haiku-os.org/files/download-data-for-wlan-firmwares.txt">このシェルスクリプト</a>もダウンロードすれば、<tt>wget</tt> と <tt>zip</tt> がインストールされたほかのどんな OS からも実行できます。<br />
-このスクリプトは必要なファイルをダウンロードし、Haiku の <tt>/boot</tt> で解凍するための zip ファイルを作成するでしょう。解凍後、ターミナルを開いて、以下を入力します。</p>
+<p>バイナリファームウェアファイルを <tt>install-wifi-firmwares.sh</tt> スクリプトで入手できない場合 (たとえば、Haiku でインターネット接続ができないため)、同様に<a href="http://www.haiku-os.org/files/download-data-for-wlan-firmwares.txt">このシェルスクリプト</a>をダウンロードし、<tt>wget</tt> と <tt>zip</tt> がインストールされたほかの OS から実行できます。<br />
+Windows ユーザーは、Windows 用の <a href="http://gnuwin32.sourceforge.net/packages/wget.htm">wget</a> と <a href="http://gnuwin32.sourceforge.net/packages/zip.htm">zip</a> を規定の位置にインストールしている必要があります。それから、<a href="https://www.haiku-os.org/files/download-data-for-wlan-firmwares.bat">このバッチファイルスクリプト</a>を使用してください。<br />
+このスクリプトは必要なファイルをダウンロードし、Haiku の <tt>/boot</tt> で解凍するための zip ファイルを作成するでしょう。解凍後、ターミナルを開いて以下を入力します。</p>
 <pre class="terminal">install-wifi-firmwares.sh</pre>
 <p>ライセンスを見なおして承認後、利用できるファームウェアファイルをすべてインストールします。</p>
 <h3>接続の切断を避ける</h3>

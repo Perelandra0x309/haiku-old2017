@@ -100,10 +100,6 @@ All rights reserved.
 #define B_TRANSLATION_CONTEXT "ContainerWindow"
 
 
-const uint32 kRedo = 'REDO';
-	// this is the same as B_REDO in Dano/Zeta/Haiku
-
-
 #ifdef _IMPEXP_BE
 _IMPEXP_BE
 #endif
@@ -555,7 +551,7 @@ BContainerWindow::BContainerWindow(LockingList<BWindow>* list,
 	// ToDo: remove me once we have undo/redo menu items
 	// (that is, move them to AddShortcuts())
 	AddShortcut('Z', B_COMMAND_KEY, new BMessage(B_UNDO), this);
-	AddShortcut('Z', B_COMMAND_KEY | B_SHIFT_KEY, new BMessage(kRedo), this);
+	AddShortcut('Z', B_COMMAND_KEY | B_SHIFT_KEY, new BMessage(B_REDO), this);
 }
 
 
@@ -1382,9 +1378,43 @@ BContainerWindow::MessageReceived(BMessage* message)
 		case kPasteLinksFromClipboard:
 		{
 			BView* view = CurrentFocus();
-			if (view->LockLooper()) {
+			if (dynamic_cast<BTextView*>(view) == NULL) {
+				// The selected item is not a BTextView, so forward the
+				// message to the PoseView.
+				if (fPoseView != NULL)
+					fPoseView->MessageReceived(message);
+			} else {
+				// Since we catch the generic clipboard shortcuts in a way that
+				// means the BTextView will never get them, we must
+				// manually forward them ourselves.
+				//
+				// However, we have to take care to not forward the custom
+				// clipboard messages, else we would wind up in infinite
+				// recursion.
+				if (message->what == B_CUT || message->what == B_COPY
+						|| message->what == B_PASTE) {
+					view->MessageReceived(message);
+				}
+			}
+			break;
+		}
+
+		case B_UNDO: {
+			BView* view = CurrentFocus();
+			if (dynamic_cast<BTextView*>(view) == NULL) {
+				FSUndo();
+			} else {
 				view->MessageReceived(message);
-				view->UnlockLooper();
+			}
+			break;
+		}
+
+		case B_REDO: {
+			BView* view = CurrentFocus();
+			if (dynamic_cast<BTextView*>(view) == NULL) {
+				FSRedo();
+			} else {
+				view->MessageReceived(message);
 			}
 			break;
 		}
@@ -1678,16 +1708,6 @@ BContainerWindow::MessageReceived(BMessage* message)
 
 		case B_NODE_MONITOR:
 			UpdateTitle();
-			break;
-
-		case B_UNDO:
-			FSUndo();
-			break;
-
-		//case B_REDO:
-			// only defined in Dano/Zeta/OpenBeOS
-		case kRedo:
-			FSRedo();
 			break;
 
 		default:
@@ -2020,7 +2040,7 @@ BContainerWindow::AddWindowMenu(BMenu* menu)
 	item->SetTarget(PoseView());
 	menu->AddItem(item);
 
-	BMenu* listViewMenu = new BMenu("List view");
+	BMenu* listViewMenu = new BMenu(B_TRANSLATE("List view"));
 
 	message = new BMessage(kListMode);
 	message->AddInt32("icon_size", B_MINI_ICON);
@@ -4376,8 +4396,12 @@ BorderedView::BorderedView()
 void
 BorderedView::WindowActivated(bool active)
 {
-	// Update border color
-	PoseViewFocused(active);
+	BContainerWindow* window = dynamic_cast<BContainerWindow*>(Window());
+	if (window == NULL)
+		return;
+
+	if (window->PoseView()->IsFocus())
+		PoseViewFocused(active); // Update border color
 }
 
 
@@ -4400,15 +4424,16 @@ BorderedView::PoseViewFocused(bool focused)
 	if (focused && window->IsActive() && fEnableBorderHighlight) {
 		base = B_KEYBOARD_NAVIGATION_COLOR;
 		tint = B_NO_TINT;
-
-		BScrollBar* hScrollBar = window->PoseView()->HScrollBar();
-		if (hScrollBar != NULL)
-			hScrollBar->SetBorderHighlighted(focused);
-
-		BScrollBar* vScrollBar = window->PoseView()->VScrollBar();
-		if (vScrollBar != NULL)
-			vScrollBar->SetBorderHighlighted(focused);
 	}
+
+	BScrollBar* hScrollBar = window->PoseView()->HScrollBar();
+	if (hScrollBar != NULL)
+		hScrollBar->SetBorderHighlighted(focused);
+
+	BScrollBar* vScrollBar = window->PoseView()->VScrollBar();
+	if (vScrollBar != NULL)
+		vScrollBar->SetBorderHighlighted(focused);
+
 	SetViewUIColor(base, tint);
 	Invalidate();
 }

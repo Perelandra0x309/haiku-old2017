@@ -1,26 +1,14 @@
 SubDir HAIKU_TOP src add-ons kernel network ppp modem ;
 
 SetSubDirSupportedPlatformsBeOSCompatible ;
+SubDirC++Flags -fno-rtti ;
 
-if $(TARGET_PLATFORM) != haiku {
-	UseHeaders [ FDirName $(HAIKU_TOP) headers posix ] : true ;
-		# We need the public network headers also when not compiling for Haiku.
-		# Unfortunately we get more than we want, namely all POSIX headers.
-}
-
-# for kernel_cpp.h and BLocker
-UseHeaders [ FDirName $(HAIKU_TOP) headers cpp ] : true ;
+UsePrivateKernelHeaders ;
 UsePrivateHeaders net ;
-UsePrivateHeaders [ FDirName kernel ] ;
 UsePrivateHeaders [ FDirName kernel util ] ;
+
 UseHeaders [ FDirName $(HAIKU_TOP) src add-ons kernel network ppp shared
 	libkernelppp headers ] : true ;
-
-
-{
-	SubDirC++Flags -fno-rtti ;
-}
-
 
 KernelAddon modem :
 	modem.cpp
@@ -31,6 +19,6 @@ KernelAddon modem :
 LinkAgainst modem : libkernelppp.a ;
 
 # Installation
-HaikuInstall install-networking
-	: /boot/home/config/add-ons/kernel/obos_network/ppp
+HaikuInstall install-ppp
+	: /boot/home/config/non-packaged/add-ons/kernel/network/ppp
 	: modem ;

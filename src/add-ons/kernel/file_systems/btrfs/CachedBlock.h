@@ -7,9 +7,16 @@
 
 //!	interface for the block cache
 
-#include <fs_cache.h>
 
 #include "Volume.h"
+
+
+//#define TRACE_BTRFS
+#ifdef TRACE_BTRFS
+#	define TRACE(x...) dprintf("\33[34mbtrfs:\33[0m " x)
+#else
+#	define TRACE(x...) ;
+#endif
 
 
 class CachedBlock {
@@ -22,19 +29,23 @@ public:
 			void			Unset();
 
 			const uint8*	SetTo(off_t block);
+			uint8*			SetToWritable(off_t block, int32 transactionId,
+								bool empty);
 
 			const uint8*	Block() const { return fBlock; }
 			off_t			BlockNumber() const { return fBlockNumber; }
+			bool			IsWritable() const { return fWritable; }
 
 private:
-							CachedBlock(const CachedBlock &);
-							CachedBlock &operator=(const CachedBlock &);
+							CachedBlock(const CachedBlock&);
+							CachedBlock& operator=(const CachedBlock&);
 								// no implementation
-						
+
 protected:
 			Volume*			fVolume;
 			off_t			fBlockNumber;
 			uint8*			fBlock;
+			bool			fWritable;
 };
 
 
@@ -46,7 +57,8 @@ CachedBlock::CachedBlock(Volume* volume)
 	:
 	fVolume(volume),
 	fBlockNumber(0),
-	fBlock(NULL)
+	fBlock(NULL),
+	fWritable(false)
 {
 }
 
@@ -56,7 +68,8 @@ CachedBlock::CachedBlock(Volume* volume, off_t block)
 	:
 	fVolume(volume),
 	fBlockNumber(0),
-	fBlock(NULL)
+	fBlock(NULL),
+	fWritable(false)
 {
 	SetTo(block);
 }
@@ -86,12 +99,31 @@ CachedBlock::Unset()
 }
 
 
-inline const uint8 *
+inline const uint8*
 CachedBlock::SetTo(off_t block)
 {
 	Unset();
 	fBlockNumber = block;
-	return fBlock = (uint8 *)block_cache_get(fVolume->BlockCache(), block);
+	return fBlock = (uint8*)block_cache_get(fVolume->BlockCache(), block);
 }
+
+
+inline uint8*
+CachedBlock::SetToWritable(off_t block, int32 transactionId, bool empty)
+{
+	Unset();
+	fBlockNumber = block;
+	fWritable = true;
+	if (empty) {
+		fBlock = (uint8*)block_cache_get_empty(fVolume->BlockCache(),
+			block, transactionId);
+	} else {
+		fBlock = (uint8*)block_cache_get_writable(fVolume->BlockCache(),
+			block, transactionId);
+	}
+
+	return fBlock;
+}
+
 
 #endif	// CACHED_BLOCK_H

@@ -5,11 +5,11 @@ resource app_flags B_SINGLE_LAUNCH;
 resource app_version {
 	major  = 1,
 	middle = 0,
-	minor  = 0,
+	minor  = 3,
 	variety = B_APPV_BETA,
 	internal = 0,
 	short_info = "SoftwareUpdater",
-	long_info  = "Software Updater ©2008-2016 Haiku"
+	long_info  = "Software Updater ©2008-2017 Haiku"
 };
 
 resource vector_icon {

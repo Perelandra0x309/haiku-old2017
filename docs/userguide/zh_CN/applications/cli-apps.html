@@ -29,23 +29,23 @@
 <div class="inner">
 <ul class="lang-menu">
 <li class="now"><img src="../../images/flags/zh_CN.png" alt="" />  中文 ［中文］</li>
-<li><a href="../../fr/applications/cli-apps.html"><img src="../../images/flags/fr.png" alt="" />Français</a></li>
-<li><a href="../../de/applications/cli-apps.html"><img src="../../images/flags/de.png" alt="" />Deutsch</a></li>
-<li><a href="../../it/applications/cli-apps.html"><img src="../../images/flags/it.png" alt="" />Italiano</a></li>
-<li><a href="../../ru/applications/cli-apps.html"><img src="../../images/flags/ru.png" alt="" />Русский</a></li>
-<li><a href="../../es/applications/cli-apps.html"><img src="../../images/flags/es.png" alt="" />Español</a></li>
-<li><a href="../../sv_SE/applications/cli-apps.html"><img src="../../images/flags/sv_SE.png" alt="" />Svenska</a></li>
-<li><a href="../../jp/applications/cli-apps.html"><img src="../../images/flags/jp.png" alt="" />日本語</a></li>
-<li><a href="../../uk/applications/cli-apps.html"><img src="../../images/flags/uk.png" alt="" />Українська</a></li>
-<li><a href="../../pt_PT/applications/cli-apps.html"><img src="../../images/flags/pt_PT.png" alt="" />Português</a></li>
-<li><a href="../../fi/applications/cli-apps.html"><img src="../../images/flags/fi.png" alt="" />Suomi</a></li>
-<li><a href="../../sk/applications/cli-apps.html"><img src="../../images/flags/sk.png" alt="" />Slovenčina</a></li>
-<li><a href="../../hu/applications/cli-apps.html"><img src="../../images/flags/hu.png" alt="" />Magyar</a></li>
-<li><a href="../../pt_BR/applications/cli-apps.html"><img src="../../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
 <li><a href="../../ca/applications/cli-apps.html"><img src="../../images/flags/ca.png" alt="" />Català</a></li>
-<li><a href="../../pl/applications/cli-apps.html"><img src="../../images/flags/pl.png" alt="" />Polski</a></li>
-<li><a href="../../ro/applications/cli-apps.html"><img src="../../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../../de/applications/cli-apps.html"><img src="../../images/flags/de.png" alt="" />Deutsch</a></li>
 <li><a href="../../en/applications/cli-apps.html"><img src="../../images/flags/gb.png" alt="" />English</a></li>
+<li><a href="../../es/applications/cli-apps.html"><img src="../../images/flags/es.png" alt="" />Español</a></li>
+<li><a href="../../fr/applications/cli-apps.html"><img src="../../images/flags/fr.png" alt="" />Français</a></li>
+<li><a href="../../it/applications/cli-apps.html"><img src="../../images/flags/it.png" alt="" />Italiano</a></li>
+<li><a href="../../hu/applications/cli-apps.html"><img src="../../images/flags/hu.png" alt="" />Magyar</a></li>
+<li><a href="../../pl/applications/cli-apps.html"><img src="../../images/flags/pl.png" alt="" />Polski</a></li>
+<li><a href="../../pt_PT/applications/cli-apps.html"><img src="../../images/flags/pt_PT.png" alt="" />Português</a></li>
+<li><a href="../../pt_BR/applications/cli-apps.html"><img src="../../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
+<li><a href="../../ro/applications/cli-apps.html"><img src="../../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../../sk/applications/cli-apps.html"><img src="../../images/flags/sk.png" alt="" />Slovenčina</a></li>
+<li><a href="../../fi/applications/cli-apps.html"><img src="../../images/flags/fi.png" alt="" />Suomi</a></li>
+<li><a href="../../sv_SE/applications/cli-apps.html"><img src="../../images/flags/sv_SE.png" alt="" />Svenska</a></li>
+<li><a href="../../ru/applications/cli-apps.html"><img src="../../images/flags/ru.png" alt="" />Русский</a></li>
+<li><a href="../../uk/applications/cli-apps.html"><img src="../../images/flags/uk.png" alt="" />Українська</a></li>
+<li><a href="../../jp/applications/cli-apps.html"><img src="../../images/flags/jp.png" alt="" />日本語</a></li>
 </ul>
 
 <span>
@@ -77,7 +77,7 @@ The following isn't an exhaustive list of all Haiku-specific CLI apps, it serves
 <p>利用这些命令，您可以对BFS的索引属性进行排序，新建，重新索引和删除等操作。由于每个卷都有自己独立的索引，所以在不同的卷之间拷贝文件时尤其要注意。<br />上述这些命令在<a href="../index.html">索引</a>主题中会有详细的描述。</p>
 
 <h3><a href="#"><img src="../../images/up.png" style="border:none;float:right" alt="index" /></a>
-<a id="cli-pkg" name="cli-pkg">Relating to package management: <span class="cli">package</span>, <span class="cli">pkgman</span></a></h3>
+<a id="cli-pkg" name="cli-pkg">包管理相关：<span class="cli">package</span>, <span class="cli">pkgman</span></a></h3>
 <p>The <span class="cli">package</span> command is used to manage HPKG packages. Have a look at the article <a href="https://www.haiku-os.org/guides/daily-tasks/install-applications">Installing applications</a> to learn the very basics. Usually the tool <a href="https://github.com/haikuports/haikuports/wiki">haikuporter</a> is used to create so-called recipes for automatic package building.</p>
 <p><span class="cli">pkgman</span> is used to search, install, update and uninstall packages. Package repositories can be added, dropped and their package lists refreshed. A special kind of update is invoked with the parameter <tt>full-sync</tt>: It is more aggressive and also downgrades or removes packages, if necessary.<br />
 For more details on a parameter, append "--help", e.g. <tt>pkgman search --help</tt>.</p>
@@ -125,6 +125,11 @@ Would you like a link to it?" "On Desktop" "In Deskbar" "No thanks"</pre>
 <tr><td><p><span class="cli">diskimage</span></p></td><td style="width:10px;"> </td>
 		<td valign="top"><p><span class="cli">diskimage</span>可用于注册普通文件作为磁盘设备。例如，您可以注册 Haiku anyboot 镜像，将其挂载在文件浏览器中，并且可以在安装器使用之前，编辑和移动其中的文件。</p>
 </td></tr>
+<tr><td><p><span class="cli">launch_roster</span></p></td><td style="width:10px;"> </td>
+		<td valign="top"><p>The launch_daemon starts all sorts of services and applications at boot-up. For some it was instructed to re-start them if they were quit. If you don't want that – maybe you'd like to test a modified Tracker, for example – you use <span class="cli">launch_roster</span> to <tt>stop</tt> the re-starting of the application before quitting it. Similarly, you can <tt>start</tt> it again or get <tt>info</tt> about it. Without parameter, <span class="cli">launch_roster</span> lists all apps/services that are under its control.<br />
+For example, this will stop the re-launching of the Deskbar:</p>
+<pre class="terminal">launch_roster stop x-vnd.be-tskb</pre>
+</td></tr>
 <tr><td><p><span class="cli">mountvolume</span><br /><span class="cli">mount</span></p></td><td style="width:10px;"> </td>
 		<td valign="top"><p><span class="cli">mountvolume</span> is preferred by many to mount local partitions and disks, because its usage is so easy: just call it with the name of the partition and you're done. Try <tt>--help</tt> for more options.</p>
 <p><span class="cli">mount</span> can additionally mount remote disks by using a network filesystem, like NFS4. You specify the used filesystem with the <tt>-t</tt> parameter and the remote location with the <tt>-p</tt> parameter. As filesystem parameter you can use anything you find in <span class="path">/system/add-ons/kernel/file_system</span> (and corresponding file hierarchies under <span class="path">~/config</span> or "<span class="path">non-packaged</span>", of course). You also have to create a folder as mountpoint. Here's an example:</p>
@@ -132,6 +137,21 @@ Would you like a link to it?" "On Desktop" "In Deskbar" "No thanks"</pre>
 mount -t nfs4 -p "192.168.178.3:volume1" /DiskStation</pre></td></tr>
 <tr><td><p><span class="cli">open</span></p></td><td style="width:10px;"> </td>
 		<td valign="top"><p><span class="cli">open</span>是一个非常小巧的工具。通过它，您可以以默认的程序打开任何文件，或者利用程序的签名还打开该程序而无需知道它的路径。它也可以用于打开网页，甚至“虚拟” 的目录， <tt>.</tt> 用于当前目录或者 <tt>..</tt> 用于上层目录，并且可以在 Tracker 中打开相应的文件夹。</p>
+</td></tr>
+<tr><td><p><span class="cli">ramdisk</span></p></td><td style="width:10px;"> </td>
+		<td valign="top"><p>A ramdisk is like a harddisk running only in the computer's memory. That makes it very fast but also volatile, because its contents vanishes when you shut down the computer, or it crashes or you experience a blackout.<br />
+To create a ramdisk of 1 GiB, format to the name "RAMses" and mount it, you enter this in Terminal or create a script of it:</p>
+<pre class="terminal">ramdisk create -s 1gb
+mkfs -q -t bfs /dev/disk/virtual/ram/0/raw RAMses
+mountvolume RAMses</pre>
+<p>Note: When creating a ramdisk, the <span class="cli">ramdisk</span> command prints out the path to it. If you create several disks, that path <span class="path">/dev/disk/virtual/ram/0/raw</span> will change!</p>
+<p>To preserve the contents, at least if no calamity like a blackout etc. strikes, a ramdisk can be set up to read/write an image on the harddisk. For that, you need to supply a file of the desired size that will be read from every time you start your ramdisk, and written to when you unmount it. To create an image file "RAMimage" of 500MiB and format it, do this:</p>
+<pre class="terminal">dd if=/dev/zero of=RAMimage bs=500M count=1
+mkfs -q -t bfs /dev/disk/virtual/ram/0/raw RAMimage</pre>
+<p>From now on, you start the ramdisk like this:</p>
+<pre class="terminal">ramdisk create RAMimage
+mountvolume RAMimage</pre>
+<p>It's very important to always cleanly unmount you ramdisk, either from Tracker or with <span class="cli">unmount /RAMimage</span>, or the changes won't be written back to the image file!</p>
 </td></tr>
 </table>
 </div>

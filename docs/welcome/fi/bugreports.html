@@ -13,6 +13,7 @@
  *		Humdinger <humdingerb@gmail.com>
  * Translators:
  *		Karvjorm
+ *		Humdinger
  *
 -->
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
@@ -30,23 +31,23 @@
 <div class="inner">
 <ul class="lang-menu">
 <li class="now"><img src="../images/flags/fi.png" alt="" /> Suomi</li>
-<li><a href="../fr/bugreports.html"><img src="../images/flags/fr.png" alt="" />Français</a></li>
-<li><a href="../de/bugreports.html"><img src="../images/flags/de.png" alt="" />Deutsch</a></li>
-<li><a href="../it/bugreports.html"><img src="../images/flags/it.png" alt="" />Italiano</a></li>
-<li><a href="../ru/bugreports.html"><img src="../images/flags/ru.png" alt="" />Русский</a></li>
-<li><a href="../es/bugreports.html"><img src="../images/flags/es.png" alt="" />Español</a></li>
-<li><a href="../sv_SE/bugreports.html"><img src="../images/flags/sv_SE.png" alt="" />Svenska</a></li>
-<li><a href="../jp/bugreports.html"><img src="../images/flags/jp.png" alt="" />日本語</a></li>
-<li><a href="../uk/bugreports.html"><img src="../images/flags/uk.png" alt="" />Українська</a></li>
-<li><a href="../zh_CN/bugreports.html"><img src="../images/flags/zh_CN.png" alt="" /> 中文 ［中文］</a></li>
-<li><a href="../pt_PT/bugreports.html"><img src="../images/flags/pt_PT.png" alt="" />Português</a></li>
-<li><a href="../sk/bugreports.html"><img src="../images/flags/sk.png" alt="" />Slovenčina</a></li>
-<li><a href="../hu/bugreports.html"><img src="../images/flags/hu.png" alt="" />Magyar</a></li>
-<li><a href="../pt_BR/bugreports.html"><img src="../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
 <li><a href="../ca/bugreports.html"><img src="../images/flags/ca.png" alt="" />Català</a></li>
-<li><a href="../pl/bugreports.html"><img src="../images/flags/pl.png" alt="" />Polski</a></li>
-<li><a href="../ro/bugreports.html"><img src="../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../de/bugreports.html"><img src="../images/flags/de.png" alt="" />Deutsch</a></li>
 <li><a href="../en/bugreports.html"><img src="../images/flags/gb.png" alt="" />English</a></li>
+<li><a href="../es/bugreports.html"><img src="../images/flags/es.png" alt="" />Español</a></li>
+<li><a href="../fr/bugreports.html"><img src="../images/flags/fr.png" alt="" />Français</a></li>
+<li><a href="../it/bugreports.html"><img src="../images/flags/it.png" alt="" />Italiano</a></li>
+<li><a href="../hu/bugreports.html"><img src="../images/flags/hu.png" alt="" />Magyar</a></li>
+<li><a href="../pl/bugreports.html"><img src="../images/flags/pl.png" alt="" />Polski</a></li>
+<li><a href="../pt_PT/bugreports.html"><img src="../images/flags/pt_PT.png" alt="" />Português</a></li>
+<li><a href="../pt_BR/bugreports.html"><img src="../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
+<li><a href="../ro/bugreports.html"><img src="../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../sk/bugreports.html"><img src="../images/flags/sk.png" alt="" />Slovenčina</a></li>
+<li><a href="../sv_SE/bugreports.html"><img src="../images/flags/sv_SE.png" alt="" />Svenska</a></li>
+<li><a href="../zh_CN/bugreports.html"><img src="../images/flags/zh_CN.png" alt="" /> 中文 ［中文］</a></li>
+<li><a href="../ru/bugreports.html"><img src="../images/flags/ru.png" alt="" />Русский</a></li>
+<li><a href="../uk/bugreports.html"><img src="../images/flags/uk.png" alt="" />Українська</a></li>
+<li><a href="../jp/bugreports.html"><img src="../images/flags/jp.png" alt="" />日本語</a></li>
 </ul>
 <span>
     <a href="../welcome_fi.html" class="uplink">Welcome</a>
@@ -100,8 +101,9 @@ Varmista sen jälkeen kun olet esitellyt ainutlaatuisen vian, että tietosi ovat
 
 <h2><a href="#"><img src="../images/up.png" style="border:none;float:right" alt="index" /></a>
 <a id="server" name="server">Palvelinviat</a></h2>
-<p>Kun elintärkeät palvelimet, kuten app-, registrar- tai input-palvelin kaatuvat, et näe tavallista kaatumishälytystä. Sen sijaan koko näyttö muuttuu valkoiseksi tja gdb-istunto käynnistyy ja sen tuloste ilmaantuu näytölle. Todennäköisesti pystyt yhä liikuttamaan hiiren kohdistinta, mikä ylikirjoittaa valkoisen ja gdb-tulosteen näytöllä. Yhä vielä toimivat sovellukset (kuten Prosessivalvonta tai Työpöytäpalkin kello) saattavat myös kirjoittaa vikajäljitin tulosteen päälle näytölle.<br />
-Paitsi että kaikki on rumempaa ja epämukavampaa, sama koskee myös sovellusvikoja. Tärkeintä on hankkia paluujälki (<span class="cli">bt</span>-komento). Sinun on ehkä otettava valokuva näytöstä digitaalikameralla, koska et voi kopioida tekstiä mihinkään.</p>
+<p>When vital servers like the app server, the registrar or the input server crash, you won't see the usual crash alert. Instead the whole screen will be cleared white and a gdb session will be started, its output appearing directly on screen. Likely you will still be able to move the mouse, which will overwrite the white and gdb output on screen. Applications still running (like ProcessController or the clock in the Deskbar) might also draw over the debugger output on screen.<br />
+Besides everything being more ugly and inconvenient, basically the same applies as for application bugs. Most importantly procure a back trace (<span class="cli">bt</span> command). You may need to take a picture of the screen with a digital camera, since you won't be able to copy the text anywhere.<br />
+Depending on what exactly crashed, you can try to save a crash report on the Desktop with <span class="cli">save-report</span> and then press the power button once to try shutting cleanly down.</p>
 
 <h2><a href="#"><img src="../images/up.png" style="border:none;float:right" alt="index" /></a>
 <a id="kernel" name="kernel">Käyttöjärjestelmäydinviat</a></h2>
@@ -113,7 +115,7 @@ Paitsi että kaikki on rumempaa ja epämukavampaa, sama koskee myös sovellusvik
 <li><p>Järjestelmä ei alkulataa oikein. Se voi alkulatautua itsestään tai pysähtyä jossain vaiheessa (esimerkiksi jonkun alkaulatausnäytön kuvakkeen kohdalla). Yritä jälkimmäisessä tapauksessa myös <span class="key">ALT</span> <span class="key">SysReq</span> <span class="key">D</span>.</p></li>
 <li><p>Koko järjestelmä tai joku laitteiston osa ei toimi kunnolla. Esimerkiksi se voisi olla hyvin hidas, tapahtuu virheitä, tai jokin ei toimi ollenkaan. Jos  jokin laite ei toimi ollenkaan, ensimmäinen ilmeinen tarkistus on, että tukeeko Haiku sitä ylimalkaan tällä hetkellä (esim.: kysy sähköpostituslistalta tai foorumilta).</p></li>
 </ul>
-<p>Huomaa että vaikka ainoastaan viimeinen kohta tuntuu viittaavan laittoistovikaan, kaikki muutkin oireet voivat johtua myös viasta laitteistoajurissa. Jos sinulla on epäilyjä, että mikä laitteiston osa tai vastaava ajuri aiheuttaa pulmia, tarkista, että eroaako tilanne, jos poistat tai otat pois käytöstä laitteen tai ajurin. Esimerkiksi jos epäilet Wifi-verkkoa, saatat huomata, että BIOS-asetuksissa voidaan ottaa se pois käytöstä. Tai jos ei, niin voisit merkata vastuullisen Wifi-ajurin mustalle listalle Haiku-asennuksestasi (katso <a href="../../../userguide/en/bootloader.html">Käynnistyslataaja</a>).</p>
+<p>Huomaa että vaikka ainoastaan viimeinen kohta tuntuu viittaavan laittoistovikaan, kaikki muutkin oireet voivat johtua myös viasta laitteistoajurissa. Jos sinulla on epäilyjä, että mikä laitteiston osa tai vastaava ajuri aiheuttaa pulmia, tarkista, että eroaako tilanne, jos poistat tai otat pois käytöstä laitteen tai ajurin. Esimerkiksi jos epäilet Wifi-verkkoa, saatat huomata, että BIOS-asetuksissa voidaan ottaa se pois käytöstä. Tai jos ei, niin voisit merkata vastuullisen Wifi-ajurin mustalle listalle Haiku-asennuksestasi (katso <a href="../../userguide/fi/bootloader.html">Käynnistyslataaja</a>).</p>
 
 <h3><a href="#"><img src="../images/up.png" style="border:none;float:right" alt="index" /></a>
 <a id="kdl" name="kdl">Käyttöjärjestelmäytimen viajäljitysalue - KDL</a></h3>
@@ -143,7 +145,7 @@ Käynnistyslataajan <span class="menu">Vianjäljitys</span>-valikossa sinun pit�
 <p><b>Vianjäljitystulostus näytölle on hyödyllinen vain hyvin erikoisten kohteiden vianjäljityksessä ja siinä tiedetään olevan (ajoitus) pulmia.</b><br />
 Se on ajankohtainen vain kun Haikun alkulataus epäonnistuu ja valikkovalinta <span class="menu">Vikajäljitä järjestelmäloki</span> ei jostain syystä toimi. Pidä ennen Haikun alkulatauslogon ilmaantumistta alhaalla <span class="key">VAIHTO</span>-näppäintä päästäksesi alkulatausvalikkoon. Valitse <span class="menu">Valitse turvatila</span>-valitsimet. Lähellä alareunaa luetelleaan <span class="menu">[ ] Ota käyttöön vikajäljitystulostus näytölle</span>. (Huomaa: Toiset valitsime voivat olla käytössä yrityksenä alkuladata Haiku. Jos Haiku alkulatautuu vain kun yksi tai useampi valitsin on käytössä, varmista, että mainitset ne).<br />
 Valitse lopuksi <span class="menu">Paluu päävalikkoon</span> ja sitten <span class="menu">Jatka alkulatausta</span>.<br />
-Yksi tai useampia tekstisivuja näytetään näytölle, vain muutama harva viimeinen rivi on liitettävä vikailmoituslippuun. Tässä on lisätietoja <a href="../../../userguide/fi/bootloader.html">Alkulataaja</a>sta.</p>
+Yksi tai useampia tekstisivuja näytetään näytölle, vain muutama harva viimeinen rivi on liitettävä vikailmoituslippuun. Tässä on lisätietoja <a href="../../userguide/fi/bootloader.html">Alkulataaja</a>sta.</p>
 
 <h2><a href="#"><img src="../images/up.png" style="border:none;float:right" alt="index" /></a>
 <a id="hardware" name="hardware">Laitteisto/ajuriviat</a></h2>

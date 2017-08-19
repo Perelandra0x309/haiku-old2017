@@ -1,25 +1,24 @@
-1	german	x-vnd.Be-PRNT	2163275033
+1	german	x-vnd.Be-PRNT	686411231
 Printer: %printer_name%\nDriver:  %driver%\n	TestPageView		Drucker: %printer_name%\nTreiber: %driver%\n
 Waiting	JobListView		Warten
 Print test page	PrintersWindow		Testseite drucken
-Test Page	TestPageView		Testseite
-Test Page	PrintersWindow		Testseite
+ pending jobs	PrinterListView		offene Druckaufträge.
 page	JobListView		Seite
 Cancel	AddPrinterDialog		Abbrechen
+Test page	PrintersWindow		Testseite
 Add printer	AddPrinterDialog		Drucker hinzufügen
 Green	TestPageView		Grün
 Printers	PrintersWindow		Printers - Drucker
 Add…	PrintersWindow		Hinzu…
+No pending jobs	PrinterListView		Keine offenen Druckaufträge
 Default Printer	PrinterListView		Standarddrucker
 Transport: %transport% %transport_address%	PrinterListView		Transport:%transport% %transport_address%
-No pending jobs.	PrinterListView		Keine offenen Druckaufträge.
 pages	JobListView		Seiten
 Printers	System name		Drucker
 Processing	JobListView		In Bearbeitung
 Red	TestPageView		Rot
 Printer name:	AddPrinterDialog		Druckername:
 Driver: %driver%	PrinterListView		Treiber: %driver%
- pending jobs.	PrinterListView		offene Druckaufträge.
 Black	TestPageView		Schwarz
 Restart job	PrintersWindow		Druckauftrag neu starten
 Add	AddPrinterDialog		Hinzufügen
@@ -28,7 +27,6 @@ Transport: %transport% %transport_address%	TestPageView		Transport: %transport% 
 Cancel job	PrintersWindow		Druckauftrag abbrechen
 Yellow	TestPageView		Gelb
 Blue	TestPageView		Blau
-1 pending job.	PrinterListView		1 offener Druckauftrag.
 Remove	PrintersWindow		Entfernen
 <pick one>	AddPrinterDialog		<auswählen>
 Print jobs for 	PrintersWindow		Druckaufträge für
@@ -40,5 +38,7 @@ No printer found!	TransportMenu		Es wurde kein Drucker gefunden!
 Print jobs: No printer selected	PrintersWindow		Druckaufträge: kein Drucker gewählt
 Cyan	TestPageView		Cyan
 Unknown status	JobListView		Status unbekannt
+1 pending job	PrinterListView		1 offener Druckauftrag
 Connected to:	AddPrinterDialog		Verbunden mit:
 Printer type:	AddPrinterDialog		Druckertyp:
+Test page	TestPageView		Testseite

@@ -30,7 +30,7 @@
 #define B_HAIKU_VERSION_1_PRE_BETA_1	0x00000401
 #define B_HAIKU_VERSION_1				0x00010000
 
-#define B_HAIKU_VERSION					B_HAIKU_VERSION_1_PRE_ALPHA_4
+#define B_HAIKU_VERSION					B_HAIKU_VERSION_1_PRE_BETA_1
 
 /* Haiku ABI */
 #define B_HAIKU_ABI_MAJOR				0xffff0000
@@ -45,7 +45,7 @@
 
 #if __GNUC__ == 2
 #	define B_HAIKU_ABI					B_HAIKU_ABI_GCC_2_HAIKU
-#elif __GNUC__ >= 4 && __GNUC__ <= 7
+#elif __GNUC__ >= 4 && __GNUC__ <= 8
 #	define B_HAIKU_ABI					B_HAIKU_ABI_GCC_4
 #else
 #	error Unsupported gcc version!

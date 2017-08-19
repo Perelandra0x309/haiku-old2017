@@ -303,6 +303,21 @@ if [ IsPackageAvailable freetype_devel ] {
 	Echo "Freetype support not available on $(TARGET_PACKAGING_ARCH)" ;
 }
 
+# fontconfig
+if [ IsPackageAvailable fontconfig_devel ] {
+	ExtractBuildFeatureArchives fontconfig :
+		file: base fontconfig
+			runtime: lib
+		file: devel fontconfig_devel
+			depends: base
+			library: $(developLibDir)/libfontconfig.so
+			headers: $(developHeadersDir) $(developHeadersDir)/fontconfig
+		;
+
+	EnableBuildFeatures fontconfig ;
+} else {
+	Echo "fontconfig support not available on $(TARGET_PACKAGING_ARCH)" ;
+}
 
 # Gutenprint
 if [ IsPackageAvailable gutenprint_devel ] {
@@ -425,15 +440,25 @@ if [ IsPackageAvailable libicns_devel ] {
 
 # Jasper
 if [ IsPackageAvailable jasper_devel ] {
-	ExtractBuildFeatureArchives jasper :
-		file: base jasper
-			runtime: lib
-		file: devel jasper_devel
-			depends: base
-			library: $(developLibDir)/libjasper.so.1
-			headers: $(developHeadersDir) $(developHeadersDir)/jasper
-		;
-
+	if $(HAIKU_PACKAGING_ARCH) = x86_64 {
+		ExtractBuildFeatureArchives jasper :
+			file: base jasper
+				runtime: lib
+			file: devel jasper_devel
+				depends: base
+				library: $(developLibDir)/libjasper.so.4
+				headers: $(developHeadersDir) $(developHeadersDir)/jasper
+			;
+	} else {
+		ExtractBuildFeatureArchives jasper :
+			file: base jasper
+				runtime: lib
+			file: devel jasper_devel
+				depends: base
+				library: $(developLibDir)/libjasper.so.1
+				headers: $(developHeadersDir) $(developHeadersDir)/jasper
+			;
+	}
 	EnableBuildFeatures jasper ;
 } else {
 	Echo "Jasper support not available on $(TARGET_PACKAGING_ARCH)" ;
@@ -553,14 +578,25 @@ if [ IsPackageAvailable tiff4_devel ] {
 
 # libwebp
 if [ IsPackageAvailable libwebp_devel ] {
-	ExtractBuildFeatureArchives libwebp :
-		file: base libwebp
-			runtime: lib
-		file: devel libwebp_devel
-			depends: base
-			library: $(developLibDir)/libwebp.so.6
-			headers: $(developHeadersDir) $(developHeadersDir)/webp
-		;
+	if $(HAIKU_PACKAGING_ARCH) = x86 && $(TARGET_PACKAGING_ARCH) = x86_gcc2 {
+		ExtractBuildFeatureArchives libwebp :
+			file: base libwebp
+				runtime: lib
+			file: devel libwebp_devel
+				depends: base
+				library: $(developLibDir)/libwebp.so.6
+				headers: $(developHeadersDir) $(developHeadersDir)/webp
+			;
+	} else {
+		ExtractBuildFeatureArchives libwebp :
+			file: base libwebp
+				runtime: lib
+			file: devel libwebp_devel
+				depends: base
+				library: $(developLibDir)/libwebp.so.7
+				headers: $(developHeadersDir) $(developHeadersDir)/webp
+			;
+	}
 
 	EnableBuildFeatures libwebp ;
 } else {
@@ -641,16 +677,5 @@ if $(TARGET_PACKAGING_ARCH) = x86_64 {
 	}
 }
 
-# GPL add-ons
-if $(HAIKU_INCLUDE_GPL_ADDONS) = 1 {
-	EnableBuildFeatures gpl ;
-}
-
-
-# ATA vs. IDE
-#HACK: remove when old ide code is removed!
-if $(HAIKU_ATA_STACK) = 1 {
-	EnableBuildFeatures ata ;
-} else {
-	EnableBuildFeatures ide ;
-}
+# ATA Drivers + Bus
+EnableBuildFeatures ata ;

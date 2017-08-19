@@ -6,6 +6,7 @@
 
 #include "PackageManager.h"
 
+#include <Catalog.h>
 #include <Notification.h>
 #include <package/DownloadFileRequest.h>
 #include <package/RefreshRepositoryRequest.h>
@@ -24,6 +25,8 @@
 #include "Root.h"
 #include "Volume.h"
 
+#undef B_TRANSLATION_CONTEXT
+#define B_TRANSLATION_CONTEXT "PackageManager"
 
 using BPackageKit::BManager::BPrivate::BAbortedByUserException;
 using BPackageKit::BManager::BPrivate::BFatalErrorException;
@@ -306,7 +309,8 @@ PackageManager::Warn(status_t error, const char* format, ...)
 		message << BString().SetToFormat(": %s", strerror(error));
 
 	BNotification notification(B_ERROR_NOTIFICATION);
-	notification.SetTitle("Package Daemon");
+	notification.SetGroup(B_TRANSLATE("Package daemon"));
+	notification.SetTitle(B_TRANSLATE("Warning"));
 	notification.SetContent(message);
 	notification.Send();
 }

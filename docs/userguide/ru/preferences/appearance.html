@@ -12,9 +12,10 @@
  * Translators:
  *		mrNoisy
  *		Rodastahm Islamov
- *		Diver
+ *		Sergei Reznikov
  *		Humdinger
  *		PoZorro
+ *		Akuji
  *
 -->
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
@@ -33,23 +34,23 @@
 <div class="inner">
 <ul class="lang-menu">
 <li class="now"><img src="../../images/flags/ru.png" alt="" /> Русский</li>
-<li><a href="../../fr/preferences/appearance.html"><img src="../../images/flags/fr.png" alt="" />Français</a></li>
-<li><a href="../../de/preferences/appearance.html"><img src="../../images/flags/de.png" alt="" />Deutsch</a></li>
-<li><a href="../../it/preferences/appearance.html"><img src="../../images/flags/it.png" alt="" />Italiano</a></li>
-<li><a href="../../es/preferences/appearance.html"><img src="../../images/flags/es.png" alt="" />Español</a></li>
-<li><a href="../../sv_SE/preferences/appearance.html"><img src="../../images/flags/sv_SE.png" alt="" />Svenska</a></li>
-<li><a href="../../jp/preferences/appearance.html"><img src="../../images/flags/jp.png" alt="" />日本語</a></li>
-<li><a href="../../uk/preferences/appearance.html"><img src="../../images/flags/uk.png" alt="" />Українська</a></li>
-<li><a href="../../zh_CN/preferences/appearance.html"><img src="../../images/flags/zh_CN.png" alt="" /> 中文 ［中文］</a></li>
-<li><a href="../../pt_PT/preferences/appearance.html"><img src="../../images/flags/pt_PT.png" alt="" />Português</a></li>
-<li><a href="../../fi/preferences/appearance.html"><img src="../../images/flags/fi.png" alt="" />Suomi</a></li>
-<li><a href="../../sk/preferences/appearance.html"><img src="../../images/flags/sk.png" alt="" />Slovenčina</a></li>
-<li><a href="../../hu/preferences/appearance.html"><img src="../../images/flags/hu.png" alt="" />Magyar</a></li>
-<li><a href="../../pt_BR/preferences/appearance.html"><img src="../../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
 <li><a href="../../ca/preferences/appearance.html"><img src="../../images/flags/ca.png" alt="" />Català</a></li>
-<li><a href="../../pl/preferences/appearance.html"><img src="../../images/flags/pl.png" alt="" />Polski</a></li>
-<li><a href="../../ro/preferences/appearance.html"><img src="../../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../../de/preferences/appearance.html"><img src="../../images/flags/de.png" alt="" />Deutsch</a></li>
 <li><a href="../../en/preferences/appearance.html"><img src="../../images/flags/gb.png" alt="" />English</a></li>
+<li><a href="../../es/preferences/appearance.html"><img src="../../images/flags/es.png" alt="" />Español</a></li>
+<li><a href="../../fr/preferences/appearance.html"><img src="../../images/flags/fr.png" alt="" />Français</a></li>
+<li><a href="../../it/preferences/appearance.html"><img src="../../images/flags/it.png" alt="" />Italiano</a></li>
+<li><a href="../../hu/preferences/appearance.html"><img src="../../images/flags/hu.png" alt="" />Magyar</a></li>
+<li><a href="../../pl/preferences/appearance.html"><img src="../../images/flags/pl.png" alt="" />Polski</a></li>
+<li><a href="../../pt_PT/preferences/appearance.html"><img src="../../images/flags/pt_PT.png" alt="" />Português</a></li>
+<li><a href="../../pt_BR/preferences/appearance.html"><img src="../../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
+<li><a href="../../ro/preferences/appearance.html"><img src="../../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../../sk/preferences/appearance.html"><img src="../../images/flags/sk.png" alt="" />Slovenčina</a></li>
+<li><a href="../../fi/preferences/appearance.html"><img src="../../images/flags/fi.png" alt="" />Suomi</a></li>
+<li><a href="../../sv_SE/preferences/appearance.html"><img src="../../images/flags/sv_SE.png" alt="" />Svenska</a></li>
+<li><a href="../../zh_CN/preferences/appearance.html"><img src="../../images/flags/zh_CN.png" alt="" /> 中文 ［中文］</a></li>
+<li><a href="../../uk/preferences/appearance.html"><img src="../../images/flags/uk.png" alt="" />Українська</a></li>
+<li><a href="../../jp/preferences/appearance.html"><img src="../../images/flags/jp.png" alt="" />日本語</a></li>
 </ul>
 <span>
     <a href="../preferences.html" class="uplink">Настройки</a> 
@@ -59,7 +60,6 @@
 
 <div id="content">
 <div>
-<div class="box-info">Перевод этой страницы еще не завершен. Пока это не произойдет, незавершенные части будут на английском.</div>
 
 <h2><img src="../../images/prefs-images/appearance-icon_64.png" alt="appearance-icon_64.png" width="64" height="64" />Внешний вид</h2>
 <table summary="quickinfo" border="0" cellspacing="0" cellpadding="2">
@@ -79,10 +79,11 @@
 <h3>
 <a href="#"><img src="../../images/up.png" style="border:none;float:right" alt="index" /></a>
 <a id="installing_fonts" name="installing_fonts">Установка новых шрифтов</a></h3>
-<p>New fonts that don't come as part of a regular .hpkg package, can be installed by copying them into a subfolder according to the font type (<tt>psfonts</tt> or <tt>ttfonts</tt>) into their respective <tt>non-packaged</tt> folder (see topic <a href="../filesystem-layout.html">Filesystem layout</a>). For TrueType fonts that would be:</p>
+<p>Новые шрифты, не являющиеся частью стандартного пакета .hpkg, могут быть установлены путем их копирования в соответствующую папку <tt>non-packaged</tt> в зависимости от их типа (<tt>psfonts</tt> или <tt>ttfonts</tt>)
+(см. также раздел <a href="../filesystem-layout.html">Структура файловой системы</a>). Для шрифтов TrueType это:</p>
 <table summary="layout" border="0" cellspacing="0" cellpadding="2">
-<tr><td><span class="path">/boot/system/non-packaged/data/fonts/ttfonts/</span></td><td>   </td><td> for fonts available to every user.</td></tr>
-<tr><td><span class="path">/boot/home/config/non-packaged/data/fonts/ttfonts/</span></td><td>   </td><td> for fonts only available to yourself.</td></tr>
+<tr><td><span class="path">/boot/system/non-packaged/data/fonts/ttfonts/</span></td><td>   </td><td>для шрифтов, доступных каждому пользователю.</td></tr>
+<tr><td><span class="path">/boot/home/config/non-packaged/data/fonts/ttfonts/</span></td><td>   </td><td>для шрифтов, доступных лишь вам.</td></tr>
 </table>
 
 <h2>
@@ -96,7 +97,7 @@
 <a id="decorators" name="decorators">Декораторы окон</a></h2>
 <img src="../images/prefs-images/appearance-decorators.png" alt="appearance-decorators.png" />
 <p>Декораторы определяют внешний вид окон и всех элелементов пользовательского интерфейса. Сейчас Haiku имеет по умолчанию только один декоратор. Если Вы найдете и установите другие декораторы, Вы сможете выбрать их в данном меню.</p>
-<p>Haiku's default decorator lets you set the arrow style of the scroll bar: either single arrows at the end of scrollbars to conserve a bit of space, or double arrows — the traditional BeOS way — potentially saving some mouse moving when scrolling up and down or left and right...</p>
+<p>Базовый декоратор Haiku позволяет вам настроить стиль стрелок у полосы прокрутки: либо одна стрелка с каждой стороны, либо две (как у BeOS), позволяющие потенциально уменьшить движение мыши при горизонтальной или вертикальной прокрутке.</p>
 
 <h2>
 <a href="#"><img src="../../images/up.png" style="border:none;float:right" alt="index" /></a>

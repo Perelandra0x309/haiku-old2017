@@ -16,7 +16,7 @@ licenses {
 }
 
 provides {
-	haiku=%HAIKU_VERSION% compat>=R1~alpha1
+	haiku=%HAIKU_VERSION% compat>=R1~alpha4_pm_hrev51198
 	cmd:arp
 	cmd:bc
 	cmd:chop
@@ -61,8 +61,11 @@ requires {
 	cmd:unzip
 #endif
 	lib:libcurl
-	lib:libgcc_s
+#ifdef HAIKU_BUILD_FEATURE_X86_64_FONTCONFIG_ENABLED
+	lib:libfontconfig
+#endif
 	lib:libfreetype
+	lib:libgcc_s
 	lib:libicudata >= 57
 	lib:libicui18n >= 57
 	lib:libicuio >= 57
@@ -118,5 +121,6 @@ requires {
 	lib:libstdc++
 	lib:libsupc++
 	lib:libz
-	vl_gothic
+	noto
+	noto_sans_cjk_jp
 }

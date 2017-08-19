@@ -27,10 +27,10 @@ BinCommand ppp_up :
 	PPPStatusWindow.cpp
 	PPPUpApplication.cpp
 	:
-	libppp.a be $(TARGET_LIBSUPC++) translation $(HAIKU_LOCALE_LIBS) root $(TARGET_NETWORK_LIBS)
+	be libppp.a [ TargetLibsupc++ ] translation $(HAIKU_LOCALE_LIBS) libbsd.so $(TARGET_NETWORK_LIBS)
 ;
 
 # Installation
-HaikuInstall install-networking
-	: /boot/beos/bin
-	: ppp_up ;
+HaikuInstall install-ppp
+    : /boot/home/config/non-packaged/bin
+    : ppp_up ;

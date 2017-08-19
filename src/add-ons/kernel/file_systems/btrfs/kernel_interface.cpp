@@ -5,17 +5,6 @@
  */
 
 
-#include <dirent.h>
-#include <util/kernel_cpp.h>
-#include <string.h>
-
-#include <AutoDeleter.h>
-#include <fs_cache.h>
-#include <fs_info.h>
-#include <io_requests.h>
-#include <NodeMonitor.h>
-#include <util/AutoLock.h>
-
 #include "Attribute.h"
 #include "AttributeIterator.h"
 #include "btrfs.h"
@@ -68,14 +57,14 @@ iterative_io_finished_hook(void* cookie, io_request* request, status_t status,
 
 
 static float
-btrfs_identify_partition(int fd, partition_data *partition, void **_cookie)
+btrfs_identify_partition(int fd, partition_data* partition, void** _cookie)
 {
 	btrfs_super_block superBlock;
 	status_t status = Volume::Identify(fd, &superBlock);
 	if (status != B_OK)
 		return -1;
 
-	identify_cookie *cookie = new identify_cookie;
+	identify_cookie* cookie = new identify_cookie;
 	memcpy(&cookie->super_block, &superBlock, sizeof(btrfs_super_block));
 
 	*_cookie = cookie;
@@ -84,9 +73,9 @@ btrfs_identify_partition(int fd, partition_data *partition, void **_cookie)
 
 
 static status_t
-btrfs_scan_partition(int fd, partition_data *partition, void *_cookie)
+btrfs_scan_partition(int fd, partition_data* partition, void* _cookie)
 {
-	identify_cookie *cookie = (identify_cookie *)_cookie;
+	identify_cookie* cookie = (identify_cookie*)_cookie;
 
 	partition->status = B_PARTITION_VALID;
 	partition->flags |= B_PARTITION_FILE_SYSTEM;
@@ -138,9 +127,9 @@ btrfs_mount(fs_volume* _volume, const char* device, uint32 flags,
 
 
 static status_t
-btrfs_unmount(fs_volume *_volume)
+btrfs_unmount(fs_volume* _volume)
 {
-	Volume* volume = (Volume *)_volume->private_volume;
+	Volume* volume = (Volume*)_volume->private_volume;
 
 	status_t status = volume->Unmount();
 	delete volume;
@@ -186,18 +175,18 @@ btrfs_get_vnode(fs_volume* _volume, ino_t id, fs_vnode* _node, int* _type,
 		return B_NO_MEMORY;
 
 	status_t status = inode->InitCheck();
-	if (status != B_OK)
+	if (status != B_OK) {
 		delete inode;
-
-	if (status == B_OK) {
-		_node->private_node = inode;
-		_node->ops = &gBtrfsVnodeOps;
-		*_type = inode->Mode();
-		*_flags = 0;
-	} else
 		ERROR("get_vnode: InitCheck() failed. Error: %s\n", strerror(status));
+		return status;
+	}
 
-	return status;
+	_node->private_node = inode;
+	_node->ops = &gBtrfsVnodeOps;
+	*_type = inode->Mode();
+	*_flags = 0;
+
+	return B_OK;
 }
 
 
@@ -266,7 +255,7 @@ btrfs_io(fs_volume* _volume, fs_vnode* _node, void* _cookie, io_request* request
 	Volume* volume = (Volume*)_volume->private_volume;
 	Inode* inode = (Inode*)_node->private_node;
 
-#ifndef BTRFS_SHELL
+#ifndef FS_SHELL
 	if (io_request_is_write(request) && volume->IsReadOnly()) {
 		notify_io_request(request, B_READ_ONLY_DEVICE);
 		return B_READ_ONLY_DEVICE;
@@ -274,7 +263,7 @@ btrfs_io(fs_volume* _volume, fs_vnode* _node, void* _cookie, io_request* request
 #endif
 
 	if (inode->FileCache() == NULL) {
-#ifndef BTRFS_SHELL
+#ifndef FS_SHELL
 		notify_io_request(request, B_BAD_VALUE);
 #endif
 		return B_BAD_VALUE;
@@ -452,7 +441,7 @@ btrfs_read(fs_volume* _volume, fs_vnode* _node, void* _cookie, off_t pos,
 
 
 static status_t
-btrfs_close(fs_volume *_volume, fs_vnode *_node, void *_cookie)
+btrfs_close(fs_volume* _volume, fs_vnode* _node, void* _cookie)
 {
 	return B_OK;
 }
@@ -482,8 +471,8 @@ btrfs_access(fs_volume* _volume, fs_vnode* _node, int accessMode)
 
 
 static status_t
-btrfs_read_link(fs_volume *_volume, fs_vnode *_node, char *buffer,
-	size_t *_bufferSize)
+btrfs_read_link(fs_volume* _volume, fs_vnode* _node, char* buffer,
+	size_t* _bufferSize)
 {
 	Inode* inode = (Inode*)_node->private_node;
 	return inode->ReadAt(0, (uint8*)buffer, _bufferSize);
@@ -516,8 +505,8 @@ btrfs_open_dir(fs_volume* /*_volume*/, fs_vnode* _node, void** _cookie)
 
 
 static status_t
-btrfs_read_dir(fs_volume *_volume, fs_vnode *_node, void *_cookie,
-	struct dirent *dirent, size_t bufferSize, uint32 *_num)
+btrfs_read_dir(fs_volume* _volume, fs_vnode* _node, void* _cookie,
+	struct dirent* dirent, size_t bufferSize, uint32* _num)
 {
 	DirectoryIterator* iterator = (DirectoryIterator*)_cookie;
 	Volume* volume = (Volume*)_volume->private_volume;
@@ -560,7 +549,7 @@ btrfs_read_dir(fs_volume *_volume, fs_vnode *_node, void *_cookie,
 
 
 static status_t
-btrfs_rewind_dir(fs_volume * /*_volume*/, fs_vnode * /*node*/, void *_cookie)
+btrfs_rewind_dir(fs_volume* /*_volume*/, fs_vnode* /*node*/, void* _cookie)
 {
 	DirectoryIterator* iterator = (DirectoryIterator*)_cookie;
 
@@ -576,7 +565,7 @@ btrfs_close_dir(fs_volume * /*_volume*/, fs_vnode * /*node*/, void * /*_cookie*/
 
 
 static status_t
-btrfs_free_dir_cookie(fs_volume *_volume, fs_vnode *_node, void *_cookie)
+btrfs_free_dir_cookie(fs_volume* _volume, fs_vnode* _node, void* _cookie)
 {
 	delete (DirectoryIterator*)_cookie;
 	return B_OK;
@@ -584,7 +573,7 @@ btrfs_free_dir_cookie(fs_volume *_volume, fs_vnode *_node, void *_cookie)
 
 
 static status_t
-btrfs_open_attr_dir(fs_volume *_volume, fs_vnode *_node, void **_cookie)
+btrfs_open_attr_dir(fs_volume* _volume, fs_vnode* _node, void** _cookie)
 {
 	Inode* inode = (Inode*)_node->private_node;
 	TRACE("%s()\n", __FUNCTION__);
@@ -634,7 +623,9 @@ btrfs_read_attr_dir(fs_volume* _volume, fs_vnode* _node,
 	if (status == B_ENTRY_NOT_FOUND) {
 		*_num = 0;
 		return B_OK;
-	} else if (status != B_OK)
+	}
+
+	if (status != B_OK)
 		return status;
 
 	Volume* volume = (Volume*)_volume->private_volume;
@@ -716,7 +707,6 @@ btrfs_write_attr(fs_volume* _volume, fs_vnode* _node, void* cookie,
 }
 
 
-
 static status_t
 btrfs_read_attr_stat(fs_volume* _volume, fs_vnode* _node,
 	void* _cookie, struct stat* stat)
@@ -751,6 +741,23 @@ btrfs_remove_attr(fs_volume* _volume, fs_vnode* vnode,
 	const char* name)
 {
 	return EROFS;
+}
+
+//	#pragma mark -
+
+
+static status_t
+btrfs_std_ops(int32 op, ...)
+{
+	switch (op) {
+		case B_MODULE_INIT:
+			return B_OK;
+		case B_MODULE_UNINIT:
+			return B_OK;
+
+		default:
+			return B_ERROR;
+	}
 }
 
 
@@ -840,7 +847,7 @@ static file_system_module_info sBtrfsFileSystem = {
 	{
 		"file_systems/btrfs" B_CURRENT_FS_API_VERSION,
 		0,
-		NULL,
+		btrfs_std_ops,
 	},
 
 	"btrfs",						// short_name
@@ -855,11 +862,32 @@ static file_system_module_info sBtrfsFileSystem = {
 
 	&btrfs_mount,
 
+
+	/* capability querying operations */
 	NULL,
+
+	NULL,	// validate_resize
+	NULL,	// validate_move
+	NULL,	// validate_set_content_name
+	NULL,	// validate_set_content_parameters
+	NULL,	// validate_initialize,
+
+	/* shadow partition modification */
+	NULL,	// shadow_changed
+
+	/* writing */
+	NULL,	// defragment
+	NULL,	// repair
+	NULL,	// resize
+	NULL,	// move
+	NULL,	// set_content_name
+	NULL,	// set_content_parameters
+	NULL,	// initialize
+	NULL	// unitialize
 };
 
 
-module_info *modules[] = {
-	(module_info *)&sBtrfsFileSystem,
+module_info* modules[] = {
+	(module_info*)&sBtrfsFileSystem,
 	NULL,
 };

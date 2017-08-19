@@ -22,11 +22,7 @@
 
 #include <arpa/inet.h>
 
-#if USE_SSL
-#include <openssl/md5.h>
-#else
 #include "md5.h"
-#endif
 
 #include <Alert.h>
 #include <Catalog.h>
@@ -607,7 +603,7 @@ POP3Protocol::RetrieveInternal(const char* command, int32 message,
 		if (result == B_TIMED_OUT) {
 			// No data available, even after waiting a minute.
 			fLog = "POP3 timeout - no data received after a long wait.";
-			return B_ERROR;
+			return B_TIMED_OUT;
 		}
 		if (amountToReceive > bufSize - 1 - amountInBuffer)
 			amountToReceive = bufSize - 1 - amountInBuffer;
@@ -814,15 +810,11 @@ POP3Protocol::MD5Digest(unsigned char* in, char* asciiDigest)
 {
 	unsigned char digest[16];
 
-#ifdef USE_SSL
-	MD5(in, ::strlen((char*)in), digest);
-#else
 	MD5_CTX context;
 
 	MD5Init(&context);
 	MD5Update(&context, in, ::strlen((char*)in));
 	MD5Final(digest, &context);
-#endif
 
 	for (int i = 0;  i < 16;  i++) {
 		sprintf(asciiDigest + 2 * i, "%02x", digest[i]);

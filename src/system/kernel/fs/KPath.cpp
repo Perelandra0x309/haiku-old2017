@@ -1,9 +1,12 @@
 /*
  * Copyright 2004-2008, Ingo Weinhold, ingo_weinhold@gmx.de.
+ * Copyright 2008-2017, Axel Dörfler, axeld@pinc-software.de.
  * Distributed under the terms of the MIT License.
  */
 
-/** A simple class wrapping a path. Has a fixed-sized buffer. */
+
+/*! A simple class wrapping a path. Has a fixed-sized buffer. */
+
 
 #include <fs/KPath.h>
 
@@ -24,20 +27,26 @@ KPath::KPath(size_t bufferSize)
 	fBuffer(NULL),
 	fBufferSize(0),
 	fPathLength(0),
-	fLocked(false)
+	fLocked(false),
+	fLazy(false),
+	fFailed(false),
+	fIsNull(false)
 {
-	SetTo(NULL, false, bufferSize);
+	SetTo(NULL, DEFAULT, bufferSize);
 }
 
 
-KPath::KPath(const char* path, bool normalize, size_t bufferSize)
+KPath::KPath(const char* path, int32 flags, size_t bufferSize)
 	:
 	fBuffer(NULL),
 	fBufferSize(0),
 	fPathLength(0),
-	fLocked(false)
+	fLocked(false),
+	fLazy(false),
+	fFailed(false),
+	fIsNull(false)
 {
-	SetTo(path, normalize, bufferSize);
+	SetTo(path, flags, bufferSize);
 }
 
 
@@ -46,7 +55,10 @@ KPath::KPath(const KPath& other)
 	fBuffer(NULL),
 	fBufferSize(0),
 	fPathLength(0),
-	fLocked(false)
+	fLocked(false),
+	fLazy(false),
+	fFailed(false),
+	fIsNull(false)
 {
 	*this = other;
 }
@@ -59,31 +71,31 @@ KPath::~KPath()
 
 
 status_t
-KPath::SetTo(const char* path, bool normalize, size_t bufferSize,
-	bool traverseLeafLink)
+KPath::SetTo(const char* path, int32 flags, size_t bufferSize)
 {
 	if (bufferSize == 0)
 		bufferSize = B_PATH_NAME_LENGTH;
 
 	// free the previous buffer, if the buffer size differs
-	if (fBuffer && fBufferSize != bufferSize) {
+	if (fBuffer != NULL && fBufferSize != bufferSize) {
 		free(fBuffer);
 		fBuffer = NULL;
 		fBufferSize = 0;
 	}
+
 	fPathLength = 0;
 	fLocked = false;
+	fBufferSize = bufferSize;
+	fLazy = (flags & LAZY_ALLOC) != 0;
+	fIsNull = path == NULL;
 
-	// allocate buffer
-	if (!fBuffer)
-		fBuffer = (char*)malloc(bufferSize);
-	if (!fBuffer)
-		return B_NO_MEMORY;
-	if (fBuffer) {
-		fBufferSize = bufferSize;
-		fBuffer[0] = '\0';
+	if (path != NULL || !fLazy) {
+		status_t status = _AllocateBuffer();
+		if (status != B_OK)
+			return status;
 	}
-	return SetPath(path, normalize, traverseLeafLink);
+
+	return SetPath(path, flags);
 }
 
 
@@ -94,35 +106,62 @@ KPath::Adopt(KPath& other)
 
 	fBuffer = other.fBuffer;
 	fBufferSize = other.fBufferSize;
+	fPathLength = other.fPathLength;
+	fLazy = other.fLazy;
+	fFailed = other.fFailed;
+	fIsNull = other.fIsNull;
 
 	other.fBuffer = NULL;
+	if (!other.fLazy)
+		other.fBufferSize = 0;
+	other.fPathLength = 0;
+	other.fFailed = false;
+	other.fIsNull = other.fLazy;
 }
 
 
 status_t
 KPath::InitCheck() const
 {
-	return fBuffer ? B_OK : B_NO_MEMORY;
+	if (fBuffer != NULL || (fLazy && !fFailed && fBufferSize != 0))
+		return B_OK;
+
+	return fFailed ? B_NO_MEMORY : B_NO_INIT;
 }
 
 
+/*!	\brief Sets the buffer to \a path.
+
+	\param flags Understands the following two options:
+		- \c NORMALIZE
+		- \c TRAVERSE_LEAF_LINK
+*/
 status_t
-KPath::SetPath(const char* path, bool normalize, bool traverseLeafLink)
+KPath::SetPath(const char* path, int32 flags)
 {
-	if (fBuffer == NULL)
-		return B_NO_INIT;
+	if (path == NULL && fLazy && fBuffer == NULL) {
+		fIsNull = true;
+		return B_OK;
+	}
+
+	if (fBuffer == NULL) {
+		if (fLazy) {
+			status_t status = _AllocateBuffer();
+			if (status != B_OK)
+				return B_NO_MEMORY;
+		} else
+			return B_NO_INIT;
+	}
+
+	fIsNull = false;
 
 	if (path != NULL) {
-		if (normalize) {
+		if ((flags & NORMALIZE) != 0) {
 			// normalize path
-			status_t error = vfs_normalize_path(path, fBuffer, fBufferSize,
-				traverseLeafLink,
-				team_get_kernel_team_id() == team_get_current_team_id());
-			if (error != B_OK) {
-				SetPath(NULL);
-				return error;
-			}
-			fPathLength = strlen(fBuffer);
+			status_t status = _Normalize(path,
+				(flags & TRAVERSE_LEAF_LINK) != 0);
+			if (status != B_OK)
+				return status;
 		} else {
 			// don't normalize path
 			size_t length = strlen(path);
@@ -136,6 +175,8 @@ KPath::SetPath(const char* path, bool normalize, bool traverseLeafLink)
 	} else {
 		fBuffer[0] = '\0';
 		fPathLength = 0;
+		if (fLazy)
+			fIsNull = true;
 	}
 	return B_OK;
 }
@@ -144,17 +185,31 @@ KPath::SetPath(const char* path, bool normalize, bool traverseLeafLink)
 const char*
 KPath::Path() const
 {
-	return fBuffer;
+	return fIsNull ? NULL : fBuffer;
 }
 
 
+/*!	\brief Locks the buffer for external changes.
+
+	\param force In lazy mode, this will allocate a buffer when set.
+		Otherwise, \c NULL will be returned if set to NULL.
+*/
 char*
-KPath::LockBuffer()
+KPath::LockBuffer(bool force)
 {
+	if (fBuffer == NULL && fLazy) {
+		if (fIsNull && !force)
+			return NULL;
+
+		_AllocateBuffer();
+	}
+
 	if (fBuffer == NULL || fLocked)
 		return NULL;
 
 	fLocked = true;
+	fIsNull = false;
+
 	return fBuffer;
 }
 
@@ -166,7 +221,12 @@ KPath::UnlockBuffer()
 		TRACE(("KPath::UnlockBuffer(): ERROR: Buffer not locked!\n"));
 		return;
 	}
+
 	fLocked = false;
+
+	if (fBuffer == NULL)
+		return;
+
 	fPathLength = strnlen(fBuffer, fBufferSize);
 	if (fPathLength == fBufferSize) {
 		TRACE(("KPath::UnlockBuffer(): WARNING: Unterminated buffer!\n"));
@@ -184,7 +244,6 @@ KPath::DetachBuffer()
 
 	if (fBuffer != NULL) {
 		fBuffer = NULL;
-		fBufferSize = 0;
 		fPathLength = 0;
 		fLocked = false;
 	}
@@ -196,17 +255,14 @@ KPath::DetachBuffer()
 const char*
 KPath::Leaf() const
 {
-	if (!fBuffer)
+	if (fBuffer == NULL)
 		return NULL;
 
-	// only "/" has trailing slashes -- then we have to return the complete
-	// buffer, as we have to do in case there are no slashes at all
-	if (fPathLength != 1 || fBuffer[0] != '/') {
-		for (int32 i = fPathLength - 1; i >= 0; i--) {
-			if (fBuffer[i] == '/')
-				return fBuffer + i + 1;
-		}
+	for (int32 i = fPathLength - 1; i >= 0; i--) {
+		if (fBuffer[i] == '/')
+			return fBuffer + i + 1;
 	}
+
 	return fBuffer;
 }
 
@@ -215,7 +271,7 @@ status_t
 KPath::ReplaceLeaf(const char* newLeaf)
 {
 	const char* leaf = Leaf();
-	if (!leaf)
+	if (leaf == NULL)
 		return B_NO_INIT;
 
 	int32 leafIndex = leaf - fBuffer;
@@ -227,7 +283,7 @@ KPath::ReplaceLeaf(const char* newLeaf)
 	}
 
 	// if a leaf was given, append it
-	if (newLeaf)
+	if (newLeaf != NULL)
 		return Append(newLeaf);
 	return B_OK;
 }
@@ -238,7 +294,7 @@ KPath::RemoveLeaf()
 {
 	// get the leaf -- bail out, if not initialized or only the "/" is left
 	const char* leaf = Leaf();
-	if (!leaf || leaf == fBuffer)
+	if (leaf == NULL || leaf == fBuffer || leaf[0] == '\0')
 		return false;
 
 	// chop off the leaf
@@ -293,25 +349,15 @@ KPath::Normalize(bool traverseLeafLink)
 	if (fPathLength == 0)
 		return B_BAD_VALUE;
 
-	status_t error = vfs_normalize_path(fBuffer, fBuffer, fBufferSize,
-		traverseLeafLink,
-		team_get_kernel_team_id() == team_get_current_team_id());
-	if (error != B_OK) {
-		// vfs_normalize_path() might have screwed up the previous path -- unset
-		// it completely to avoid weird problems.
-		fBuffer[0] = '\0';
-		fPathLength = 0;
-	}
-
-	fPathLength = strlen(fBuffer);
-	return B_OK;
+	return _Normalize(fBuffer, traverseLeafLink);
 }
 
 
 KPath&
 KPath::operator=(const KPath& other)
 {
-	SetTo(other.fBuffer, false, other.fBufferSize);
+	SetTo(other.fBuffer, fLazy ? KPath::LAZY_ALLOC : KPath::DEFAULT,
+		other.fBufferSize);
 	return *this;
 }
 
@@ -319,7 +365,7 @@ KPath::operator=(const KPath& other)
 KPath&
 KPath::operator=(const char* path)
 {
-	SetTo(path);
+	SetPath(path);
 	return *this;
 }
 
@@ -327,22 +373,22 @@ KPath::operator=(const char* path)
 bool
 KPath::operator==(const KPath& other) const
 {
-	if (!fBuffer)
+	if (fBuffer == NULL)
 		return !other.fBuffer;
 
-	return (other.fBuffer
+	return other.fBuffer != NULL
 		&& fPathLength == other.fPathLength
-		&& strcmp(fBuffer, other.fBuffer) == 0);
+		&& strcmp(fBuffer, other.fBuffer) == 0;
 }
 
 
 bool
 KPath::operator==(const char* path) const
 {
-	if (!fBuffer)
-		return (!path);
+	if (fBuffer == NULL)
+		return path == NULL;
 
-	return path && !strcmp(fBuffer, path);
+	return path != NULL && strcmp(fBuffer, path) == 0;
 }
 
 
@@ -360,10 +406,45 @@ KPath::operator!=(const char* path) const
 }
 
 
+status_t
+KPath::_AllocateBuffer()
+{
+	if (fBuffer == NULL && fBufferSize != 0)
+		fBuffer = (char*)malloc(fBufferSize);
+	if (fBuffer == NULL) {
+		fFailed = true;
+		return B_NO_MEMORY;
+	}
+
+	fBuffer[0] = '\0';
+	fFailed = false;
+	return B_OK;
+}
+
+
+status_t
+KPath::_Normalize(const char* path, bool traverseLeafLink)
+{
+	status_t error = vfs_normalize_path(path, fBuffer, fBufferSize,
+		traverseLeafLink,
+		team_get_kernel_team_id() == team_get_current_team_id());
+	if (error != B_OK) {
+		// vfs_normalize_path() might have screwed up the previous
+		// path -- unset it completely to avoid weird problems.
+		fBuffer[0] = '\0';
+		fPathLength = 0;
+		return error;
+	}
+
+	fPathLength = strlen(fBuffer);
+	return B_OK;
+}
+
+
 void
 KPath::_ChopTrailingSlashes()
 {
-	if (fBuffer) {
+	if (fBuffer != NULL) {
 		while (fPathLength > 1 && fBuffer[fPathLength - 1] == '/')
 			fBuffer[--fPathLength] = '\0';
 	}

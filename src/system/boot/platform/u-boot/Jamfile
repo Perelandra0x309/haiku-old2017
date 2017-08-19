@@ -11,10 +11,6 @@ UsePrivateHeaders [ FDirName graphics vesa ] ;
 UsePrivateHeaders [ FDirName storage ] ;
 UsePrivateHeaders [ FDirName kernel arch generic ] ;
 
-# TODO: move this to arch/arm !
-
-UsePrivateHeaders [ FDirName kernel arch $(TARGET_KERNEL_ARCH) board $(TARGET_BOOT_BOARD) ] ;
-
 {
 	local defines = _BOOT_MODE ;
 
@@ -159,13 +155,13 @@ actions BuildUImageScript1
 # requires mtools package on linux
 rule BuildUBootSDImage image : files
 {
-	Depends $(image) : $(files) ;
+	Depends $(image) : $(files) $(TARGET_DEVICE_TREES) ;
 	SDIMAGE_BLOCK_SIZE on $(image) = 1048576 ; # 1MiB
 	SDIMAGE_MTOOLS_H on $(image) = 255 ;
 	SDIMAGE_MTOOLS_S on $(image) = 63 ;
 	SDIMAGE_MTOOLS_C on $(image) = 8 ;
-	SDIMAGE_SIZE on $(image) = $(HAIKU_BOARD_SDIMAGE_SIZE) ;
-	SDIMAGE_BEGIN on $(image) = $(HAIKU_BOARD_SDIMAGE_BEGIN:E=63) ;
+	SDIMAGE_SIZE on $(image) = $(HAIKU_BOOT_SDIMAGE_SIZE) ;
+	SDIMAGE_BEGIN on $(image) = $(HAIKU_BOOT_SDIMAGE_BEGIN:E=63) ;
 	BuildUBootSDImage1 $(image) : $(files) ;
 }
 
@@ -193,8 +189,12 @@ actions BuildUBootSDImage1
 	# populate
 	MTOOLSRC=$(1).mtools mcopy $(2[1-]) i:
 	MTOOLSRC=$(1).mtools mcopy uEnv.txt i:
+	# populate fdts
+	MTOOLSRC=$(1).mtools mmd i:\fdt
+	MTOOLSRC=$(1).mtools mcopy $(TARGET_DEVICE_TREES[1-]) i:\fdt\
 	# list content
 	MTOOLSRC=$(1).mtools mdir i:
+	MTOOLSRC=$(1).mtools mdir i:\fdt
 	# cleanup
 	$(RM) $(1).mtools
 	$(RM) uEnv.txt
@@ -230,33 +230,17 @@ actions BlessSDImage1 bind HAIKU_BOARD_SDIMAGE_BOOT0_SEEK HAIKU_BOARD_SDIMAGE_BO
 	fi
 }
 
+HAIKU_BOOT_LOADER_ENTRY_LINUX = `printf \"obase=16;ibase=16;10 + %x\\n\" $(HAIKU_BOOT_LOADER_BASE)|bc` ;
 
 # uimage targets
-BuildUImage haiku_loader.ub : haiku_loader :
-	-A $(TARGET_ARCH) -O $(uImageFakeOS) -T kernel -C none
-	-a $(HAIKU_BOARD_LOADER_BASE) -e $(HAIKU_BOARD_LOADER_ENTRY_RAW)
-		-n 'haiku_loader $(TARGET_BOOT_BOARD)' ;
-
-local tgzArchive = haiku-floppyboot.tgz ;
-
-BuildUImage $(tgzArchive).ub : $(tgzArchive) :
+BuildUImage haiku-floppyboot.tgz.ub : haiku-floppyboot.tgz :
 	-A $(TARGET_ARCH) -O linux -T ramdisk -C none
-		-n '$(tgzArchive) $(TARGET_BOOT_BOARD)' ;
+		-n 'Haiku $(TARGET_KERNEL_ARCH) floppyboot' ;
 
-BuildUImage haiku_loader_linux.ub : haiku_loader :
+BuildUImage haiku_loader.ub : haiku_loader :
 	-A $(TARGET_ARCH) -O linux -T kernel -C none
-	-a $(HAIKU_BOARD_LOADER_BASE) -e $(HAIKU_BOARD_LOADER_ENTRY_LINUX)
-		-n 'haiku_loader $(TARGET_BOOT_BOARD)' ;
-
-if $(HAIKU_BOARD_FDT_NAME) {
-	local fdtBinary = $(HAIKU_BOARD_FDT_NAME).dtb ;
-	CompileDTS $(fdtBinary) : [ FDirName $(HAIKU_TOP) src data dts arch $(TARGET_ARCH) $(HAIKU_BOARD_FDT_NAME).dts ] ;
-
-	BuildUImage haiku_loader_nbsd.ub : haiku_loader $(tgzArchive) $(fdtBinary) :
-		-A $(TARGET_ARCH) -O $(uImageFakeOS) -T multi -C none
-		-a $(HAIKU_BOARD_LOADER_BASE) -e $(HAIKU_BOARD_LOADER_ENTRY_NBSD)
-			-n 'haiku_loader $(TARGET_BOOT_BOARD)' ;
-}
+	-a $(HAIKU_BOOT_LOADER_BASE) -e $(HAIKU_BOOT_LOADER_ENTRY_LINUX)
+		-n 'Haiku $(TARGET_KERNEL_ARCH) loader' ;
 
 if $(HAIKU_BOARD_SDIMAGE_UBOOT_SCRIPT_NAME) {
 	BuildUImageScript $(HAIKU_BOARD_SDIMAGE_UBOOT_SCRIPT_NAME) :
@@ -265,26 +249,27 @@ if $(HAIKU_BOARD_SDIMAGE_UBOOT_SCRIPT_NAME) {
 
 # flash image targets
 
-BuildUBootFlashImage haiku-$(HAIKU_BOOT_BOARD)_flash_image_raw.img : haiku_loader :
+BuildUBootFlashImage haiku-$(TARGET_KERNEL_ARCH)_flash_image_raw.img : haiku_loader :
 	$(FLASH_IMAGE_PARTS) ;
 NotFile haiku-flash-image ;
-Depends haiku-flash-image : haiku-$(HAIKU_BOOT_BOARD)_flash_image_raw.img ;
+Depends haiku-flash-image : haiku-$(TARGET_KERNEL_ARCH)_flash_image_raw.img ;
 
-#BuildUBootFlashImage haiku-$(HAIKU_BOOT_BOARD)_flash_image_elf.img : boot_loader_u-boot :
+#BuildUBootFlashImage haiku-$(TARGET_KERNEL_ARCH)_flash_image_elf.img : boot_loader_u-boot :
 #	$(FLASH_IMAGE_PARTS) ;
 #NotFile haiku-flash-elf-image ;
-#Depends haiku-flash-elf-image : haiku-$(HAIKU_BOOT_BOARD)_flash_image_elf.img ;
+#Depends haiku-flash-elf-image : haiku-$(TARGET_KERNEL_ARCH)_flash_image_elf.img ;
 
-BuildUBootFlashImage haiku-$(HAIKU_BOOT_BOARD)_flash_image_uimage.img : haiku_loader.ub :
+BuildUBootFlashImage haiku-$(TARGET_KERNEL_ARCH)_flash_image_uimage.img : haiku_loader.ub :
 	$(FLASH_IMAGE_PARTS) ;
 NotFile haiku-flash-uimage ;
-Depends haiku-flash-uimage : haiku-$(HAIKU_BOOT_BOARD)_flash_image_uimage.img ;
+Depends haiku-flash-uimage : haiku-$(TARGET_KERNEL_ARCH)_flash_image_uimage.img ;
 
 # SD/mmc image targets
-BuildUBootSDImage haiku-$(HAIKU_BOOT_BOARD).mmc : $(HAIKU_IMAGE) $(HAIKU_BOARD_SDIMAGE_FILES) ;
-BlessSDImage haiku-$(HAIKU_BOOT_BOARD).mmc ;
+BuildUBootSDImage haiku-$(TARGET_KERNEL_ARCH).mmc :
+	$(HAIKU_IMAGE) haiku_loader.ub haiku-floppyboot.tgz.ub ;
+BlessSDImage haiku-$(TARGET_KERNEL_ARCH).mmc ;
 NotFile haiku-mmc-image ;
-Depends haiku-mmc-image : haiku-$(HAIKU_BOOT_BOARD).mmc ;
+Depends haiku-mmc-image : haiku-$(TARGET_KERNEL_ARCH).mmc ;
 
 SEARCH on [ FGristFiles $(genericPlatformSources) ]
 	= [ FDirName $(HAIKU_TOP) src system boot platform generic ] ;

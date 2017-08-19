@@ -11,6 +11,7 @@
  *		Humdinger <humdingerb@gmail.com>
  * Translators:
  *		Dancsó Róbert
+ *		Humdinger
  *
 -->
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
@@ -29,23 +30,23 @@
 <div class="inner">
 <ul class="lang-menu">
 <li class="now"><img src="../images/flags/hu.png" alt="" /> Magyar</li>
-<li><a href="../fr/bootloader.html"><img src="../images/flags/fr.png" alt="" />Français</a></li>
-<li><a href="../de/bootloader.html"><img src="../images/flags/de.png" alt="" />Deutsch</a></li>
-<li><a href="../it/bootloader.html"><img src="../images/flags/it.png" alt="" />Italiano</a></li>
-<li><a href="../ru/bootloader.html"><img src="../images/flags/ru.png" alt="" />Русский</a></li>
-<li><a href="../es/bootloader.html"><img src="../images/flags/es.png" alt="" />Español</a></li>
-<li><a href="../sv_SE/bootloader.html"><img src="../images/flags/sv_SE.png" alt="" />Svenska</a></li>
-<li><a href="../jp/bootloader.html"><img src="../images/flags/jp.png" alt="" />日本語</a></li>
-<li><a href="../uk/bootloader.html"><img src="../images/flags/uk.png" alt="" />Українська</a></li>
-<li><a href="../zh_CN/bootloader.html"><img src="../images/flags/zh_CN.png" alt="" /> 中文 ［中文］</a></li>
-<li><a href="../pt_PT/bootloader.html"><img src="../images/flags/pt_PT.png" alt="" />Português</a></li>
-<li><a href="../fi/bootloader.html"><img src="../images/flags/fi.png" alt="" />Suomi</a></li>
-<li><a href="../sk/bootloader.html"><img src="../images/flags/sk.png" alt="" />Slovenčina</a></li>
-<li><a href="../pt_BR/bootloader.html"><img src="../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
 <li><a href="../ca/bootloader.html"><img src="../images/flags/ca.png" alt="" />Català</a></li>
-<li><a href="../pl/bootloader.html"><img src="../images/flags/pl.png" alt="" />Polski</a></li>
-<li><a href="../ro/bootloader.html"><img src="../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../de/bootloader.html"><img src="../images/flags/de.png" alt="" />Deutsch</a></li>
 <li><a href="../en/bootloader.html"><img src="../images/flags/gb.png" alt="" />English</a></li>
+<li><a href="../es/bootloader.html"><img src="../images/flags/es.png" alt="" />Español</a></li>
+<li><a href="../fr/bootloader.html"><img src="../images/flags/fr.png" alt="" />Français</a></li>
+<li><a href="../it/bootloader.html"><img src="../images/flags/it.png" alt="" />Italiano</a></li>
+<li><a href="../pl/bootloader.html"><img src="../images/flags/pl.png" alt="" />Polski</a></li>
+<li><a href="../pt_PT/bootloader.html"><img src="../images/flags/pt_PT.png" alt="" />Português</a></li>
+<li><a href="../pt_BR/bootloader.html"><img src="../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
+<li><a href="../ro/bootloader.html"><img src="../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../sk/bootloader.html"><img src="../images/flags/sk.png" alt="" />Slovenčina</a></li>
+<li><a href="../fi/bootloader.html"><img src="../images/flags/fi.png" alt="" />Suomi</a></li>
+<li><a href="../sv_SE/bootloader.html"><img src="../images/flags/sv_SE.png" alt="" />Svenska</a></li>
+<li><a href="../zh_CN/bootloader.html"><img src="../images/flags/zh_CN.png" alt="" /> 中文 ［中文］</a></li>
+<li><a href="../ru/bootloader.html"><img src="../images/flags/ru.png" alt="" />Русский</a></li>
+<li><a href="../uk/bootloader.html"><img src="../images/flags/uk.png" alt="" />Українська</a></li>
+<li><a href="../jp/bootloader.html"><img src="../images/flags/jp.png" alt="" />日本語</a></li>
 </ul>
 <span>
     <!-- «  <a href="installation.html">Installing Haiku</a> 
@@ -72,33 +73,33 @@
 <tr><td><b>Select safe mode options</b><br />Biztonsági opciók
 </td><td> </td><td>A következő opciók hibakereséskor lehetnek hasznunkra. Az opciók kijelölésekor a képernyő alján egy rövid leírást olvashatunk a hatásukról.</td></tr>
 <tr><td></td><td></td><td>
-	<p><span class="menu">Safe mode</span> (Biztonsági mód)<br />
-		A rendszert biztonsági módba állítja. Ez a többi opciótól függetlenül engedélyezhető.</p>
-	<p><span class="menu">Disable user add-ons</span> (Felhasználói kiegésztők tiltása)<br />
-		Minden a felhasználó által telepített kiegészítő betöltésének megakadályozása. Csak a rendszer mappában lévő kiegészítők töltődnek be. Bővebben a <a href="#troubleshooting">Hibelhárítás</a> szakaszban.</p>
-	<p><span class="menu">Disable IDE DMA</span> (IDE DMA tiltása)<br />
-		Letiltja az IDE DMA-t, megnöveli az IDE kompatibilitást a teljesítmény rovására.</p>
-	<p><span class="menu">Ignore memory beyond 4 GiB</span> (A 4 GiB feletti memória tiltása)<br />
-		A rendszer kernel beállításait felülbírálva letiltható  4 GiB feletti memória terület.
+	<p><span class="menu">Safe mode</span><br />
+		Puts the system into safe mode. This can be enabled independently from the other options.</p>
+	<p><span class="menu">Disable user add-ons</span><br />
+		Prevents all user installed add-ons from being loaded. Only the add-ons in the system directory will be used. See <a href="#troubleshooting">Troubleshooting</a> below.</p>
+	<p><span class="menu">Disable IDE DMA</span><br />
+		Disables IDE DMA, increasing IDE compatibility at the expense of performance.</p>
+	<p><span class="menu">Ignore memory beyond 4 GiB</span><br />
+		Ignores all memory beyond the 4 GiB address limit, overriding the setting in the kernel settings file.
 </p>
-	<p><span class="menu">Use fail-safe video mode</span> (Biztonsági videó mód)<br />
-		A rendszer csak a VESA módot fogja használni, megakadályozza minden egyéb grafikus vezérlő betöltését.</p>
-	<p><span class="menu">Disable IO-APIC</span> (IO APIC tiltása)<br />
-		Letiltja az IO APIC megszakítás-kiosztását, helyette a hagyományos PIC használatát erőlteti.</p>
-	<p><span class="menu">Disable local APIC</span> (Helyi APIC tiltása)<br />
-		A helyi APIC tiltása az SMP tiltásával együtt.</p>
-	<p><span class="menu">Disable SMP</span> (SMP tiltása)<br />
-		Egy kivételével az összes processzormagot letiltja.</p>
-	<p><span class="menu">Don't call the BIOS</span> (BIOS hívások tiltása)<br />
-		Letiltja a rendszert hívó BIOS funkciókat.</p>
-	<p><span class="menu">Disable APM</span> (APM tiltása)<br />
-		Letiltja a bővített energiagazdálkodást. Ezzel felül bírálja a kernelben megadott APM beállítást is.</p>
-	<p><span class="menu">Disable ACPI</span> (ACPI tiltása)<br />
-		Letiltja a bővített konfigurációs és energia vezérőt. Ezzel felül bírálja a kernelben megadott ACPI beállítást is.</p>
-	<p><span class="menu">Blacklist entries</span> (Feketelista)<br />
-		Lehetőséget nyújt arra, hogy rendszer fájlok betöltését mellőzzük induláskor. Hasznos lehet, ha például egy eszköz vezérlőt ideiglenesen le akarunk tiltani. Bővebben a <a href="#troubleshooting">Hibaelhárítás</a> szakaszban.</p></td></tr>
+	<p><span class="menu">Use fail-safe graphics driver</span><br />
+		The system will use VESA mode and won't try to use any video graphics drivers.</p>
+	<p><span class="menu">Disable IO-APIC</span><br />
+		Disables using the IO APIC for interrupt routing, forcing the use of the legacy PIC instead.</p>
+	<p><span class="menu">Disable local APIC</span><br />
+		Disables using the local APIC, also disables SMP.</p>
+	<p><span class="menu">Disable SMP</span><br />
+		Disables all but one CPU core.</p>
+	<p><span class="menu">Don't call the BIOS</span><br />
+		Stops the system from calling BIOS functions.</p>
+	<p><span class="menu">Disable APM</span><br />
+		Disables Advanced Power Management hardware support, overriding the APM setting in the kernel settings file.</p>
+	<p><span class="menu">Disable ACPI</span><br />
+		Disables Advanced Configuration and Power Interface hardware support, overriding the ACPI setting in the kernel settings file.</p>
+	<p><span class="menu">Blacklist entries</span><br />
+		Allows to select system files that shall be ignored. Useful e.g. to disable drivers temporarily. See <a href="#troubleshooting">Troubleshooting</a> below.</p></td></tr>
 <tr><td><b>Debug menu</b><br />Hibakereső menü
-</td><td> </td><td>Az alábbi opciók segítséghetnek a hiba keresésben illetve a hiba <a href="../welcome/hu/bugreports.html">jelentésében</a>. Szintén kapunk egy kis leírást a képernyő alján ha kiválasztunk egy opciót.</td></tr>
+</td><td> </td><td>Az alábbi opciók segítséghetnek a hiba keresésben illetve a hiba <a href="../../welcome/hu/bugreports.html">jelentésében</a>. Szintén kapunk egy kis leírást a képernyő alján ha kiválasztunk egy opciót.</td></tr>
 <tr><td></td><td></td><td>
 	<p><span class="menu">Enable serial debug output</span> (Soros porton történő hibakeresés engedélyezése)<br />
 		A naplózást a soros portra irányítja át (eredeti beállítások: 115200, 8N1).</p>
@@ -119,12 +120,12 @@
 		A legutóbbi munkamenetben összegyűjtött hibakeresési információk megjelenítse.</p>
 	<p><span class="menu">Save syslog from previous session</span> (Előző munkamenet naplójának elmentése)<br />
 		A legutóbbi munkamenetben összegyűjtött hibakeresési információk elmentése lemezre. Jelenleg csak FAT32 fájlrendszerű lemezek használhatóak.</p></td></tr>
-<tr><td class="onelinetop"><b>Select fail safe video mode</b><br />Biztonsági videó mód választása</td><td> </td><td>Ha bejelöljük a <i>Use fail-safe video mode</i>-ot (biztonsági videó mód), akkor kiválaszthatjuk a felbontást és a színmélységet.</td></tr>
+<tr><td class="onelinetop"><b>Select screen resolution</b></td><td> </td><td>Lets you force a certain screen resolution and color depth.</td></tr>
 </table>
 <h2>
 <a href="#"><img src="../images/up.png" style="border:none;float:right" alt="index" /></a>
 <a id="troubleshooting" name="troubleshooting">Hibaelhárítás</a></h2>
-<p>Ha a Haiku elsőre nem tud elindulni, akkor ajánlott kipróbálni néhány hibakeresési opciót a <span class="menu">Select safe mode options</span> menüben. Továbbá egy <a href="../welcome/en/bugreports.html">hibajelentést</a> is lehet küldeni.</p>
+<p>Ha a Haiku elsőre nem tud elindulni, akkor ajánlott kipróbálni néhány hibakeresési opciót a <span class="menu">Select safe mode options</span> menüben. Továbbá egy <a href="../../welcome/hu/bugreports.html">hibajelentést</a> is lehet küldeni.</p>
 <p>Az is lehetséges, hogy a Haiku csak egy újonnan feltelepített program, eszközvezérlő miatt nem indul el. Ekkor több lehetőségünk is van hogy újra be tudjuk tölteni a rendszerünket, például a feltelepített csomag eltávolításával:</p>
 <ul>
 <li><p>A <span class="menu">Safe mode</span> engedélyezésével megakadályozhatjuk a legtöbb szerver, démon elindítását illetve a UserBootScript végrehajtását.</p></li>
@@ -149,7 +150,7 @@ A különféle szimbólumok az alábbi betöltési szakaszokat jelölik:</p>
 	<tr><td><b>Rendszerlemez</b></td><td> </td><td>Rendszerlemez csatolása.</td></tr>
 	<tr><td><b>Chip</b></td><td> </td><td>Processzor-függő modulok betöltése.</td></tr>
 	<tr><td><b>Mappa</b></td><td> </td><td>Alrendszerek betöltése.</td></tr>
-	<tr><td><b>Rakéta</b></td><td> </td><td>Launch_daemon has started the system.</td></tr>
+	<tr><td><b>Rakéta</b></td><td> </td><td>A Launch_daemon elindította a rendszert.</td></tr>
 </table>
 
 </div>

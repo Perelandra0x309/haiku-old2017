@@ -4069,6 +4069,9 @@ BPoseView::SelectPose(BPose* pose, int32 index, bool scrollIntoView)
 		ClearSelection();
 
 	AddPoseToSelection(pose, index, scrollIntoView);
+
+	if (pose != NULL)
+		fSelectionPivotPose = pose;
 }
 
 
@@ -7936,7 +7939,7 @@ BPoseView::AddRemoveSelectionRange(BPoint where, bool extendSelection,
  	if (pose == fSelectionPivotPose && !extendSelection)
  		return;
 
-	if ((modifiers() & B_SHIFT_KEY) != 0 && fSelectionPivotPose) {
+	if (fMultipleSelection && (modifiers() & B_SHIFT_KEY) != 0 && fSelectionPivotPose) {
 		// multi pose extend/shrink current selection
 		bool select = !pose->IsSelected() || !extendSelection;
 			// This weird bit of logic causes the selection to always
@@ -9017,9 +9020,9 @@ rgb_color
 BPoseView::DeskTextColor() const
 {
 	rgb_color color = ViewColor();
-	float thresh = color.red + (color.green * 1.5f) + (color.blue * 0.50f);
+	float thresh = color.red + (color.green * 1.25f) + (color.blue * 0.45f);
 
-	if (thresh >= 300) {
+	if (thresh >= 360) {
 		color.red = 0;
 		color.green = 0;
 		color.blue = 0;

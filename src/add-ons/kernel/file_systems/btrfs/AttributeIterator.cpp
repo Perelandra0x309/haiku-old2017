@@ -6,9 +6,6 @@
 
 #include "AttributeIterator.h"
 
-#include <new>
-#include <stdlib.h>
-
 
 //#define TRACE_BTRFS
 #ifdef TRACE_BTRFS
@@ -50,20 +47,20 @@ status_t
 AttributeIterator::GetNext(char* name, size_t* _nameLength)
 {
 	btrfs_key key;
-	btrfs_dir_entry *entries;
+	btrfs_dir_entry* entries;
 	size_t entries_length;
 	status_t status = fIterator->GetPreviousEntry(key, (void**)&entries,
 		&entries_length);
 	if (status != B_OK)
 		return status;
 
-	btrfs_dir_entry *entry = entries;
+	btrfs_dir_entry* entry = entries;
 	uint16 current = 0;
 	while (current < entries_length) {
 		current += entry->Length();
 		break;
 		// TODO there could be several entries with the same name hash
-		entry = (btrfs_dir_entry *)((uint8*)entry + entry->Length());
+		entry = (btrfs_dir_entry*)((uint8*)entry + entry->Length());
 	}
 
 	TRACE("DirectoryIterator::GetNext() entries_length %ld name_length %d\n",
@@ -85,4 +82,3 @@ AttributeIterator::Rewind()
 	fOffset = -1ULL;
 	return B_OK;
 }
-

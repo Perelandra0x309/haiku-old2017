@@ -168,7 +168,7 @@ ul.lang-menu li a {
 	margin: 0 auto;
 }
 
-#content div {
+#content > div {
 	margin-top: 30px;
 	margin-left: 40px;
 	margin-right: 40px;
@@ -225,6 +225,8 @@ table.index a:hover, table.index a:active {
 	padding: 10px 15px 10px 80px;
 	margin-bottom: 15px;
 	margin-top: 15px;
+	margin-left: 40px;
+	margin-right: 40px;
 	min-height: 42px;
 }
 .box-info {

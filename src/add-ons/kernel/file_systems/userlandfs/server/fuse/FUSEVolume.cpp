@@ -6,6 +6,7 @@
 #include "FUSEVolume.h"
 
 #include <dirent.h>
+#include <file_systems/mime_ext_table.h>
 
 #include <algorithm>
 
@@ -277,6 +278,92 @@ private:
 	size_t	fAttributesSize;
 	size_t	fCurrentOffset;
 	bool	fValid;
+};
+
+
+struct FUSEVolume::AttrCookie : RWLockable {
+public:
+	AttrCookie(const char* name)
+		:
+		fValue(NULL),
+		fSize(0),
+		fType(0)
+	{
+		_SetType(name);
+	}
+
+	AttrCookie(const char* name, const char* value)
+		:
+		fValue(strdup(value)),
+		fSize(strlen(value) + 1),
+		fType(0)
+	{
+		_SetType(name);
+	}
+
+	~AttrCookie()
+	{
+		free(fValue);
+	}
+
+	bool IsValid() const
+	{
+		return fValue != NULL;
+	}
+
+	uint32 Type() const
+	{
+		return fType;
+	}
+
+	status_t Allocate(size_t size)
+	{
+		fValue = (char*)malloc(size);
+		if (fValue == NULL) {
+			fSize = 0;
+			return B_NO_MEMORY;
+		}
+		fSize = size;
+		return B_OK;
+	}
+
+	void Read(void* buffer, size_t bufferSize, off_t pos,
+		size_t* bytesRead) const
+	{
+		if (pos < 0 || (uint64)pos > SIZE_MAX || (size_t)pos > fSize - 1) {
+			*bytesRead = 0;
+			return;
+		}
+		size_t copySize = fSize - pos;
+		if (copySize > bufferSize)
+			copySize = bufferSize;
+		strlcpy((char*)buffer, &fValue[pos], bufferSize);
+		*bytesRead = copySize;
+	}
+
+	char* Buffer()
+	{
+		return fValue;
+	}
+
+	size_t Size() const
+	{
+		return fSize;
+	}
+
+private:
+	void _SetType(const char* name)
+	{
+		if (strcmp(name, kAttrMimeTypeName) == 0)
+			fType = B_MIME_STRING_TYPE;
+		else
+			fType = B_RAW_TYPE;
+	}
+
+private:
+	char*	fValue;
+	size_t	fSize;
+	uint32	fType;
 };
 
 
@@ -783,6 +870,15 @@ FUSEVolume::Sync()
 status_t
 FUSEVolume::ReadFSInfo(fs_info* info)
 {
+	if (gHasHaikuFuseExtensions == 1 && fFS->ops.get_fs_info != NULL) {
+		int fuseError = fuse_fs_get_fs_info(fFS, info);
+		if (fuseError != 0)
+			return fuseError;
+		return B_OK;
+	}
+
+	// No Haiku FUSE extensions, so our knowledge is limited: use some values
+	// from statfs and make reasonable guesses for the rest of them.
 	if (fFS->ops.statfs == NULL)
 		return B_UNSUPPORTED;
 
@@ -791,6 +887,7 @@ FUSEVolume::ReadFSInfo(fs_info* info)
 	if (fuseError != 0)
 		return fuseError;
 
+	memset(info, 0, sizeof(*info));
 	info->flags = B_FS_IS_PERSISTENT;	// assume the FS is persistent
 	info->block_size = st.f_bsize;
 	info->io_size = 64 * 1024;			// some value
@@ -1250,6 +1347,11 @@ FUSEVolume::ReadStat(void* _node, struct stat* st)
 
 	locker.Unlock();
 
+	st->st_dev = GetID();
+	st->st_ino = node->id;
+	st->st_blksize = 2048;
+	st->st_type = 0;
+
 	// stat the path
 	int fuseError = fuse_fs_getattr(fFS, path, st);
 	if (fuseError != 0)
@@ -1459,6 +1561,10 @@ FUSEVolume::Open(void* _node, int openMode, void** _cookie)
 	// truncate the file, if requested
 	if (truncate) {
 		fuseError = fuse_fs_ftruncate(fFS, path, 0, cookie);
+		if (fuseError == ENOSYS) {
+			// Fallback to truncate if ftruncate is not implemented
+			fuseError = fuse_fs_truncate(fFS, path, 0);
+		}
 		if (fuseError != 0) {
 			fuse_fs_flush(fFS, path, cookie);
 			fuse_fs_release(fFS, path, cookie);
@@ -2043,6 +2149,117 @@ FUSEVolume::RewindAttrDir(void* _node, void* _cookie)
 	RWLockableWriteLocker cookieLocker(this, cookie);
 
 	cookie->Clear();
+
+	return B_OK;
+}
+
+
+// #pragma mark - attributes
+
+
+status_t
+FUSEVolume::OpenAttr(void* _node, const char* name, int openMode,
+	void** _cookie)
+{
+	FUSENode* node = (FUSENode*)_node;
+
+	// lock the node
+	NodeReadLocker nodeLocker(this, node, true);
+	if (nodeLocker.Status() != B_OK)
+		RETURN_ERROR(nodeLocker.Status());
+
+	if (openMode != O_RDONLY) {
+		// Write support currently not implemented
+		RETURN_ERROR(B_UNSUPPORTED);
+	}
+
+	AutoLocker<Locker> locker(fLock);
+
+	// get a path for the node
+	char path[B_PATH_NAME_LENGTH];
+	size_t pathLen;
+	status_t error = _BuildPath(node, path, pathLen);
+	if (error != B_OK)
+		RETURN_ERROR(error);
+
+	locker.Unlock();
+
+	int attrSize = fuse_fs_getxattr(fFS, path, name, NULL, 0);
+	if (attrSize < 0) {
+		if (strcmp(name, kAttrMimeTypeName) == 0) {
+			// Return a fake MIME type attribute based on the file extension
+			const char* mimeType = NULL;
+			error = set_mime(&mimeType, S_ISDIR(node->type) ? NULL : &path[0]);
+			if (error != B_OK)
+				return error;
+			*_cookie = new(std::nothrow)AttrCookie(name, mimeType);
+			return B_OK;
+		}
+
+		// Reading attribute failed
+		return attrSize;
+	}
+
+	AttrCookie* cookie = new(std::nothrow)AttrCookie(name);
+	error = cookie->Allocate(attrSize);
+	if (error != B_OK)
+		RETURN_ERROR(error);
+
+	int bytesRead = fuse_fs_getxattr(fFS, path, name, cookie->Buffer(),
+		attrSize);
+	if (bytesRead < 0)
+		return bytesRead;
+
+	*_cookie = cookie;
+
+	return B_OK;
+}
+
+
+status_t
+FUSEVolume::CloseAttr(void* _node, void* _cookie)
+{
+	return B_OK;
+}
+
+
+status_t
+FUSEVolume::FreeAttrCookie(void* _node, void* _cookie)
+{
+	delete (AttrCookie*)_cookie;
+	return B_OK;
+}
+
+
+status_t
+FUSEVolume::ReadAttr(void* _node, void* _cookie, off_t pos, void* buffer,
+	size_t bufferSize, size_t* bytesRead)
+{
+	AttrCookie* cookie = (AttrCookie*)_cookie;
+
+	RWLockableWriteLocker cookieLocker(this, cookie);
+
+	if (!cookie->IsValid())
+		RETURN_ERROR(B_BAD_VALUE);
+
+	cookie->Read(buffer, bufferSize, pos, bytesRead);
+
+	return B_OK;
+}
+
+
+status_t
+FUSEVolume::ReadAttrStat(void* _node, void* _cookie, struct stat* st)
+{
+	AttrCookie* cookie = (AttrCookie*)_cookie;
+
+	RWLockableWriteLocker cookieLocker(this, cookie);
+
+	if (!cookie->IsValid())
+		RETURN_ERROR(B_BAD_VALUE);
+
+	st->st_size = cookie->Size();
+	st->st_type = cookie->Type();
 
 	return B_OK;
 }

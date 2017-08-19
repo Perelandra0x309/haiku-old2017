@@ -169,7 +169,6 @@ private:
 private:
 			URLInputGroup*		fURLInputGroup;
 			TextViewCompleter*	fURLAutoCompleter;
-			BString				fPreviousText;
 			bool				fUpdateAutoCompleterChoices;
 };
 
@@ -180,7 +179,6 @@ URLInputGroup::URLTextView::URLTextView(URLInputGroup* parent)
 	fURLInputGroup(parent),
 	fURLAutoCompleter(new TextViewCompleter(this,
 		new BrowsingHistoryChoiceModel())),
-	fPreviousText(""),
 	fUpdateAutoCompleterChoices(true)
 {
 	MakeResizable(true);
@@ -284,8 +282,8 @@ URLInputGroup::URLTextView::KeyDown(const char* bytes, int32 numBytes)
 			break;
 
 		case B_ESCAPE:
-			// Revert to text as it was when we received keyboard focus.
-			SetText(fPreviousText.String());
+			// Text already unlocked && replaced in BrowserWindow,
+			// now select it.
 			SelectAll();
 			break;
 
@@ -294,23 +292,32 @@ URLInputGroup::URLTextView::KeyDown(const char* bytes, int32 numBytes)
 			break;
 
 		default:
+		{
+			BString currentText = Text();
 			BTextView::KeyDown(bytes, numBytes);
+			// Lock the URL input if it was modified
+			if (!fURLInputGroup->IsURLInputLocked()
+				&& Text() != currentText)
+				fURLInputGroup->LockURLInput();
 			break;
+		}
 	}
 }
 
 void
 URLInputGroup::URLTextView::MakeFocus(bool focus)
 {
+	// Unlock the URL input if focus was lost.
+	if (!focus)
+		fURLInputGroup->LockURLInput(false);
+
 	if (focus == IsFocus())
 		return;
 
 	BTextView::MakeFocus(focus);
 
-	if (focus) {
-		fPreviousText = Text();
+	if (focus)
 		SelectAll();
-	}
 
 	fURLInputGroup->Invalidate();
 }
@@ -583,7 +590,8 @@ private:
 URLInputGroup::URLInputGroup(BMessage* goMessage)
 	:
 	BGroupView(B_HORIZONTAL, 0.0),
-	fWindowActive(false)
+	fWindowActive(false),
+	fURLLocked(false)
 {
 	GroupLayout()->SetInsets(2, 2, 2, 2);
 
@@ -608,6 +616,7 @@ URLInputGroup::URLInputGroup(BMessage* goMessage)
 
 	SetExplicitAlignment(BAlignment(B_ALIGN_USE_FULL_WIDTH,
 		B_ALIGN_VERTICAL_CENTER));
+
 }
 
 
@@ -666,8 +675,8 @@ URLInputGroup::TextView() const
 void
 URLInputGroup::SetText(const char* text)
 {
-	// Ignore setting the text, if the user is currently editing the URL.
-	if (fWindowActive && fTextView->IsFocus())
+	// Ignore setting the text, if the input is locked.
+	if (fURLLocked)
 		return;
 
 	if (!text || !Text() || strcmp(Text(), text) != 0) {
@@ -698,3 +707,16 @@ URLInputGroup::SetPageIcon(const BBitmap* icon)
 	fIconView->SetIcon(icon);
 }
 
+
+bool
+URLInputGroup::IsURLInputLocked() const
+{
+	return fURLLocked;
+}
+
+
+void
+URLInputGroup::LockURLInput(bool lock)
+{
+	fURLLocked = lock;
+}

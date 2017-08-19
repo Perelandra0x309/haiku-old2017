@@ -862,6 +862,12 @@ INFORM("Volume::_PackagesEntryCreated(\"%s\")\n", name);
 				"\"%s\"\n", name);
 		}
 
+		// Remove the package from the packages-to-be-deactivated set, if it is in
+		// there (unlikely, unless we see a remove-create sequence).
+		PackageSet::iterator it = fPackagesToBeDeactivated.find(package);
+		if (it != fPackagesToBeDeactivated.end())
+			fPackagesToBeDeactivated.erase(it);
+
 		return;
 	}
 
@@ -1238,7 +1244,8 @@ Volume::_SetLatestState(VolumeState* state, bool isActive)
 		fActiveState = state;
 	}
 
-	delete fLatestState;
+	if (fLatestState != fActiveState)
+		delete fLatestState;
 	fLatestState = state;
 	fChangeCount++;
 

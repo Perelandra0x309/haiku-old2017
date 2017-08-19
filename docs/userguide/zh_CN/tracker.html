@@ -4,7 +4,7 @@
 <head>
 <!-- 
  *
- * Copyright 2008-2014, Haiku. All rights reserved.
+ * Copyright 2008-2017, Haiku. All rights reserved.
  * Distributed under the terms of the MIT License.
  *
  * Authors:
@@ -31,23 +31,23 @@
 <div class="inner">
 <ul class="lang-menu">
 <li class="now"><img src="../images/flags/zh_CN.png" alt="" />  中文 ［中文］</li>
-<li><a href="../fr/tracker.html"><img src="../images/flags/fr.png" alt="" />Français</a></li>
-<li><a href="../de/tracker.html"><img src="../images/flags/de.png" alt="" />Deutsch</a></li>
-<li><a href="../it/tracker.html"><img src="../images/flags/it.png" alt="" />Italiano</a></li>
-<li><a href="../ru/tracker.html"><img src="../images/flags/ru.png" alt="" />Русский</a></li>
-<li><a href="../es/tracker.html"><img src="../images/flags/es.png" alt="" />Español</a></li>
-<li><a href="../sv_SE/tracker.html"><img src="../images/flags/sv_SE.png" alt="" />Svenska</a></li>
-<li><a href="../jp/tracker.html"><img src="../images/flags/jp.png" alt="" />日本語</a></li>
-<li><a href="../uk/tracker.html"><img src="../images/flags/uk.png" alt="" />Українська</a></li>
-<li><a href="../pt_PT/tracker.html"><img src="../images/flags/pt_PT.png" alt="" />Português</a></li>
-<li><a href="../fi/tracker.html"><img src="../images/flags/fi.png" alt="" />Suomi</a></li>
-<li><a href="../sk/tracker.html"><img src="../images/flags/sk.png" alt="" />Slovenčina</a></li>
-<li><a href="../hu/tracker.html"><img src="../images/flags/hu.png" alt="" />Magyar</a></li>
-<li><a href="../pt_BR/tracker.html"><img src="../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
 <li><a href="../ca/tracker.html"><img src="../images/flags/ca.png" alt="" />Català</a></li>
-<li><a href="../pl/tracker.html"><img src="../images/flags/pl.png" alt="" />Polski</a></li>
-<li><a href="../ro/tracker.html"><img src="../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../de/tracker.html"><img src="../images/flags/de.png" alt="" />Deutsch</a></li>
 <li><a href="../en/tracker.html"><img src="../images/flags/gb.png" alt="" />English</a></li>
+<li><a href="../es/tracker.html"><img src="../images/flags/es.png" alt="" />Español</a></li>
+<li><a href="../fr/tracker.html"><img src="../images/flags/fr.png" alt="" />Français</a></li>
+<li><a href="../it/tracker.html"><img src="../images/flags/it.png" alt="" />Italiano</a></li>
+<li><a href="../hu/tracker.html"><img src="../images/flags/hu.png" alt="" />Magyar</a></li>
+<li><a href="../pl/tracker.html"><img src="../images/flags/pl.png" alt="" />Polski</a></li>
+<li><a href="../pt_PT/tracker.html"><img src="../images/flags/pt_PT.png" alt="" />Português</a></li>
+<li><a href="../pt_BR/tracker.html"><img src="../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
+<li><a href="../ro/tracker.html"><img src="../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../sk/tracker.html"><img src="../images/flags/sk.png" alt="" />Slovenčina</a></li>
+<li><a href="../fi/tracker.html"><img src="../images/flags/fi.png" alt="" />Suomi</a></li>
+<li><a href="../sv_SE/tracker.html"><img src="../images/flags/sv_SE.png" alt="" />Svenska</a></li>
+<li><a href="../ru/tracker.html"><img src="../images/flags/ru.png" alt="" />Русский</a></li>
+<li><a href="../uk/tracker.html"><img src="../images/flags/uk.png" alt="" />Українська</a></li>
+<li><a href="../jp/tracker.html"><img src="../images/flags/jp.png" alt="" />日本語</a></li>
 </ul>
 <span>
  «  <a href="teammonitor.html">程序监控器</a> 
@@ -86,6 +86,7 @@
 <br />
 上述设置将会自动挂载您所连接/插入的所有存储设备，然后在启动时挂载所有曾经挂载过的磁盘。</p>
 <div class="box-warning">在您断开硬件设备或者USB磁盘的连接前，一定要保证您已经成功的卸载了该磁卷。这样可以保证所有的数据传输已经结束，否则可能会导致数据丢失或者损坏磁盘。</div>
+<div class="box-warning">Haiku 可以关在非 BFS 格式化分区。需要注意的是，目前这些非BFS文件系统未经过严格的测试。在某些情况下，写入这些分区会出现异常。如果希望保证数据安全，请在挂载时总是选择 <span class="button">Mount read-only</span> 。</div>
 
 <h2>
 <a href="#"><img src="../images/up.png" style="border:none;float:right" alt="index" /></a>

@@ -30,23 +30,23 @@
 <div class="inner">
 <ul class="lang-menu">
 <li class="now"><img src="../images/flags/fi.png" alt="" /> Suomi</li>
-<li><a href="../fr/bash-scripting.html"><img src="../images/flags/fr.png" alt="" />Français</a></li>
-<li><a href="../de/bash-scripting.html"><img src="../images/flags/de.png" alt="" />Deutsch</a></li>
-<li><a href="../it/bash-scripting.html"><img src="../images/flags/it.png" alt="" />Italiano</a></li>
-<li><a href="../ru/bash-scripting.html"><img src="../images/flags/ru.png" alt="" />Русский</a></li>
-<li><a href="../es/bash-scripting.html"><img src="../images/flags/es.png" alt="" />Español</a></li>
-<li><a href="../sv_SE/bash-scripting.html"><img src="../images/flags/sv_SE.png" alt="" />Svenska</a></li>
-<li><a href="../jp/bash-scripting.html"><img src="../images/flags/jp.png" alt="" />日本語</a></li>
-<li><a href="../uk/bash-scripting.html"><img src="../images/flags/uk.png" alt="" />Українська</a></li>
-<li><a href="../zh_CN/bash-scripting.html"><img src="../images/flags/zh_CN.png" alt="" /> 中文 ［中文］</a></li>
-<li><a href="../pt_PT/bash-scripting.html"><img src="../images/flags/pt_PT.png" alt="" />Português</a></li>
-<li><a href="../sk/bash-scripting.html"><img src="../images/flags/sk.png" alt="" />Slovenčina</a></li>
-<li><a href="../hu/bash-scripting.html"><img src="../images/flags/hu.png" alt="" />Magyar</a></li>
-<li><a href="../pt_BR/bash-scripting.html"><img src="../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
 <li><a href="../ca/bash-scripting.html"><img src="../images/flags/ca.png" alt="" />Català</a></li>
-<li><a href="../pl/bash-scripting.html"><img src="../images/flags/pl.png" alt="" />Polski</a></li>
-<li><a href="../ro/bash-scripting.html"><img src="../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../de/bash-scripting.html"><img src="../images/flags/de.png" alt="" />Deutsch</a></li>
 <li><a href="../en/bash-scripting.html"><img src="../images/flags/gb.png" alt="" />English</a></li>
+<li><a href="../es/bash-scripting.html"><img src="../images/flags/es.png" alt="" />Español</a></li>
+<li><a href="../fr/bash-scripting.html"><img src="../images/flags/fr.png" alt="" />Français</a></li>
+<li><a href="../it/bash-scripting.html"><img src="../images/flags/it.png" alt="" />Italiano</a></li>
+<li><a href="../hu/bash-scripting.html"><img src="../images/flags/hu.png" alt="" />Magyar</a></li>
+<li><a href="../pl/bash-scripting.html"><img src="../images/flags/pl.png" alt="" />Polski</a></li>
+<li><a href="../pt_PT/bash-scripting.html"><img src="../images/flags/pt_PT.png" alt="" />Português</a></li>
+<li><a href="../pt_BR/bash-scripting.html"><img src="../images/flags/pt_BR.png" alt="" />Português (Brazil)</a></li>
+<li><a href="../ro/bash-scripting.html"><img src="../images/flags/ro.png" alt="" />Română</a></li>
+<li><a href="../sk/bash-scripting.html"><img src="../images/flags/sk.png" alt="" />Slovenčina</a></li>
+<li><a href="../sv_SE/bash-scripting.html"><img src="../images/flags/sv_SE.png" alt="" />Svenska</a></li>
+<li><a href="../zh_CN/bash-scripting.html"><img src="../images/flags/zh_CN.png" alt="" /> 中文 ［中文］</a></li>
+<li><a href="../ru/bash-scripting.html"><img src="../images/flags/ru.png" alt="" />Русский</a></li>
+<li><a href="../uk/bash-scripting.html"><img src="../images/flags/uk.png" alt="" />Українська</a></li>
+<li><a href="../jp/bash-scripting.html"><img src="../images/flags/jp.png" alt="" />日本語</a></li>
 </ul>
 <span>
  «  <a href="preferences.html">Asetukset</a> 
@@ -57,16 +57,16 @@
 
 <div id="content">
 <div>
-<div class="box-info">Tämän sivun kotoistaminen ei ole vielä täydellinen. Siihen asti keskeneräiset osat käyttävät englanninkielistä alkuperäistekstiä.</div>
 
 <h1>Bash ja skriptaus</h1>
 
-<p>"Skriptaus" on proseduurien automointitekniikka, jossa komentoja ketjutetaan merkkijonoiksi ja tallennetaan tekstitiedostona, niin kutsuttuna "skripteinä". Joka kerta kun skripti suoritetaan, komennot käsitellään yksi kerrallaan aivan kuin ne olisi kirjoitettu käsin <a href="applications/terminal.html">Pääteikkunassa</a>.<br />Skriptit voivat ulottua yksinkertaisesta muutaman komennon suorittamisesta aina edistyneisiin koodipätkiin, jotka ratkaisevat monimutkaisia tehtäviä.</p>
+<p>”Skriptaus” on proseduurien automointitekniikka, jossa komentoja ketjutetaan merkkijonoiksi ja tallennetaan tekstitiedostona, niin kutsuttuna ”skripteinä”. Joka kerta kun skripti suoritetaan, komennot käsitellään yksi kerrallaan aivan kuin ne olisi kirjoitettu käsin <a href="applications/terminal.html">Pääteikkunassa</a>.<br />Skriptit voivat ulottua yksinkertaisesta muutaman komennon suorittamisesta aina edistyneisiin koodipätkiin, jotka ratkaisevat monimutkaisia tehtäviä.</p>
 
 <h2>
 <a href="#"><img src="../images/up.png" style="border:none;float:right" alt="index" /></a>
 <a id="bash" name="bash">Bash-komentotulkki</a></h2>
-<p>Koska skriptit turvautuvat luonnollisesti paljolti komentotulkkeihin, jotka tulkitsevat niitä, sinun pitäisi ensiksi tutustua BASH-komentotulkkiin, jota käytetään Haikussa. Verkossa on monia resursseja, koska se on laajalti käytetty komentotulkki. Yksi hyvä dokumentti on Johan Janssonin <a href="http://www.beforever.com/bashtut.htm" class="printurl">Perehdyttämien bash-komentotulkkiin - oppitunti bash-komnentotulkista BeOS-käyttöjärjestelmässä</a>.</p>
+<p>Koska skriptit turvautuvat luonnollisesti paljolti komentotulkkeihin, jotka tulkitsevat niitä, sinun pitäisi ensiksi tutustua BASH-komentotulkkiin, jota käytetään Haikussa. Verkossa on monia resursseja, koska kyseessä on laajalti käytetty komentotulkki. Yksi hyvä dokumentti on Johan Janssonin <a href="https://web.archive.org/web/20011205095723/http://www.beforever.com/bashtut.htm" class="printurl">Perehdyttämien bash-komentotulkkiin - oppitunti bash-komnentotulkista BeOS-käyttöjärjestelmässä</a>.<br />
+<a href="https://www.gnu.org/software/bash/manual/bash.pdf" class="printurl">Bash-viitekäsikirja (PDF, 720 kibitavua)</a> auttaa pääsemään selville yksityiskohdista.</p>
 
 <h2>
 <a href="#"><img src="../images/up.png" style="border:none;float:right" alt="index" /></a>
@@ -75,8 +75,8 @@
 
 <h2>
 <a href="#"><img src="../images/up.png" style="border:none;float:right" alt="index" /></a><a id="user-scripts" name="user-scripts">Skriptit Haikussa</a></h2>
-<p>Haiku used to have scripts for booting and shutting down. Today it uses the <a href="https://dev.haiku-os.org/wiki/LaunchDaemon">launch_daemon</a> instead. However, the user can still augment this process with certain user scripts.
-If they don't exist already, you'll have to create the needed files yourself. Otherwise simply add your commands where in the process you want them to be executed.</p>
+<p>Haiku on aiemmin käyttänyt skriptejä käynnistyksessä ja järjestelmän sulkemisessa. Nykyään käyttöjärjestelmä käyttää sen sijaan <a href="https://dev.haiku-os.org/wiki/LaunchDaemon">launch_daemon</a>-käynnistystaustaohjelmaa. Käyttäjä voi kuitenkin lisätä tähän prosessiin tiettyjä käyttäjäskriptejä.
+Jos niitä ei jo ole olemassa, sinun on lisättävä tarvittavat tiedostot itse. Muussa tapauksessa lisää yksinkertaisesti komentosi prosessissa sinne, missä haluat ne suorittaa.</p>
 
 <h3>
 <a href="#"><img src="../images/up.png" style="border:none;float:right" alt="index" /></a>

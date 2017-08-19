@@ -7,8 +7,6 @@
 #define VOLUME_H
 
 
-#include <lock.h>
-
 #include "btrfs.h"
 
 
@@ -16,7 +14,7 @@ enum volume_flags {
 	VOLUME_READ_ONLY	= 0x0001
 };
 
-class BPlusTree;
+class BTree;
 class Chunk;
 class Inode;
 
@@ -40,10 +38,14 @@ public:
 									{ return fFSVolume ? fFSVolume->id : -1; }
 			fs_volume*			FSVolume() const { return fFSVolume; }
 			const char*			Name() const;
-			BPlusTree*			FSTree() const { return fFSTree; }
-			BPlusTree*			RootTree() const { return fRootTree; }
+			BTree*				FSTree() const { return fFSTree; }
+			BTree*				ExtentTree() const { return fExtentTree; }
+			BTree*				RootTree() const { return fRootTree; }
 
+			uint32				SectorSize() const { return fSectorSize; }
 			uint32				BlockSize() const { return fBlockSize; }
+			Chunk*				SystemChunk() const { return fChunk; }
+
 			btrfs_super_block&	SuperBlock() { return fSuperBlock; }
 
 			status_t			LoadSuperBlock();
@@ -53,8 +55,8 @@ public:
 
 	static	status_t			Identify(int fd, btrfs_super_block* superBlock);
 
-			status_t			FindBlock(off_t logical, fsblock_t &physical);
-			status_t			FindBlock(off_t logical, off_t &physical);
+			status_t			FindBlock(off_t logical, fsblock_t& physical);
+			status_t			FindBlock(off_t logical, off_t& physical);
 
 private:
 			mutex				fLock;
@@ -64,19 +66,20 @@ private:
 			char				fName[32];
 
 			uint32				fFlags;
+			uint32				fSectorSize;
 			uint32				fBlockSize;
 
 			void*				fBlockCache;
 			Inode*				fRootNode;
 
 			Chunk*				fChunk;
-			BPlusTree*			fChunkTree;
-			BPlusTree*			fRootTree;
-			BPlusTree*			fDevTree;
-			BPlusTree*			fExtentTree;
-			BPlusTree*			fFSTree;
-			BPlusTree*			fChecksumTree;
+			BTree*				fChunkTree;
+			BTree*				fRootTree;
+			BTree*				fDevTree;
+			BTree*				fExtentTree;
+			BTree*				fFSTree;
+			BTree*				fChecksumTree;
 };
 
-#endif	// VOLUME_H
 
+#endif	// VOLUME_H

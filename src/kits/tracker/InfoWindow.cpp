@@ -369,11 +369,9 @@ BInfoWindow::Show()
 		"will use to find the window width");
 
 	// window height depends on file type
-	int lines = 7;
-	if (fModel->IsSymLink())
-		lines++;
+	int lines = 9;
 	if (fModel->IsExecutable())
-		lines += 2;
+		lines++;
 	float height = font->Size() * (lines * 2 + 1);
 
 	ResizeTo(width, height);
@@ -645,7 +643,7 @@ BInfoWindow::MessageReceived(BMessage* message)
 			BRect permissionsBounds(kBorderWidth + 1,
 						fAttributeView->Bounds().bottom,
 						fAttributeView->Bounds().right,
-						fAttributeView->Bounds().bottom + 80);
+						fAttributeView->Bounds().bottom + 103);
 
 			if (fPermissionsView == NULL) {
 				// Only true on first call.
@@ -912,6 +910,7 @@ AttributeView::AttributeView(BRect rect, Model* model)
 				Bounds().Width() - 5, fTitleRect.bottom + (lineHeight * 8));
 			fPreferredAppMenu = new BMenuField(preferredAppRect, "", "",
 				new BPopUpMenu(""));
+			currentFont.SetSize(currentFont.Size() + 2);
 			fDivider = currentFont.StringWidth(B_TRANSLATE("Opens with:"))
 				+ 5;
 			fPreferredAppMenu->SetDivider(fDivider);
@@ -1044,7 +1043,7 @@ AttributeView::InitStrings(const Model* model)
 		fLinkToStr = linkToPath;
 		if (!linked) {
 			// link points to missing object
-			fLinkToStr += " (broken)";
+			fLinkToStr += B_TRANSLATE(" (broken)");
 		}
 	} else if (model->IsExecutable()) {
 		if (((Model*)model)->GetLongVersionString(fDescStr,
@@ -1121,7 +1120,7 @@ AttributeView::ModelChanged(Model* model, BMessage* message)
 					&& itemNode.node == model->NodeRef()->node)) {
 				model->UpdateEntryRef(&dirNode, name);
 				BString title;
-				title << name << " info";
+				title << name << B_TRANSLATE(" info");
 				Window()->SetTitle(title.String());
 				WidgetAttributeText::AttrAsString(model, &fPathStr, kAttrPath,
 					B_STRING_TYPE, 0, this);

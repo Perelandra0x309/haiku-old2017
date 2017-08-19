@@ -239,7 +239,7 @@ acpi_std_ops(int32 op,...)
 			parameter.Count = 1;
 			parameter.Pointer = &arg;
 
-			AcpiEvaluateObject(NULL, "\\_PIC", &parameter, NULL);
+			AcpiEvaluateObject(NULL, (ACPI_STRING)"\\_PIC", &parameter, NULL);
 
 			if (checkAndLogFailure(AcpiEnableSubsystem(
 						ACPI_FULL_INITIALIZATION),
@@ -665,7 +665,7 @@ get_irq_routing_table(acpi_handle busDeviceHandle, acpi_data *retBuffer)
 
 	status = AcpiGetIrqRoutingTable(busDeviceHandle, (ACPI_BUFFER*)retBuffer);
 	if (status == AE_BUFFER_OVERFLOW)
-		dprintf("evaluate_method: the passed buffer is too small!\n");
+		dprintf("get_irq_routing_table: the passed buffer is too small!\n");
 
 	return status == AE_OK ? B_OK : B_ERROR;
 }

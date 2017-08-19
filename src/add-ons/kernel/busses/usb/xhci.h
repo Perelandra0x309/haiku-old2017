@@ -155,6 +155,7 @@ private:
 									xhci_endpoint *endpoint);
 
 			// Command
+			void				DumpRing(xhci_trb *trb, uint32 size);
 			void				QueueCommand(xhci_trb *trb);
 			void				HandleCmdComplete(xhci_trb *trb);
 			void				HandleTransferComplete(xhci_trb *trb);
@@ -195,6 +196,13 @@ private:
 			// Doorbell register functions
 	inline	uint32				ReadDoorReg32(uint32 reg);
 	inline	void				WriteDoorReg32(uint32 reg, uint32 value);
+
+			// Context functions
+	inline	addr_t				_OffsetContextAddr(addr_t p);
+	inline	uint32				_ReadContext(uint32* p);
+	inline	void				_WriteContext(uint32* p, uint32 value);
+	inline	uint64				_ReadContext(uint64* p);
+	inline	void				_WriteContext(uint64* p, uint64 value);
 
 			void				_SwitchIntelPorts();
 
@@ -250,6 +258,7 @@ private:
 
 			// Devices
 			struct xhci_device	fDevices[XHCI_MAX_DEVICES];
+			int32				fContextSizeShift; // 0/1 for 32/64 bytes
 
 			sem_id				fEventSem;
 			thread_id			fEventThread;

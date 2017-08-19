@@ -1,10 +1,11 @@
 /*
- * Copyright 2013-2015, Haiku, Inc. All Rights Reserved.
+ * Copyright 2013-2017, Haiku, Inc. All Rights Reserved.
  * Distributed under the terms of the MIT License.
  *
  * Authors:
  *		Ingo Weinhold <ingo_weinhold@gmx.de>
  *		Rene Gollent <rene@gollent.com>
+ *		Brian Hill <supernova@tycho.email>
  */
 #ifndef UPDATE_MANAGER_H
 #define UPDATE_MANAGER_H
@@ -13,8 +14,13 @@
 #include <package/DaemonClient.h>
 #include <package/manager/PackageManager.h>
 
+#include "constants.h"
+#include "SoftwareUpdaterWindow.h"
+
+class ProblemWindow;
 
 //using namespace BPackageKit;
+using BPackageKit::BPackageInstallationLocation;
 using BPackageKit::BPrivate::BDaemonClient;
 using BPackageKit::BManager::BPrivate::BPackageManager;
 
@@ -23,25 +29,28 @@ class UpdateManager : public BPackageManager,
 	private BPackageManager::UserInteractionHandler {
 public:
 								UpdateManager(
-									BPackageKit::BPackageInstallationLocation location);
+									BPackageInstallationLocation location,
+									bool verbose);
 								~UpdateManager();
 
+			void				CheckNetworkConnection();
+			update_type			GetUpdateType();
+			void				CheckRepositories();
 	virtual	void				JobFailed(BSupportKit::BJob* job);
 	virtual	void				JobAborted(BSupportKit::BJob* job);
-
+			void				FinalUpdate(const char* header,
+									const char* text);
 private:
 	// UserInteractionHandler
 	virtual	void				HandleProblems();
 	virtual	void				ConfirmChanges(bool fromMostSpecific);
-
 	virtual	void				Warn(status_t error, const char* format, ...);
-
 
 	virtual	void				ProgressPackageDownloadStarted(
 									const char* packageName);
 	virtual	void				ProgressPackageDownloadActive(
 									const char* packageName,
-									float completionPercentage,
+									float completionValue,
 									off_t bytes, off_t totalBytes);
 	virtual	void				ProgressPackageDownloadComplete(
 									const char* packageName);
@@ -60,11 +69,31 @@ private:
 
 private:
 			void				_PrintResult(InstalledRepository&
-									installationRepository);
+									installationRepository,
+									int32& upgradeCount,
+									int32& installCount,
+									int32& uninstallCount);
+			void				_UpdateStatusWindow(const char* header,
+									const char* detail);
+			void				_UpdateDownloadProgress(const char* header,
+									const char* packageName,
+									float percentageComplete);
+			void				_FinalUpdate(const char* header,
+									const char* text);
+			void				_SetCurrentStep(int32 step);
 
 private:
 			BPackageManager::ClientInstallationInterface
 									fClientInstallationInterface;
+			
+			SoftwareUpdaterWindow*	fStatusWindow;
+			ProblemWindow*			fProblemWindow;
+			uint32					fCurrentStep;
+			bool					fChangesConfirmed;
+			bool					fNewDownloadStarted;
+			int32					fPackageDownloadsTotal;
+			int32					fPackageDownloadsCount;
+			bool					fVerbose;
 };
 
 

@@ -735,6 +735,10 @@ BrowserWindow::DispatchMessage(BMessage* message, BHandler* target)
 				// Do it in such a way that the user sees the Go-button go down.
 				_InvokeButtonVisibly(fURLInputGroup->GoButton());
 				return;
+			} else if (bytes[0] == B_ESCAPE) {
+				// Replace edited text with the current URL.
+				fURLInputGroup->LockURLInput(false);
+				fURLInputGroup->SetText(CurrentWebView()->MainFrameURL());
 			}
 		} else if (target == fFindTextControl->TextView()) {
 			// Handle B_RETURN when the find text control has focus.
@@ -844,8 +848,8 @@ BrowserWindow::MessageReceived(BMessage* message)
 			entry_ref ref;
 			BString name;
 
-			if (message->FindRef("directory", &ref) == B_OK &&
-				message->FindString("name", &name) == B_OK) {
+			if (message->FindRef("directory", &ref) == B_OK
+				&& message->FindString("name", &name) == B_OK) {
 				BDirectory dir(&ref);
 				BFile output(&dir, name,
 					B_WRITE_ONLY | B_CREATE_FILE | B_ERASE_FILE);
@@ -1308,6 +1312,10 @@ BrowserWindow::SetCurrentWebView(BWebView* webView)
 		} else
 			webView->MakeFocus(true);
 
+		bool state = fURLInputGroup->IsURLInputLocked();
+		fURLInputGroup->LockURLInput(false);
+			// Unlock it so the following code can update the URL
+
 		if (userData != NULL) {
 			fURLInputGroup->SetPageIcon(userData->PageIcon());
 			if (userData->URLInputContents().Length())
@@ -1323,6 +1331,9 @@ BrowserWindow::SetCurrentWebView(BWebView* webView)
 			fURLInputGroup->SetPageIcon(NULL);
 			fURLInputGroup->SetText(webView->MainFrameURL());
 		}
+
+		fURLInputGroup->LockURLInput(state);
+			// Restore the state
 
 		// Trigger update of the interface to the new page, by requesting
 		// to resend all notifications.
@@ -1468,8 +1479,15 @@ BrowserWindow::CloseWindowRequested(BWebView* view)
 void
 BrowserWindow::LoadNegotiating(const BString& url, BWebView* view)
 {
-	if (view != CurrentWebView())
-		return;
+	if (view != CurrentWebView()) {
+		// Update the userData contents instead so the user sees
+		// the correct URL when they switch back to that tab.
+		PageUserData* userData = static_cast<PageUserData*>(
+			view->GetUserData());
+		if (userData != NULL && userData->URLInputContents().Length() == 0) {
+			userData->SetURLInputContents(url);
+		}
+	}
 
 	fURLInputGroup->SetText(url.String());
 
@@ -1723,6 +1741,8 @@ void
 BrowserWindow::UpdateGlobalHistory(const BString& url)
 {
 	BrowsingHistory::DefaultInstance()->AddItem(BrowsingHistoryItem(url));
+
+	fURLInputGroup->SetText(CurrentWebView()->MainFrameURL());
 }
 
 
@@ -1778,7 +1798,20 @@ BrowserWindow::AuthenticationChallenge(BString message, BString& inOutUser,
 void
 BrowserWindow::_UpdateTitle(const BString& title)
 {
-	BString windowTitle = title;
+	BString windowTitle;
+
+	if (title.Length() > 0)
+		windowTitle = title;
+	else {
+		BWebView* webView = CurrentWebView();
+		if (webView != NULL) {
+			BString url = webView->MainFrameURL();
+			int32 leafPos = url.FindLast('/');
+			url.Remove(0, leafPos + 1);
+			windowTitle = url;
+		}
+	}
+
 	if (windowTitle.Length() > 0)
 		windowTitle << " - ";
 	windowTitle << kApplicationName;
@@ -2448,7 +2481,7 @@ BrowserWindow::_EncodeURIComponent(const BString& search)
 void
 BrowserWindow::_VisitURL(const BString& url)
 {
-	//fURLInputGroup->TextView()->SetText(url);
+	// fURLInputGroup->TextView()->SetText(url);
 	CurrentWebView()->LoadURL(url.String());
 }
 

@@ -9,9 +9,8 @@ SYSTEM_BIN += [ FFilterByBuildFeatures
 	dpms
 	FirstBootPrompt	fwcontrol@x86
 	installsound
-	mail mail2mbox mbox2mail mkdos mount_nfs
-	play playfile playsound playwav
-	screenshot setdecor spamdbm
+	mail mail2mbox mbox2mail media_client mkdos mount_nfs
+	play screenshot setdecor spamdbm
 	translate
 	WindowShade
 ] ;
@@ -24,9 +23,8 @@ SYSTEM_APPS += [ FFilterByBuildFeatures
 	Magnify Mail MediaConverter MediaPlayer MidiPlayer
 	People PoorMan PowerStatus
 	RemoteDesktop
-	Screenshot SerialConnect SoundRecorder
+	Screenshot SerialConnect SoftwareUpdater SoundRecorder
 	TV
-	WebWatch
 ] ;
 
 DESKBAR_APPLICATIONS +=
@@ -35,7 +33,7 @@ DESKBAR_APPLICATIONS +=
 	Icon-O-Matic Installer
 	Magnify Mail MediaConverter MediaPlayer MidiPlayer
 	People PoorMan
-	SerialConnect SoundRecorder
+	SerialConnect SoftwareUpdater SoundRecorder
 	TV
 ;
 
@@ -166,7 +164,6 @@ SYSTEM_ADD_ONS_PRINT += [ FFilterByBuildFeatures
 	Gutenprint@gutenprint
 	PCL5\ Compatible
 	PCL6\ Compatible
-	PDF\ Writer
 	PS\ Compatible
 	Preview
 ] ;

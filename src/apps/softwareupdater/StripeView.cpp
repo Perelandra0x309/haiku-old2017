@@ -6,68 +6,82 @@
  *		Ryan Leavengood <leavengood@gmail.com>
  *		John Scipione <jscipione@gmail.com>
  *		Joseph Groover <looncraz@looncraz.net>
+ *		Brian Hill <supernova@tycho.email>
  */
 
 
 #include "StripeView.h"
 
+#include <LayoutUtils.h>
 
-static const float kStripeWidth = 30.0;
+
+static const float kTopOffset = 10.0f;
+static const int kIconStripeWidth = 30;
 
 
-StripeView::StripeView(BBitmap* icon)
+StripeView::StripeView(BBitmap& icon)
 	:
 	BView("StripeView", B_WILL_DRAW),
-	fIcon(icon)
+	fIcon(icon),
+	fIconSize(0.0),
+	fPreferredWidth(0.0),
+	fPreferredHeight(0.0)
 {
 	SetViewUIColor(B_PANEL_BACKGROUND_COLOR);
 
-	float width = 0.0f;
-	if (icon != NULL)
-		width += icon->Bounds().Width() + 32.0f;
-
-	SetExplicitMinSize(BSize(width, B_SIZE_UNSET));
-	SetExplicitPreferredSize(BSize(width, B_SIZE_UNLIMITED));
-}
-
-
-StripeView::~StripeView()
-{
+	if (fIcon.IsValid()) {
+		fIconSize = fIcon.Bounds().Width();
+		// Use the same scaling as a BAlert
+		int32 scale = icon_layout_scale();
+		fPreferredWidth = 18 * scale + fIcon.Bounds().Width();
+		fPreferredHeight = 6 * scale + fIcon.Bounds().Height();
+	}
 }
 
 
 void
 StripeView::Draw(BRect updateRect)
 {
-	if (fIcon == NULL)
+	if (fIconSize == 0)
 		return;
 
 	SetHighColor(ViewColor());
 	FillRect(updateRect);
 
 	BRect stripeRect = Bounds();
-	stripeRect.right = kStripeWidth;
+	int32 iconLayoutScale = icon_layout_scale();
+	stripeRect.right = kIconStripeWidth * iconLayoutScale;
 	SetHighColor(tint_color(ViewColor(), B_DARKEN_1_TINT));
 	FillRect(stripeRect);
 
 	SetDrawingMode(B_OP_ALPHA);
 	SetBlendingMode(B_PIXEL_ALPHA, B_ALPHA_OVERLAY);
-	DrawBitmapAsync(fIcon, BPoint(15.0f, 10.0f));
+	DrawBitmapAsync(&fIcon, BPoint(stripeRect.right - (fIconSize / 2.0),
+		6 * iconLayoutScale));
+}
+
+
+BSize
+StripeView::PreferredSize()
+{
+	return BSize(fPreferredWidth, B_SIZE_UNSET);
 }
 
 
 void
-StripeView::SetIcon(BBitmap* icon)
+StripeView::GetPreferredSize(float* _width, float* _height)
 {
-	if (fIcon != NULL)
-		delete fIcon;
+	if (_width != NULL)
+		*_width = fPreferredWidth;
 
-	fIcon = icon;
+	if (_height != NULL)
+		*_height = fPreferredHeight;
+}
 
-	float width = 0.0f;
-	if (icon != NULL)
-		width += icon->Bounds().Width() + 32.0f;
 
-	SetExplicitMinSize(BSize(width, B_SIZE_UNSET));
-	SetExplicitPreferredSize(BSize(width, B_SIZE_UNLIMITED));
+BSize
+StripeView::MaxSize()
+{
+	return BLayoutUtils::ComposeSize(ExplicitMaxSize(),
+		BSize(fPreferredWidth, B_SIZE_UNLIMITED));
 }

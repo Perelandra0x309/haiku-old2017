@@ -1,4 +1,4 @@
-1	japanese	x-vnd.Haiku-libtracker	965916127
+1	japanese	x-vnd.Haiku-libtracker	1597598656
 OK	WidgetAttributeText		OK
 Add-ons	FilePanelPriv		アドオン
 Mount settings…	ContainerWindow		マウント設定…
@@ -118,11 +118,11 @@ New folder	ContainerWindow		新規フォルダー
 Kind	ContainerWindow		種類
 home	B_USER_DIRECTORY		ホーム
 Select…	ContainerWindow		選択…
-Copy to	ContainerWindow		指定先にコピー
+Copy to	ContainerWindow		次へコピー
 Move to Trash	ContainerWindow		ごみ箱に移動
 If you move the system folder or its contents, you won't be able to boot %osName!\n\nAre you sure you want to do this?\n\nTo move the system folder or its contents anyway, hold down the Shift key and click \"Move\".	FSUtils		システムフォルダーやその内容を移動すると、%osNameが起動しなくなります!\n\n移動しますか?\n\nそれでもシステムフォルダーやその内容を移動するなら、シフトキーを押しながら\"移動\"をクリックしてください。
 Modified	Default Query Columns		更新日時
-Move to	ContainerWindow		指定先に移動
+Move to	ContainerWindow		次へ移動
 Create %s clipping	PoseView		%s クリップを作成
 Set new link target	InfoWindow		リンク先を変更
 Save as Query template:	FindPanel		クエリ雛型として保存する:
@@ -354,7 +354,6 @@ Cancel	FilePanelPriv		中止
 The application \"%appname\" does not support the type of document you are about to open.\nAre you sure you want to proceed?\n\nIf you know that the application supports the document type, you should contact the publisher of the application and ask them to update their application to list the type of your document as supported.	OpenWithWindow		アプリケーション \"%appname\" は開こうとしているドキュメントタイプをサポートしていません。\n進めますか?\n\n アプリケーションがサポートすることがわかっている場合は、アプリケーションの製作元にドキュメントタイプをサポートに加えるように問い合わせてください。
 Disks	DirMenu		ディスク
 New folder %ld	FSUtils		新規フォルダー %ld 
-All BeOS disks	AutoMounterSettings		全 BFS パーティション
 Used space color	SettingsView		使用済容量の色
 Sorry, could not create a new folder.	FSUtils		新規フォルダーを作成できませんでした。
 Disk mount	TrackerSettingsWindow		ディスクのマウント
@@ -373,6 +372,7 @@ Open selection with:	OpenWithWindow		選択ファイルをアプリケーショ�
 Preparing to create links…	StatusWindow		リンク作成の準備をしています…
 Size	Default Query Columns		サイズ
 Show navigator	SettingsView		ツールバーを表示
+All Haiku disks	AutoMounterSettings		すべての Haiku ディスク
 Desktop	B_DESKTOP_DIRECTORY		デスクトップ
 List folders first	SettingsView		フォルダーを先頭に表示
 Name	SelectionWindow		名前

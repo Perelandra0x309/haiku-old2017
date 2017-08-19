@@ -3,15 +3,6 @@ SubDir HAIKU_TOP src add-ons kernel network ppp ipcp ;
 SetSubDirSupportedPlatformsBeOSCompatible ;
 SubDirC++Flags -fno-rtti ;
 
-if $(TARGET_PLATFORM) != haiku {
-	UseHeaders [ FStandardOSHeaders ] : true ;
-		# Needed for the atomic_add64() prototype.
-}
-
-UseHeaders [ FDirName $(HAIKU_TOP) headers posix ] : true ;
-	# We need the public network headers also when not compiling for Haiku.
-	# Unfortunately we get more than we want, namely all POSIX headers.
-
 UsePrivateKernelHeaders ;
 UsePrivateHeaders net ;
 
@@ -24,7 +15,6 @@ UseHeaders [ FDirName $(HAIKU_TOP) src add-ons kernel network ppp pppoe
 	] : true ;
 
 KernelAddon ipcp :
-	atomic.S
 	kernel_cpp.cpp
 
 	# imported from kernel util
@@ -40,12 +30,9 @@ SEARCH on [ FGristFiles inet_addr.c ]
 
 SEARCH on [ FGristFiles kernel_cpp.cpp ]
         = [ FDirName $(HAIKU_TOP) src system kernel util ] ;
-SEARCH on [ FGristFiles atomic.S ]
-        = [ FDirName $(HAIKU_TOP) src system libroot os arch $(TARGET_ARCH) ] ;
 
 LinkAgainst ipcp : libkernelppp.a ;
 
-
-HaikuInstall install-networking
-	: /boot/home/config/add-ons/kernel/network/ppp
+HaikuInstall install-ppp
+	: /boot/home/config/non-packaged/add-ons/kernel/network/ppp
 	: ipcp ;

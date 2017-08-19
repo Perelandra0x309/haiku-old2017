@@ -29,7 +29,7 @@
 
 
 static const BString kTitleEnabled =
-	B_TRANSLATE_COMMENT("Enabled", "Column title");
+	B_TRANSLATE_COMMENT("Status", "Column title");
 static const BString kTitleName = B_TRANSLATE_COMMENT("Name", "Column title");
 static const BString kTitleUrl = B_TRANSLATE_COMMENT("URL", "Column title");
 static const BString kLabelRemove =
@@ -86,7 +86,7 @@ RepositoriesView::RepositoriesView()
 	float col1width = be_plain_font->StringWidth(kTitleName) + 15;
 	float col2width = be_plain_font->StringWidth(kTitleUrl) + 15;
 	fListView->AddColumn(new BStringColumn(kTitleEnabled, col0width, col0width,
-		col0width, B_TRUNCATE_END, B_ALIGN_CENTER), kEnabledColumn);
+		2 * col0width, B_TRUNCATE_END), kEnabledColumn);
 	fListView->AddColumn(new BStringColumn(kTitleName, 90, col1width, 300,
 		B_TRUNCATE_END), kNameColumn);
 	fListView->AddColumn(new BStringColumn(kTitleUrl, 500, col2width, 5000,
@@ -150,8 +150,8 @@ RepositoriesView::RepositoriesView()
 	BLayoutBuilder::Group<>(this, B_VERTICAL, 0)
 		.SetInsets(B_USE_WINDOW_SPACING)
 		.AddGroup(B_HORIZONTAL, 0, 0.0)
-			.Add(new BStringView("instruction", B_TRANSLATE_COMMENT("Select"
-				" repositories to use with Haiku package management:",
+			.Add(new BStringView("instruction", B_TRANSLATE_COMMENT("Enable"
+				" repositories to use with package management:",
 				"Label text")), 0.0)
 			.AddGlue()
 		.End()
@@ -453,6 +453,7 @@ RepositoriesView::_TaskCompleted(RepoRow* rowItem, int16 count, BString& newName
 	if (kNewRepoDefaultName.Compare(rowItem->Name()) == 0
 		&& newName.Compare("") != 0) {
 		rowItem->SetName(newName.String());
+		_SaveList();
 	}
 	_UpdateFromRepoConfig(rowItem);
 }
@@ -509,8 +510,6 @@ RepositoriesView::AddManualRepository(BString url)
 		return;
 	
 	BString name(kNewRepoDefaultName);
-	BString newPathIdentifier = _GetPathIdentifier(newRepoUrl.Path());
-	bool foundMatchingRoot = false;
 	int32 index;
 	int32 listCount = fListView->CountRows();
 	for (index = 0; index < listCount; index++) {
@@ -524,14 +523,6 @@ RepositoriesView::AddManualRepository(BString url)
 				kOKLabel))->Go(NULL);
 			return;
 		}
-		// Predict the repo name from another url with matching path root
-		if (!foundMatchingRoot) {
-			BString rowPathIdentifier = _GetPathIdentifier(rowRepoUrl.Path());
-			 if (newPathIdentifier.ICompare(rowPathIdentifier) == 0) {
-				foundMatchingRoot = true;
-				name = repoItem->Name();
-			 }
-		}
 	}
 	RepoRow* newRepo = _AddRepo(name, url, false);
 	_FindSiblings();
@@ -539,21 +530,8 @@ RepositoriesView::AddManualRepository(BString url)
 	fListView->AddToSelection(newRepo);
 	_UpdateButtons();
 	_SaveList();
-}
-
-
-BString
-RepositoriesView::_GetPathIdentifier(BString urlPath)
-{
-	// Find second /
-	int32 index = urlPath.FindFirst("/");
-	if (index == B_ERROR)
-		return urlPath;
-	index = urlPath.FindFirst("/", index + 1);
-	if (index == B_ERROR)
-		return urlPath;
-	else
-		return urlPath.Truncate(index);
+	if (fEnableButton->IsEnabled())
+		fEnableButton->Invoke();
 }
 
 

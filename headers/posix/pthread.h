@@ -80,10 +80,12 @@ extern "C" {
 	{ PTHREAD_MUTEX_RECURSIVE, 0, -42, -1, 0 }
 #define PTHREAD_COND_INITIALIZER	\
 	{ 0, -42, NULL, 0, 0 }
+#define PTHREAD_RWLOCK_INITIALIZER	\
+	{ 0, -1, {{0}} }
 
 /* mutex functions */
 extern int pthread_mutex_destroy(pthread_mutex_t *mutex);
-extern int pthread_mutex_getprioceiling(pthread_mutex_t *mutex,
+extern int pthread_mutex_getprioceiling(const pthread_mutex_t *mutex,
 	int *_priorityCeiling);
 extern int pthread_mutex_init(pthread_mutex_t *mutex,
 	const pthread_mutexattr_t *attr);
@@ -97,13 +99,13 @@ extern int pthread_mutex_unlock(pthread_mutex_t *mutex);
 
 /* mutex attribute functions */
 extern int pthread_mutexattr_destroy(pthread_mutexattr_t *mutexAttr);
-extern int pthread_mutexattr_getprioceiling(pthread_mutexattr_t *mutexAttr,
+extern int pthread_mutexattr_getprioceiling(const pthread_mutexattr_t *mutexAttr,
 	int *_priorityCeiling);
-extern int pthread_mutexattr_getprotocol(pthread_mutexattr_t *mutexAttr,
+extern int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *mutexAttr,
 	int *_protocol);
-extern int pthread_mutexattr_getpshared(pthread_mutexattr_t *mutexAttr,
+extern int pthread_mutexattr_getpshared(const pthread_mutexattr_t *mutexAttr,
 	int *_processShared);
-extern int pthread_mutexattr_gettype(pthread_mutexattr_t *mutexAttr,
+extern int pthread_mutexattr_gettype(const pthread_mutexattr_t *mutexAttr,
 	int *_type);
 extern int pthread_mutexattr_init(pthread_mutexattr_t *mutexAttr);
 extern int pthread_mutexattr_setprioceiling(pthread_mutexattr_t *mutexAttr,

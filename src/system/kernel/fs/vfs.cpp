@@ -1,6 +1,6 @@
 /*
  * Copyright 2005-2013, Ingo Weinhold, ingo_weinhold@gmx.de.
- * Copyright 2002-2016, Axel Dörfler, axeld@pinc-software.de.
+ * Copyright 2002-2017, Axel Dörfler, axeld@pinc-software.de.
  * Distributed under the terms of the MIT License.
  *
  * Copyright 2001-2002, Travis Geiselbrecht. All rights reserved.
@@ -331,6 +331,10 @@ static MountTable* sMountsTable;
 static dev_t sNextMountID = 1;
 
 #define MAX_TEMP_IO_VECS 8
+
+// How long to wait for busy vnodes (10s)
+#define BUSY_VNODE_RETRIES 2000
+#define BUSY_VNODE_DELAY 5000
 
 mode_t __gUmask = 022;
 
@@ -894,6 +898,27 @@ lookup_vnode(dev_t mountID, ino_t vnodeID)
 }
 
 
+/*!	\brief Checks whether or not a busy vnode should be waited for (again).
+
+	This will also wait for BUSY_VNODE_DELAY before returning if one should
+	still wait for the vnode becoming unbusy.
+
+	\return \c true if one should retry, \c false if not.
+*/
+static bool
+retry_busy_vnode(int32& tries, dev_t mountID, ino_t vnodeID)
+{
+	if (--tries < 0) {
+		// vnode doesn't seem to become unbusy
+		dprintf("vnode %" B_PRIdDEV ":%" B_PRIdINO
+			" is not becoming unbusy!\n", mountID, vnodeID);
+		return false;
+	}
+	snooze(BUSY_VNODE_DELAY);
+	return true;
+}
+
+
 /*!	Creates a new vnode with the given mount and node ID.
 	If the node already exists, it is returned instead and no new node is
 	created. In either case -- but not, if an error occurs -- the function write
@@ -927,7 +952,7 @@ create_new_vnode_and_lock(dev_t mountID, ino_t vnodeID, struct vnode*& _vnode,
 	vnode->ref_count = 1;
 	vnode->SetBusy(true);
 
-	// look up the the node -- it might have been added by someone else in the
+	// look up the node -- it might have been added by someone else in the
 	// meantime
 	rw_lock_write_lock(&sVnodeLock);
 	struct vnode* existingVnode = lookup_vnode(mountID, vnodeID);
@@ -1147,8 +1172,7 @@ get_vnode(dev_t mountID, ino_t vnodeID, struct vnode** _vnode, bool canWait,
 
 	rw_lock_read_lock(&sVnodeLock);
 
-	int32 tries = 2000;
-		// try for 10 secs
+	int32 tries = BUSY_VNODE_RETRIES;
 restart:
 	struct vnode* vnode = lookup_vnode(mountID, vnodeID);
 	AutoLocker<Vnode> nodeLocker(vnode);
@@ -1156,13 +1180,14 @@ restart:
 	if (vnode && vnode->IsBusy()) {
 		nodeLocker.Unlock();
 		rw_lock_read_unlock(&sVnodeLock);
-		if (!canWait || --tries < 0) {
-			// vnode doesn't seem to become unbusy
-			dprintf("vnode %" B_PRIdDEV ":%" B_PRIdINO
-				" is not becoming unbusy!\n", mountID, vnodeID);
+		if (!canWait) {
+			dprintf("vnode %" B_PRIdDEV ":%" B_PRIdINO " is busy!\n",
+				mountID, vnodeID);
 			return B_BUSY;
 		}
-		snooze(5000); // 5 ms
+		if (!retry_busy_vnode(tries, mountID, vnodeID))
+			return B_BUSY;
+
 		rw_lock_read_lock(&sVnodeLock);
 		goto restart;
 	}
@@ -2744,7 +2769,7 @@ fd_and_path_to_vnode(int fd, char* path, bool traverseLeafLink,
 
 	// FD only, or FD + relative path
 	struct vnode* vnode = get_vnode_from_fd(fd, kernel);
-	if (!vnode)
+	if (vnode == NULL)
 		return B_FILE_ERROR;
 
 	if (path != NULL) {
@@ -3663,6 +3688,8 @@ new_vnode(fs_volume* volume, ino_t vnodeID, void* privateNode,
 	if (privateNode == NULL)
 		return B_BAD_VALUE;
 
+	int32 tries = BUSY_VNODE_RETRIES;
+restart:
 	// create the node
 	bool nodeCreated;
 	struct vnode* vnode;
@@ -3673,6 +3700,13 @@ new_vnode(fs_volume* volume, ino_t vnodeID, void* privateNode,
 
 	WriteLocker nodeLocker(sVnodeLock, true);
 		// create_new_vnode_and_lock() has locked for us
+
+	if (!nodeCreated && vnode->IsBusy()) {
+		nodeLocker.Unlock();
+		if (!retry_busy_vnode(tries, volume->id, vnodeID))
+			return B_BUSY;
+		goto restart;
+	}
 
 	// file system integrity check:
 	// test if the vnode already exists and bail out if this is the case!
@@ -3699,6 +3733,8 @@ publish_vnode(fs_volume* volume, ino_t vnodeID, void* privateNode,
 {
 	FUNCTION(("publish_vnode()\n"));
 
+	int32 tries = BUSY_VNODE_RETRIES;
+restart:
 	WriteLocker locker(sVnodeLock);
 
 	struct vnode* vnode = lookup_vnode(volume->id, vnodeID);
@@ -3726,6 +3762,11 @@ publish_vnode(fs_volume* volume, ino_t vnodeID, void* privateNode,
 	} else if (vnode->IsBusy() && vnode->IsUnpublished()
 		&& vnode->private_node == privateNode && vnode->ops == ops) {
 		// already known, but not published
+	} else if (vnode->IsBusy()) {
+		locker.Unlock();
+		if (!retry_busy_vnode(tries, volume->id, vnodeID))
+			return B_BUSY;
+		goto restart;
 	} else
 		return B_BAD_VALUE;
 
@@ -4296,9 +4337,9 @@ vfs_read_stat(int fd, const char* path, bool traverseLeafLink,
 {
 	status_t status;
 
-	if (path) {
+	if (path != NULL) {
 		// path given: get the stat of the node referred to by (fd, path)
-		KPath pathBuffer(path, false, B_PATH_NAME_LENGTH + 1);
+		KPath pathBuffer(path, KPath::DEFAULT, B_PATH_NAME_LENGTH + 1);
 		if (pathBuffer.InitCheck() != B_OK)
 			return B_NO_MEMORY;
 
@@ -8017,7 +8058,7 @@ dev_t
 _kern_mount(const char* path, const char* device, const char* fsName,
 	uint32 flags, const char* args, size_t argsLength)
 {
-	KPath pathBuffer(path, false, B_PATH_NAME_LENGTH + 1);
+	KPath pathBuffer(path, KPath::DEFAULT, B_PATH_NAME_LENGTH + 1);
 	if (pathBuffer.InitCheck() != B_OK)
 		return B_NO_MEMORY;
 
@@ -8028,7 +8069,7 @@ _kern_mount(const char* path, const char* device, const char* fsName,
 status_t
 _kern_unmount(const char* path, uint32 flags)
 {
-	KPath pathBuffer(path, false, B_PATH_NAME_LENGTH + 1);
+	KPath pathBuffer(path, KPath::DEFAULT, B_PATH_NAME_LENGTH + 1);
 	if (pathBuffer.InitCheck() != B_OK)
 		return B_NO_MEMORY;
 
@@ -8156,11 +8197,11 @@ _kern_open_entry_ref(dev_t device, ino_t inode, const char* name, int openMode,
 int
 _kern_open(int fd, const char* path, int openMode, int perms)
 {
-	KPath pathBuffer(path, false, B_PATH_NAME_LENGTH + 1);
+	KPath pathBuffer(path, KPath::LAZY_ALLOC, B_PATH_NAME_LENGTH + 1);
 	if (pathBuffer.InitCheck() != B_OK)
 		return B_NO_MEMORY;
 
-	if (openMode & O_CREAT)
+	if ((openMode & O_CREAT) != 0)
 		return file_create(fd, pathBuffer.LockBuffer(), openMode, perms, true);
 
 	return file_open(fd, pathBuffer.LockBuffer(), openMode, true);
@@ -8208,10 +8249,7 @@ _kern_open_dir_entry_ref(dev_t device, ino_t inode, const char* name)
 int
 _kern_open_dir(int fd, const char* path)
 {
-	if (path == NULL)
-		return dir_open(fd, NULL, true);;
-
-	KPath pathBuffer(path, false, B_PATH_NAME_LENGTH + 1);
+	KPath pathBuffer(path, KPath::LAZY_ALLOC, B_PATH_NAME_LENGTH + 1);
 	if (pathBuffer.InitCheck() != B_OK)
 		return B_NO_MEMORY;
 
@@ -8272,7 +8310,7 @@ _kern_create_dir_entry_ref(dev_t device, ino_t inode, const char* name,
 status_t
 _kern_create_dir(int fd, const char* path, int perms)
 {
-	KPath pathBuffer(path, false, B_PATH_NAME_LENGTH + 1);
+	KPath pathBuffer(path, KPath::DEFAULT, B_PATH_NAME_LENGTH + 1);
 	if (pathBuffer.InitCheck() != B_OK)
 		return B_NO_MEMORY;
 
@@ -8283,15 +8321,11 @@ _kern_create_dir(int fd, const char* path, int perms)
 status_t
 _kern_remove_dir(int fd, const char* path)
 {
-	if (path) {
-		KPath pathBuffer(path, false, B_PATH_NAME_LENGTH + 1);
-		if (pathBuffer.InitCheck() != B_OK)
-			return B_NO_MEMORY;
+	KPath pathBuffer(path, KPath::LAZY_ALLOC, B_PATH_NAME_LENGTH + 1);
+	if (pathBuffer.InitCheck() != B_OK)
+		return B_NO_MEMORY;
 
-		return dir_remove(fd, pathBuffer.LockBuffer(), true);
-	}
-
-	return dir_remove(fd, NULL, true);
+	return dir_remove(fd, pathBuffer.LockBuffer(), true);
 }
 
 
@@ -8316,16 +8350,12 @@ _kern_remove_dir(int fd, const char* path)
 status_t
 _kern_read_link(int fd, const char* path, char* buffer, size_t* _bufferSize)
 {
-	if (path) {
-		KPath pathBuffer(path, false, B_PATH_NAME_LENGTH + 1);
-		if (pathBuffer.InitCheck() != B_OK)
-			return B_NO_MEMORY;
+	KPath pathBuffer(path, KPath::LAZY_ALLOC, B_PATH_NAME_LENGTH + 1);
+	if (pathBuffer.InitCheck() != B_OK)
+		return B_NO_MEMORY;
 
-		return common_read_link(fd, pathBuffer.LockBuffer(),
-			buffer, _bufferSize, true);
-	}
-
-	return common_read_link(fd, NULL, buffer, _bufferSize, true);
+	return common_read_link(fd, pathBuffer.LockBuffer(),
+		buffer, _bufferSize, true);
 }
 
 
@@ -8346,7 +8376,7 @@ _kern_read_link(int fd, const char* path, char* buffer, size_t* _bufferSize)
 status_t
 _kern_create_symlink(int fd, const char* path, const char* toPath, int mode)
 {
-	KPath pathBuffer(path, false, B_PATH_NAME_LENGTH + 1);
+	KPath pathBuffer(path, KPath::DEFAULT, B_PATH_NAME_LENGTH + 1);
 	if (pathBuffer.InitCheck() != B_OK)
 		return B_NO_MEMORY;
 
@@ -8359,8 +8389,8 @@ status_t
 _kern_create_link(int pathFD, const char* path, int toFD, const char* toPath,
 	bool traverseLeafLink)
 {
-	KPath pathBuffer(path, false, B_PATH_NAME_LENGTH + 1);
-	KPath toPathBuffer(toPath, false, B_PATH_NAME_LENGTH + 1);
+	KPath pathBuffer(path, KPath::DEFAULT, B_PATH_NAME_LENGTH + 1);
+	KPath toPathBuffer(toPath, KPath::DEFAULT, B_PATH_NAME_LENGTH + 1);
 	if (pathBuffer.InitCheck() != B_OK || toPathBuffer.InitCheck() != B_OK)
 		return B_NO_MEMORY;
 
@@ -8385,7 +8415,7 @@ _kern_create_link(int pathFD, const char* path, int toFD, const char* toPath,
 status_t
 _kern_unlink(int fd, const char* path)
 {
-	KPath pathBuffer(path, false, B_PATH_NAME_LENGTH + 1);
+	KPath pathBuffer(path, KPath::DEFAULT, B_PATH_NAME_LENGTH + 1);
 	if (pathBuffer.InitCheck() != B_OK)
 		return B_NO_MEMORY;
 
@@ -8414,8 +8444,8 @@ _kern_unlink(int fd, const char* path)
 status_t
 _kern_rename(int oldFD, const char* oldPath, int newFD, const char* newPath)
 {
-	KPath oldPathBuffer(oldPath, false, B_PATH_NAME_LENGTH + 1);
-	KPath newPathBuffer(newPath, false, B_PATH_NAME_LENGTH + 1);
+	KPath oldPathBuffer(oldPath, KPath::DEFAULT, B_PATH_NAME_LENGTH + 1);
+	KPath newPathBuffer(newPath, KPath::DEFAULT, B_PATH_NAME_LENGTH + 1);
 	if (oldPathBuffer.InitCheck() != B_OK || newPathBuffer.InitCheck() != B_OK)
 		return B_NO_MEMORY;
 
@@ -8427,7 +8457,7 @@ _kern_rename(int oldFD, const char* oldPath, int newFD, const char* newPath)
 status_t
 _kern_access(int fd, const char* path, int mode, bool effectiveUserGroup)
 {
-	KPath pathBuffer(path, false, B_PATH_NAME_LENGTH + 1);
+	KPath pathBuffer(path, KPath::LAZY_ALLOC, B_PATH_NAME_LENGTH + 1);
 	if (pathBuffer.InitCheck() != B_OK)
 		return B_NO_MEMORY;
 
@@ -8492,7 +8522,7 @@ _kern_read_stat(int fd, const char* path, bool traverseLeafLink,
 	written.
 
 	\param fd The FD. May be < 0.
-	\param path The absolute or relative path. Must not be \c NULL.
+	\param path The absolute or relative path. May be \c NULL.
 	\param traverseLeafLink If \a path is given, \c true specifies that the
 		   function shall not stick to symlinks, but traverse them.
 	\param stat The buffer containing the stat data to be written.
@@ -8521,9 +8551,9 @@ _kern_write_stat(int fd, const char* path, bool traverseLeafLink,
 
 	status_t status;
 
-	if (path) {
+	if (path != NULL) {
 		// path given: write the stat of the node referred to by (fd, path)
-		KPath pathBuffer(path, false, B_PATH_NAME_LENGTH + 1);
+		KPath pathBuffer(path, KPath::DEFAULT, B_PATH_NAME_LENGTH + 1);
 		if (pathBuffer.InitCheck() != B_OK)
 			return B_NO_MEMORY;
 
@@ -8551,15 +8581,11 @@ _kern_write_stat(int fd, const char* path, bool traverseLeafLink,
 int
 _kern_open_attr_dir(int fd, const char* path, bool traverseLeafLink)
 {
-	KPath pathBuffer(B_PATH_NAME_LENGTH + 1);
+	KPath pathBuffer(path, KPath::LAZY_ALLOC, B_PATH_NAME_LENGTH + 1);
 	if (pathBuffer.InitCheck() != B_OK)
 		return B_NO_MEMORY;
 
-	if (path != NULL)
-		pathBuffer.SetTo(path);
-
-	return attr_dir_open(fd, path ? pathBuffer.LockBuffer() : NULL,
-		traverseLeafLink, true);
+	return attr_dir_open(fd, pathBuffer.LockBuffer(), traverseLeafLink, true);
 }
 
 
@@ -8567,7 +8593,7 @@ int
 _kern_open_attr(int fd, const char* path, const char* name, uint32 type,
 	int openMode)
 {
-	KPath pathBuffer(path, false, B_PATH_NAME_LENGTH + 1);
+	KPath pathBuffer(path, KPath::LAZY_ALLOC, B_PATH_NAME_LENGTH + 1);
 	if (pathBuffer.InitCheck() != B_OK)
 		return B_NO_MEMORY;
 
@@ -8636,14 +8662,11 @@ _kern_getcwd(char* buffer, size_t size)
 status_t
 _kern_setcwd(int fd, const char* path)
 {
-	KPath pathBuffer(B_PATH_NAME_LENGTH + 1);
+	KPath pathBuffer(path, KPath::LAZY_ALLOC, B_PATH_NAME_LENGTH + 1);
 	if (pathBuffer.InitCheck() != B_OK)
 		return B_NO_MEMORY;
 
-	if (path != NULL)
-		pathBuffer.SetTo(path);
-
-	return set_cwd(fd, path != NULL ? pathBuffer.LockBuffer() : NULL, true);
+	return set_cwd(fd, pathBuffer.LockBuffer(), true);
 }
 
 
@@ -8833,7 +8856,7 @@ _user_entry_ref_to_path(dev_t device, ino_t inode, const char* leaf,
 
 	// copy the leaf name onto the stack
 	char stackLeaf[B_FILE_NAME_LENGTH];
-	if (leaf) {
+	if (leaf != NULL) {
 		if (!IS_USER_ADDRESS(leaf))
 			return B_BAD_ADDRESS;
 
@@ -9424,7 +9447,7 @@ _user_read_stat(int fd, const char* userPath, bool traverseLink,
 	if (!IS_USER_ADDRESS(userStat))
 		return B_BAD_ADDRESS;
 
-	if (userPath) {
+	if (userPath != NULL) {
 		// path given: get the stat of the node referred to by (fd, path)
 		if (!IS_USER_ADDRESS(userPath))
 			return B_BAD_ADDRESS;
@@ -9483,7 +9506,7 @@ _user_write_stat(int fd, const char* userPath, bool traverseLeafLink,
 
 	status_t status;
 
-	if (userPath) {
+	if (userPath != NULL) {
 		// path given: write the stat of the node referred to by (fd, path)
 		if (!IS_USER_ADDRESS(userPath))
 			return B_BAD_ADDRESS;

@@ -89,9 +89,11 @@ BrowserApp::BrowserApp()
 	cookieStorePath << "/Cookies";
 	fCookies = new SettingsMessage(B_USER_SETTINGS_DIRECTORY,
 		cookieStorePath.String());
-	BMessage cookieArchive = fCookies->GetValue("cookies", cookieArchive);
 	fContext = new BUrlContext();
-	fContext->SetCookieJar(BNetworkCookieJar(&cookieArchive));
+	if (fCookies->InitCheck() == B_OK) {
+		BMessage cookieArchive = fCookies->GetValue("cookies", cookieArchive);
+		fContext->SetCookieJar(BNetworkCookieJar(&cookieArchive));
+	}
 #endif
 
 	BString sessionStorePath = kApplicationName;
@@ -232,7 +234,7 @@ BrowserApp::ReadyToRun()
 	}
 
 	// If no refs led to a new open page, restore previous session.
-	if (pagesCreated == 0) {
+	if (fSession->InitCheck() == B_OK && pagesCreated == 0) {
 		BMessage archivedWindow;
 		for (int i = 0; fSession->FindMessage("window", i, &archivedWindow) == B_OK;
 			i++) {

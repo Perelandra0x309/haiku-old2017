@@ -18,6 +18,7 @@
 #include "debug.h"
 
 #include "MediaExtractor.h"
+#include "MediaStreamer.h"
 #include "MediaWriter.h"
 
 
@@ -450,6 +451,7 @@ BMediaFile::_Init()
 	fTrackNum = 0;
 	fTrackList = NULL;
 	fExtractor = NULL;
+	fStreamer = NULL;
 	fWriter = NULL;
 	fWriterID = 0;
 	fErr = B_OK;
@@ -469,11 +471,18 @@ BMediaFile::_UnInit()
 	free(fTrackList);
 	fTrackList = NULL;
 	fTrackNum = 0;
+
+	// Tells the extractor to stop its asynchronous processing
+	// before deleting its source
+	if (fExtractor != NULL)
+		fExtractor->StopProcessing();
+
 	if (fDeleteSource) {
 		delete fSource;
 		fSource = NULL;
 		fDeleteSource = false;
 	}
+
 	// Deleting the extractor or writer can cause unloading of the plugins.
 	// The source must be deleted before that, because it can come from a
 	// plugin (for example the http_streamer)
@@ -481,6 +490,8 @@ BMediaFile::_UnInit()
 	fExtractor = NULL;
 	delete fWriter;
 	fWriter = NULL;
+	delete fStreamer;
+	fStreamer = NULL;
 }
 
 
@@ -494,20 +505,21 @@ BMediaFile::_InitReader(BDataIO* source, const BUrl* url, int32 flags)
 		return;
 	}
 
-	if (source != NULL) {
-		if (BFile* file = dynamic_cast<BFile*>(source)) {
-			fErr = file->InitCheck();
-			if (fErr != B_OK)
-				return;
-		}
-		fExtractor = new(std::nothrow) MediaExtractor(source, flags);
-	} else
-		fExtractor = new(std::nothrow) MediaExtractor(*url, flags);
+	if (source == NULL)
+		_InitStreamer(*url, &source);
+	else if (BFile* file = dynamic_cast<BFile*>(source))
+		fErr = file->InitCheck();
+
+	if (fErr != B_OK)
+		return;
+
+	fExtractor = new(std::nothrow) MediaExtractor(source, flags);
 
 	if (fExtractor == NULL)
 		fErr = B_NO_MEMORY;
 	else
 		fErr = fExtractor->InitCheck();
+
 	if (fErr != B_OK)
 		return;
 
@@ -543,10 +555,13 @@ BMediaFile::_InitWriter(BDataIO* target, const BUrl* url,
 
 	fMFI = *fileFormat;
 
-	if (target != NULL)
-		fWriter = new(std::nothrow) MediaWriter(target, fMFI);
-	else
-		fWriter = new(std::nothrow) MediaWriter(*url, fMFI);
+	if (target == NULL) {
+		_InitStreamer(*url, &target);
+		if (fErr != B_OK)
+			return;
+	}
+
+	fWriter = new(std::nothrow) MediaWriter(target, fMFI);
 
 	if (fWriter == NULL)
 		fErr = B_NO_MEMORY;
@@ -560,6 +575,23 @@ BMediaFile::_InitWriter(BDataIO* target, const BUrl* url,
 	fTrackNum = 0;
 }
 
+
+void
+BMediaFile::_InitStreamer(const BUrl& url, BDataIO** adapter)
+{
+	if (fStreamer != NULL)
+		delete fStreamer;
+
+	TRACE(url.UrlString());
+
+	fStreamer = new(std::nothrow) MediaStreamer(url);
+	if (fStreamer == NULL) {
+		fErr = B_NO_MEMORY;
+		return;
+	}
+
+	fErr = fStreamer->CreateAdapter(adapter);
+}
 
 /*
 //unimplemented

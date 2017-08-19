@@ -9,19 +9,7 @@
 
 
 #include "Volume.h"
-
-#include <errno.h>
-#include <new>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <fs_cache.h>
-#include <fs_volume.h>
-
-#include <util/AutoLock.h>
-
-#include "BPlusTree.h"
+#include "BTree.h"
 #include "CachedBlock.h"
 #include "Chunk.h"
 #include "Inode.h"
@@ -205,7 +193,7 @@ btrfs_super_block::IsValid()
 	// TODO: check some more values!
 	if (strncmp(magic, BTRFS_SUPER_BLOCK_MAGIC, sizeof(magic)) != 0)
 		return false;
-	
+
 	return true;
 }
 
@@ -252,7 +240,7 @@ Volume::Mount(const char* deviceName, uint32 flags)
 {
 	flags |= B_MOUNT_READ_ONLY;
 		// we only support read-only for now
-	
+
 	if ((flags & B_MOUNT_READ_ONLY) != 0) {
 		TRACE("Volume::Mount(): Read only\n");
 	} else {
@@ -276,41 +264,30 @@ Volume::Mount(const char* deviceName, uint32 flags)
 		ERROR("Volume::Mount(): Identify() failed\n");
 		return status;
 	}
-	
+
 	fBlockSize = fSuperBlock.BlockSize();
+	fSectorSize = fSuperBlock.SectorSize();
 	TRACE("block size %" B_PRIu32 "\n", fBlockSize);
+	TRACE("sector size %" B_PRIu32 "\n", fSectorSize);
 
 	uint8* start = (uint8*)&fSuperBlock.system_chunk_array[0];
 	uint8* end = (uint8*)&fSuperBlock.system_chunk_array[2048];
 	while (start < end) {
-		struct btrfs_key* key = (struct btrfs_key*)start;
+		btrfs_key* key = (btrfs_key*)start;
 		TRACE("system_chunk_array object_id 0x%" B_PRIx64 " offset 0x%"
 			B_PRIx64 " type 0x%x\n", key->ObjectID(), key->Offset(),
 			key->Type());
 		if (key->Type() != BTRFS_KEY_TYPE_CHUNK_ITEM) {
 			break;
 		}
-		
-		struct btrfs_chunk* chunk = (struct btrfs_chunk*)(key + 1);
+
+		btrfs_chunk* chunk = (btrfs_chunk*)(key + 1);
 		fChunk = new(std::nothrow) Chunk(chunk, key->Offset());
 		if (fChunk == NULL)
 			return B_ERROR;
-		start += sizeof(struct btrfs_key) + fChunk->Size();
+		start += sizeof(btrfs_key) + fChunk->Size();
 	}
 
-	TRACE("Volume::Mount() generation: %" B_PRIu64 "\n",
-		fSuperBlock.Generation());
-	fsblock_t physical = 0;
-	FindBlock(fSuperBlock.Root(), physical);
-	TRACE("Volume::Mount() root: %" B_PRIu64 " (physical %" B_PRIu64 ")\n",
-		fSuperBlock.Root(), physical);
-	FindBlock(fSuperBlock.ChunkRoot(), physical);
-	TRACE("Volume::Mount() chunk_root: %" B_PRIu64 " (physical %" B_PRIu64
-		")\n", fSuperBlock.ChunkRoot(), physical);
-	FindBlock(fSuperBlock.LogRoot(), physical);
-	TRACE("Volume::Mount() log_root: %" B_PRIu64 " (physical %" B_PRIu64 ")\n",
-		fSuperBlock.LogRoot(), physical);
-		
 	// check if the device size is large enough to hold the file system
 	off_t diskSize;
 	status = opener.GetSize(&diskSize);
@@ -323,83 +300,88 @@ Volume::Mount(const char* deviceName, uint32 flags)
 		fBlockSize);
 	if (fBlockCache == NULL)
 		return B_ERROR;
-	
+
 	TRACE("Volume::Mount(): Initialized block cache: %p\n", fBlockCache);
 
-	fChunkTree = new(std::nothrow) BPlusTree(this, fSuperBlock.ChunkRoot());
+	fChunkTree = new(std::nothrow) BTree(this);
 	if (fChunkTree == NULL)
 		return B_NO_MEMORY;
+	fChunkTree->SetRoot(fSuperBlock.ChunkRoot(), NULL);
+	TRACE("Volume::Mount() chunk_root: %" B_PRIu64 " (physical block %" B_PRIu64
+		")\n", fSuperBlock.ChunkRoot(), fChunkTree->RootBlock());
 
-	FindBlock(fSuperBlock.Root(), physical);
-	TRACE("Volume::Mount() root: %" B_PRIu64 " (physical %" B_PRIu64 ")\n",
-		fSuperBlock.Root(), physical);
-	FindBlock(fSuperBlock.ChunkRoot(), physical);
-	TRACE("Volume::Mount() chunk_root: %" B_PRIu64 " (physical %" B_PRIu64
-		")\n", fSuperBlock.ChunkRoot(), physical);
-	FindBlock(fSuperBlock.LogRoot(), physical);
-	TRACE("Volume::Mount() log_root: %" B_PRIu64 " (physical %" B_PRIu64 ")\n",
-		fSuperBlock.LogRoot(), physical);
-
-	fRootTree = new(std::nothrow) BPlusTree(this, fSuperBlock.Root());
+	fRootTree = new(std::nothrow) BTree(this);
 	if (fRootTree == NULL)
 		return B_NO_MEMORY;
+	fRootTree->SetRoot(fSuperBlock.Root(), NULL);
+	TRACE("Volume::Mount() root: %" B_PRIu64 " (physical block %" B_PRIu64 ")\n",
+		fSuperBlock.Root(), fRootTree->RootBlock());
+
 	TRACE("Volume::Mount(): Searching extent root\n");
-	struct btrfs_key search_key;
+	btrfs_key search_key;
 	search_key.SetOffset(0);
 	search_key.SetType(BTRFS_KEY_TYPE_ROOT_ITEM);
 	search_key.SetObjectID(BTRFS_OBJECT_ID_EXTENT_TREE);
-	struct btrfs_root *root;
-	if (fRootTree->FindNext(search_key, (void**)&root) != B_OK) {
+	btrfs_root* root;
+	if (fRootTree->FindExact(search_key, (void**)&root) != B_OK) {
 		ERROR("Volume::Mount(): Couldn't find extent root\n");
 		return B_ERROR;
 	}
 	TRACE("Volume::Mount(): Found extent root: %" B_PRIu64 "\n",
-		root->BlockNum());
-	fExtentTree = new(std::nothrow) BPlusTree(this, root->BlockNum());
-	free(root);
+		root->LogicalAddress());
+	fExtentTree = new(std::nothrow) BTree(this);
 	if (fExtentTree == NULL)
 		return B_NO_MEMORY;
-	
+	fExtentTree->SetRoot(root->LogicalAddress(), NULL);
+	free(root);
+
+	TRACE("Volume::Mount(): Searching fs root\n");
 	search_key.SetOffset(0);
 	search_key.SetObjectID(BTRFS_OBJECT_ID_FS_TREE);
-	if (fRootTree->FindNext(search_key, (void**)&root) != B_OK) {
+	if (fRootTree->FindExact(search_key, (void**)&root) != B_OK) {
 		ERROR("Volume::Mount(): Couldn't find fs root\n");
 		return B_ERROR;
 	}
-	TRACE("Volume::Mount(): Found fs root: %" B_PRIu64 "\n", root->BlockNum());
-	fFSTree = new(std::nothrow) BPlusTree(this, root->BlockNum());
-	free(root);
+	TRACE("Volume::Mount(): Found fs root: %" B_PRIu64 "\n",
+		root->LogicalAddress());
+	fFSTree = new(std::nothrow) BTree(this);
 	if (fFSTree == NULL)
 		return B_NO_MEMORY;
-	
+	fFSTree->SetRoot(root->LogicalAddress(), NULL);
+	free(root);
+
+	TRACE("Volume::Mount(): Searching dev root\n");
 	search_key.SetOffset(0);
 	search_key.SetObjectID(BTRFS_OBJECT_ID_DEV_TREE);
-	if (fRootTree->FindNext(search_key, (void**)&root) != B_OK) {
+	if (fRootTree->FindExact(search_key, (void**)&root) != B_OK) {
 		ERROR("Volume::Mount(): Couldn't find dev root\n");
 		return B_ERROR;
 	}
 	TRACE("Volume::Mount(): Found dev root: %" B_PRIu64 "\n",
-		root->BlockNum());
-	fDevTree = new(std::nothrow) BPlusTree(this, root->BlockNum());
-	free(root);
+		root->LogicalAddress());
+	fDevTree = new(std::nothrow) BTree(this);
 	if (fDevTree == NULL)
 		return B_NO_MEMORY;
+	fDevTree->SetRoot(root->LogicalAddress(), NULL);
+	free(root);
 
+	TRACE("Volume::Mount(): Searching checksum root\n");
 	search_key.SetOffset(0);
 	search_key.SetObjectID(BTRFS_OBJECT_ID_CHECKSUM_TREE);
-	if (fRootTree->FindNext(search_key, (void**)&root) != B_OK) {
+	if (fRootTree->FindExact(search_key, (void**)&root) != B_OK) {
 		ERROR("Volume::Mount(): Couldn't find checksum root\n");
 		return B_ERROR;
 	}
 	TRACE("Volume::Mount(): Found checksum root: %" B_PRIu64 "\n",
-		root->BlockNum());
-	fChecksumTree = new(std::nothrow) BPlusTree(this, root->BlockNum());
-	free(root);
+		root->LogicalAddress());
+	fChecksumTree = new(std::nothrow) BTree(this);
 	if (fChecksumTree == NULL)
 		return B_NO_MEMORY;
-	
+	fChecksumTree->SetRoot(root->LogicalAddress(), NULL);
+	free(root);
+
 	// ready
-	status = get_vnode(fFSVolume, BTRFS_OBJECT_ID_CHUNK_TREE,
+	status = get_vnode(fFSVolume, BTRFS_FIRST_SUBVOLUME,
 		(void**)&fRootNode);
 	if (status != B_OK) {
 		ERROR("could not create root node: get_vnode() failed!\n");
@@ -478,7 +460,7 @@ Volume::LoadSuperBlock()
 
 
 status_t
-Volume::FindBlock(off_t logical, fsblock_t &physicalBlock)
+Volume::FindBlock(off_t logical, fsblock_t& physicalBlock)
 {
 	off_t physical;
 	status_t status = FindBlock(logical, physical);
@@ -490,7 +472,7 @@ Volume::FindBlock(off_t logical, fsblock_t &physicalBlock)
 
 
 status_t
-Volume::FindBlock(off_t logical, off_t &physical)
+Volume::FindBlock(off_t logical, off_t& physical)
 {
 	if (fChunkTree == NULL
 		|| (logical >= (off_t)fChunk->Offset()
@@ -499,11 +481,11 @@ Volume::FindBlock(off_t logical, off_t &physical)
 		return fChunk->FindBlock(logical, physical);
 	}
 
-	struct btrfs_key search_key;
+	btrfs_key search_key;
 	search_key.SetOffset(logical);
 	search_key.SetType(BTRFS_KEY_TYPE_CHUNK_ITEM);
-	search_key.SetObjectID(BTRFS_OBJECT_ID_CHUNK_TREE);
-	struct btrfs_chunk *chunk;
+ 	search_key.SetObjectID(BTRFS_OBJECT_ID_FIRST_CHUNK_TREE);
+	btrfs_chunk* chunk;
 	size_t chunk_length;
 	status_t status = fChunkTree->FindPrevious(search_key, (void**)&chunk,
 		&chunk_length);

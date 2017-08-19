@@ -81,14 +81,15 @@ rule DefineDefaultBuildProfiles
 				mercurial
 				nano
 				noto
+				noto_sans_cjk_jp
 				openssh
 				p7zip
+				pdfwriter
 				pe
 				python
 				subversion
 				timgmsoundfont
 				vision
-				vl_gothic
 				wpa_supplicant
 				wqy_microhei
 				# xz_utils can't be built with gcc2, so we install it for
